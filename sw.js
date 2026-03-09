@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    HGHome Official  —  sw.js
-   Service Worker — PWA caching
+   Service Worker — PWA caching  (Fixed)
 ═══════════════════════════════════════════════════════ */
 
 const CACHE_NAME = 'hghome-v1';
@@ -11,7 +11,7 @@ const SHELL_ASSETS = [
   './script.js',
 ];
 
-// Install: cache shell assets
+/* ── Install: cache shell assets ── */
 self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(
@@ -21,76 +21,102 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Activate: remove old caches
+/* ── Activate: remove old caches ── */
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      )
     ).then(() => self.clients.claim())
   );
 });
 
-// Fetch: network-first for Firebase/API, cache-first for static assets
+/* ── Fetch ── */
 self.addEventListener('fetch', (e) => {
+  // Only handle GET requests
+  if (e.request.method !== 'GET') return;
+
   const url = new URL(e.request.url);
 
-  // Skip non-GET and cross-origin Firebase calls
-  if (e.request.method !== 'GET') return;
-  if (url.hostname.includes('firebase') || url.hostname.includes('googleapis') || url.hostname.includes('gstatic')) return;
+  // Skip cross-origin Firebase / Google calls — let them go direct
+  if (
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('googleapis') ||
+    url.hostname.includes('gstatic') ||
+    url.hostname.includes('firebaseio')
+  ) return;
 
-  // Cache-first for static assets
-  if (url.pathname.match(/\.(css|js|png|jpg|woff2|svg|ico)$/)) {
+  // ── Cache-first for static assets ──
+  if (url.pathname.match(/\.(css|js|png|jpg|jpeg|webp|woff|woff2|svg|ico)$/)) {
     e.respondWith(
       caches.match(e.request).then(cached => {
         if (cached) return cached;
+
         return fetch(e.request).then(res => {
-          if (res.ok) {
+          // Only cache valid responses
+          if (res && res.ok) {
             const clone = res.clone();
             caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
           }
           return res;
-        }).catch(() => cached);
+        }).catch(() => {
+          // FIX: return cached even if undefined — avoids unhandled rejection
+          return cached || Response.error();
+        });
       })
     );
     return;
   }
 
-  // Network-first for HTML pages
+  // ── Network-first for HTML pages ──
   e.respondWith(
     fetch(e.request).then(res => {
-      if (res.ok && url.pathname.endsWith('.html')) {
+      if (res && res.ok && (
+        url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/')
+      )) {
         const clone = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
       }
       return res;
     }).catch(() =>
-      caches.match(e.request).then(cached => cached || caches.match('./index.html'))
+      // Fallback: try cache, then app shell
+      caches.match(e.request).then(cached =>
+        cached || caches.match('./index.html')
+      )
     )
   );
 });
 
-// Push notification handler (for future FCM integration)
+/* ── Push notification handler ── */
 self.addEventListener('push', (e) => {
   if (!e.data) return;
+
   let data = {};
-  try { data = e.data.json(); } catch(_) { data = { title: 'HGHome', body: e.data.text() }; }
+  try {
+    data = e.data.json();
+  } catch(_) {
+    data = { title: 'HGHome', body: e.data.text() };
+  }
+
   e.waitUntil(
     self.registration.showNotification(data.title || 'HGHome', {
-      body: data.body || '',
-      icon: './icon-192.png',
+      body:  data.body  || '',
+      icon:  './icon-192.png',
       badge: './icon-192.png',
-      tag: data.tag || 'hghome-notif',
-      data: { url: data.url || './' }
+      tag:   data.tag   || 'hghome-notif',
+      data:  { url: data.url || './' }
     })
   );
 });
 
-// Notification click: open/focus the app
+/* ── Notification click: open / focus the app ── */
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
-      const target = e.notification.data?.url || './';
+      const target   = e.notification.data?.url || './';
       const existing = wins.find(w => w.url.includes('hghome') && 'focus' in w);
       if (existing) return existing.focus();
       return clients.openWindow(target);
