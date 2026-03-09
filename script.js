@@ -1,56 +1,87 @@
 /* ═══════════════════════════════════════
-   HGHome Official Script  —  Fixed
+   HGHome Official Script  —  REST Auth
+   Firebase Auth SDK不使用・REST API方式
 ═══════════════════════════════════════ */
 
-/* ── Firebase Config ───────────────── */
+/* ── Firebase Config (REST) ─────────── */
 
-const _cfg = {
-  apiKey:[65,73,122,97,83,121,67,102,56,80,74,89,120,67,74,67,70,67,68,49,112,104,68,95,45,88,86,85,90,57,50,68,83,86,117,82,97,117,85],
-  authDomain:[104,103,115,116,117,100,121,45,49,56,101,50,51,46,102,105,114,101,98,97,115,101,97,112,112,46,99,111,109],
-  databaseURL:[104,116,116,112,115,58,47,47,104,103,115,116,117,100,121,45,49,56,101,50,51,45,100,101,102,97,117,108,116,45,114,116,100,98,46,97,115,105,97,45,115,111,117,116,104,101,97,115,116,49,46,102,105,114,101,98,97,115,101,100,97,116,97,98,97,115,101,46,97,112,112],
-  projectId:[104,103,115,116,117,100,121,45,49,56,101,50,51],
-  storageBucket:[104,103,115,116,117,100,121,45,49,56,101,50,51,46,102,105,114,101,98,97,115,101,115,116,111,114,97,103,101,46,97,112,112],
-  appId:[49,58,55,50,48,49,53,48,55,49,50,55,55,53,58,119,101,98,58,54,51,50,98,50,98,100,54,102,48,52,52,49,97,56,51,100,55,52,57,101,50]
+const DB_URL = "https://hgstudy-18e23-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+/* ── DB REST Helpers ─────────────────── */
+
+async function dbGet(path) {
+  const res = await fetch(`${DB_URL}/${path}.json`)
+  if (!res.ok) throw new Error("DB読み込みエラー")
+  return res.json()
 }
 
-const decode = b => b.map(v => String.fromCharCode(v)).join("")
-
-const firebaseConfig = {
-  apiKey:           decode(_cfg.apiKey),
-  authDomain:       decode(_cfg.authDomain),
-  databaseURL:      decode(_cfg.databaseURL),
-  projectId:        decode(_cfg.projectId),
-  storageBucket:    decode(_cfg.storageBucket),
-  messagingSenderId:"720150712775",
-  appId:            decode(_cfg.appId)
+async function dbSet(path, data) {
+  const res = await fetch(`${DB_URL}/${path}.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error("DB書き込みエラー")
+  return res.json()
 }
 
-/* ── Firebase Init ───────────────── */
+async function dbPush(path, data) {
+  const res = await fetch(`${DB_URL}/${path}.json`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error("DB書き込みエラー")
+  return res.json()
+}
 
-firebase.initializeApp(firebaseConfig)
+async function dbDelete(path) {
+  const res = await fetch(`${DB_URL}/${path}.json`, { method: "DELETE" })
+  if (!res.ok) throw new Error("DB削除エラー")
+}
 
-const auth = firebase.auth()
-const db   = firebase.database()
+/* ── SHA-256 Hash ────────────────────── */
 
-/* ── State ───────────────── */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("")
+}
+
+/* ── State ───────────────────────────── */
 
 let session      = null
-let newsListener = null
-let authMode     = 'login'   // 'login' | 'register'
-let selectedCat  = 'info'
+let authMode     = "login"
+let selectedCat  = "info"
+let newsPolling  = null
 const seenNews   = new Set()
 const pageLoadTime = Date.now()
 
-/* ── Helpers ───────────────── */
+/* ── Session persistence ─────────────── */
+
+function saveSession(s) {
+  try { sessionStorage.setItem("hghome-session", JSON.stringify(s)) } catch(_) {}
+}
+
+function restoreSession() {
+  try {
+    const raw = sessionStorage.getItem("hghome-session")
+    if (raw) return JSON.parse(raw)
+  } catch(_) {}
+  return null
+}
+
+function clearSession() {
+  try { sessionStorage.removeItem("hghome-session") } catch(_) {}
+}
+
+/* ── Helpers ─────────────────────────── */
 
 const $ = id => document.getElementById(id)
 
 function esc(s) {
   return (s || "")
-    .replace(/&/g,  "&amp;")
-    .replace(/</g,  "&lt;")
-    .replace(/>/g,  "&gt;")
-    .replace(/"/g,  "&quot;")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 }
 
 function formatDate(ts) {
@@ -60,7 +91,7 @@ function formatDate(ts) {
        + " " + d.toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit" })
 }
 
-/* ── Toast ───────────────── */
+/* ── Toast ───────────────────────────── */
 
 let toastTimer = null
 
@@ -69,16 +100,15 @@ function showToast(msg, type = "") {
   if (!t) return
   t.textContent = msg
   t.className   = "toast" + (type ? " " + type : "")
-  // Force reflow so transition re-triggers when called rapidly
   void t.offsetWidth
   t.classList.add("show")
   clearTimeout(toastTimer)
   toastTimer = setTimeout(() => t.classList.remove("show"), 3200)
 }
 
-/* ── Theme ───────────────── */
+/* ── Theme ───────────────────────────── */
 
-const THEMES   = ["dark", "light", "glass"]
+const THEMES      = ["dark", "light", "glass"]
 const THEME_ICONS = { dark:"🌙", light:"☀️", glass:"💎" }
 
 function toggleTheme() {
@@ -102,10 +132,10 @@ function loadTheme() {
   } catch(_) {}
 }
 
-/* ── Auth Modal ───────────────── */
+/* ── Auth Modal ──────────────────────── */
 
 function openAuthModal(mode = "login") {
-  authMode = mode
+  authMode = mode || "login"
   $("authModal").classList.add("active")
   $("authError").classList.remove("visible")
   $("authError").textContent = ""
@@ -126,22 +156,22 @@ function switchAuthMode() {
 
 function updateAuthMode() {
   const isLogin = authMode === "login"
-  $("authTitle").textContent        = isLogin ? "ログイン" : "新規登録"
-  $("authSubmitBtn").textContent    = isLogin ? "[ ログイン ]" : "[ 登録する ]"
-  $("authSwitchText").innerHTML     = isLogin
+  $("authTitle").textContent     = isLogin ? "ログイン" : "新規登録"
+  $("authSubmitBtn").textContent = isLogin ? "[ ログイン ]" : "[ 登録する ]"
+  $("authSwitchText").innerHTML  = isLogin
     ? 'アカウントをお持ちでない方は <a onclick="switchAuthMode()">新規登録</a>'
     : 'すでにアカウントをお持ちの方は <a onclick="switchAuthMode()">ログイン</a>'
 }
 
-/* ── News Modal ───────────────── */
+/* ── News Modal ──────────────────────── */
 
 function openNewsModal() {
   if (!session?.isAdmin) return
   $("newsModal").classList.add("active")
   $("newsError").classList.remove("visible")
   $("newsError").textContent = ""
-  $("newsTitle").value   = ""
-  $("newsContent").value = ""
+  $("newsTitle").value    = ""
+  $("newsContent").value  = ""
   $("newsPinned").checked = false
   selectCategory("info", document.querySelector('.cat-btn[data-cat="info"]'))
   setTimeout(() => $("newsTitle").focus(), 80)
@@ -157,7 +187,7 @@ function selectCategory(cat, btn) {
   if (btn) btn.classList.add("active")
 }
 
-/* ── Notification Banner ───────────────── */
+/* ── Notification Banner ─────────────── */
 
 let bannerTimer = null
 
@@ -176,58 +206,52 @@ function closeNotifBanner() {
   if (banner) banner.classList.remove("show")
 }
 
-/* ── Login / Register ───────────────── */
+/* ── Login ───────────────────────────── */
 
 async function login(username, password) {
-  const email = `${username}@hghome.app`
-  return auth.signInWithEmailAndPassword(email, password)
+  if (!username || !password) throw new Error("ユーザー名とパスワードを入力してください")
+
+  const userData = await dbGet(`users/${username}`)
+  if (!userData) throw new Error("ユーザーが見つかりません")
+
+  const hash = await sha256(password)
+  if (userData.passwordHash !== hash) throw new Error("パスワードが正しくありません")
+
+  return { username, isAdmin: !!userData.isAdmin }
 }
+
+/* ── Register ────────────────────────── */
 
 async function register(username, password) {
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
     throw new Error("ユーザー名は3〜20文字の半角英数字・アンダーバーのみです")
   }
-  const email = `${username}@hghome.app`
-  const cred  = await auth.createUserWithEmailAndPassword(email, password)
-  await db.ref("users/" + username).set({
-    uid:       cred.user.uid,
+  if (password.length < 6) {
+    throw new Error("パスワードは6文字以上にしてください")
+  }
+
+  const existing = await dbGet(`users/${username}`)
+  if (existing) throw new Error("このユーザー名はすでに使われています")
+
+  const hash = await sha256(password)
+  await dbSet(`users/${username}`, {
     username,
-    createdAt: Date.now(),
-    isAdmin:   false
+    passwordHash: hash,
+    createdAt:    Date.now(),
+    isAdmin:      false
   })
 }
 
-/* ── Logout ───────────────── */
+/* ── Logout ──────────────────────────── */
 
-async function handleLogout() {
-  await auth.signOut()
+function handleLogout() {
   session = null
+  clearSession()
   updateUI()
   showToast("ログアウトしました")
 }
 
-/* ── Auth State ───────────────── */
-
-auth.onAuthStateChanged(async user => {
-  if (!user) {
-    session = null
-    updateUI()
-    return
-  }
-
-  const username = user.email.replace("@hghome.app", "")
-  let isAdmin    = false
-
-  try {
-    const snap = await db.ref("users/" + username).once("value")
-    if (snap.val()) isAdmin = !!snap.val().isAdmin
-  } catch(_) {}
-
-  session = { uid: user.uid, username, isAdmin }
-  updateUI()
-})
-
-/* ── UI Update ───────────────── */
+/* ── UI Update ───────────────────────── */
 
 function updateUI() {
   if (!session) {
@@ -249,22 +273,20 @@ function updateUI() {
     .forEach(b => b.classList.toggle("visible", session.isAdmin))
 }
 
-/* ── News Listener ───────────────── */
+/* ── News Polling ────────────────────── */
 
-function startNews() {
-  if (newsListener) db.ref("news").off("value", newsListener)
+async function fetchNews() {
+  try {
+    const raw = await dbGet("news")
+    if (!raw) return renderNews([])
 
-  const ref = db.ref("news").orderByChild("ts").limitToLast(20)
-
-  newsListener = ref.on("value", snap => {
-    const raw   = snap.val() || {}
     const items = Object.entries(raw)
       .map(([id, v]) => ({ id, ...v }))
       .sort((a, b) => {
-        // Pinned first, then newest
         if (b.pinned !== a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)
         return b.ts - a.ts
       })
+      .slice(0, 20)
 
     items.forEach(n => {
       if (!seenNews.has(n.id) && n.ts > pageLoadTime) {
@@ -275,10 +297,17 @@ function startNews() {
     })
 
     renderNews(items)
-  })
+  } catch(e) {
+    console.warn("[News] fetch error:", e)
+  }
 }
 
-/* ── Render News ───────────────── */
+function startNews() {
+  fetchNews()
+  newsPolling = setInterval(fetchNews, 30000)
+}
+
+/* ── Render News ─────────────────────── */
 
 function renderNews(list) {
   const grid = $("newsGrid")
@@ -292,8 +321,8 @@ function renderNews(list) {
   grid.innerHTML = ""
 
   list.forEach(n => {
-    const cat    = n.category || "info"
-    const card   = document.createElement("div")
+    const cat  = n.category || "info"
+    const card = document.createElement("div")
     card.className = "news-card category-" + esc(cat) + (n.pinned ? " pinned" : "")
 
     const catLabel = { info:"INFO", update:"UPDATE", event:"EVENT" }[cat] || cat.toUpperCase()
@@ -311,54 +340,48 @@ function renderNews(list) {
           <button class="news-del-btn" onclick="deleteNews('${esc(n.id)}')">削除</button>
         </div>` : ""}
     `
-
     grid.appendChild(card)
   })
 }
 
-/* ── Post News ───────────────── */
+/* ── Post News ───────────────────────── */
 
 async function postNews(title, content, category = "info", pinned = false) {
   if (!session?.isAdmin) return
-
-  await db.ref("news").push({
-    title,
-    content,
-    category,
+  await dbPush("news", {
+    title, content, category,
     author: session.username,
     pinned,
     ts: Date.now()
   })
+  await fetchNews()
 }
 
-/* ── Delete News ───────────────── */
+/* ── Delete News ─────────────────────── */
 
 async function deleteNews(id) {
   if (!session?.isAdmin) return
   if (!confirm("このニュースを削除しますか？")) return
   try {
-    await db.ref("news/" + id).remove()
+    await dbDelete(`news/${id}`)
     showToast("削除しました", "success")
+    await fetchNews()
   } catch(e) {
     showToast("削除に失敗しました: " + e.message, "error")
   }
 }
 
-/* ── Notification ───────────────── */
+/* ── Notification ────────────────────── */
 
 function notify(n) {
   if (Notification.permission !== "granted") return
-  new Notification("HGHome", {
-    body: n.title,
-    icon: "/favicon.ico"
-  })
+  new Notification("HGHome", { body: n.title, icon: "/favicon.ico" })
 }
 
-/* ── Form Handlers ───────────────── */
+/* ── Form Handlers ───────────────────── */
 
 function setupForms() {
 
-  // Auth form
   const authForm = $("authForm")
   if (authForm) {
     authForm.addEventListener("submit", async e => {
@@ -367,31 +390,37 @@ function setupForms() {
       const btn   = $("authSubmitBtn")
       errEl.classList.remove("visible")
       errEl.textContent = ""
-      btn.disabled      = true
+      btn.disabled    = true
+      btn.textContent = "[ 処理中... ]"
 
       const username = $("authUsername").value.trim()
       const password = $("authPassword").value
 
       try {
         if (authMode === "login") {
-          await login(username, password)
+          const user = await login(username, password)
+          session = user
+          saveSession(session)
+          updateUI()
           showToast("ログインしました", "success")
         } else {
           await register(username, password)
+          session = { username, isAdmin: false }
+          saveSession(session)
+          updateUI()
           showToast("登録しました！", "success")
         }
         closeAuthModal()
       } catch(err) {
-        const msg = translateFirebaseError(err.code) || err.message
-        errEl.textContent = msg
+        errEl.textContent = err.message
         errEl.classList.add("visible")
       } finally {
         btn.disabled = false
+        updateAuthMode()
       }
     })
   }
 
-  // News form
   const newsForm = $("newsForm")
   if (newsForm) {
     newsForm.addEventListener("submit", async e => {
@@ -400,7 +429,7 @@ function setupForms() {
       const btn   = $("newsSubmitBtn")
       errEl.classList.remove("visible")
       errEl.textContent = ""
-      btn.disabled      = true
+      btn.disabled = true
 
       const title   = $("newsTitle").value.trim()
       const content = $("newsContent").value.trim()
@@ -420,45 +449,16 @@ function setupForms() {
   }
 }
 
-/* ── Firebase Error Translation ───────────────── */
-
-function translateFirebaseError(code) {
-  const map = {
-    "auth/user-not-found":      "ユーザーが見つかりません",
-    "auth/wrong-password":      "パスワードが正しくありません",
-    "auth/email-already-in-use":"このユーザー名はすでに使われています",
-    "auth/invalid-email":       "メールアドレス形式が正しくありません",
-    "auth/weak-password":       "パスワードは6文字以上にしてください",
-    "auth/too-many-requests":   "しばらく経ってからもう一度お試しください",
-    "auth/invalid-credential":  "ユーザー名またはパスワードが正しくありません",
-  }
-  return map[code] || null
-}
-
-/* ── Service Worker Registration ───────────────── */
-
-function registerSW() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js")
-      .then(reg => console.log("[SW] registered:", reg.scope))
-      .catch(err => console.warn("[SW] registration failed:", err))
-  }
-}
-
-/* ── Modal click-outside to close ───────────────── */
+/* ── Modal dismiss & keyboard ────────── */
 
 function setupModalDismiss() {
   [$("authModal"), $("newsModal")].forEach(overlay => {
     if (!overlay) return
     overlay.addEventListener("click", e => {
-      if (e.target === overlay) {
-        overlay.classList.remove("active")
-      }
+      if (e.target === overlay) overlay.classList.remove("active")
     })
   })
 }
-
-/* ── Keyboard shortcuts ───────────────── */
 
 function setupKeyboard() {
   document.addEventListener("keydown", e => {
@@ -469,7 +469,17 @@ function setupKeyboard() {
   })
 }
 
-/* ── Expose to global scope (required for onclick="..." in HTML) ── */
+/* ── Service Worker ──────────────────── */
+
+function registerSW() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js")
+      .then(reg => console.log("[SW] registered:", reg.scope))
+      .catch(err => console.warn("[SW] failed:", err))
+  }
+}
+
+/* ── Expose to global (for onclick="") ── */
 
 window.openAuthModal    = openAuthModal
 window.closeAuthModal   = closeAuthModal
@@ -482,13 +492,17 @@ window.toggleTheme      = toggleTheme
 window.closeNotifBanner = closeNotifBanner
 window.deleteNews       = deleteNews
 
-/* ── Init ───────────────── */
+/* ── Init ────────────────────────────── */
 
-// loadTheme runs immediately (before DOMContentLoaded) so the theme
-// is applied before first paint and themeBtn icon is set as soon as
-// the element exists.
 document.addEventListener("DOMContentLoaded", () => {
   loadTheme()
+
+  const saved = restoreSession()
+  if (saved) {
+    session = saved
+    updateUI()
+  }
+
   setupForms()
   setupModalDismiss()
   setupKeyboard()
