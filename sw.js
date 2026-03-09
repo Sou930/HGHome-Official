@@ -3,7 +3,7 @@
    Service Worker — PWA caching  (Fixed)
 ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'hghome-v1';
+const CACHE_NAME = 'hghome-v2';
 const SHELL_ASSETS = [
   './',
   './index.html',
