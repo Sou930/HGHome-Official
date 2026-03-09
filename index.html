@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HGHome — 公式ポータル</title>
+  <meta name="description" content="HGHome 公式ポータル — HGStudy・HGHomeBot+ への入口">
+  <meta name="theme-color" content="#ffe600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HGHome">
+
+  <!-- Firebase v8 compat -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background -->
+  <div class="bg-mesh">
+    <div class="bg-static"></div>
+    <div class="bg-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+  </div>
+
+  <!-- ── Navigation ── -->
+  <nav>
+    <a href="#" class="nav-logo">HGHOME<span class="logo-plus">+</span></a>
+    <div class="nav-right">
+      <div id="navUser" class="nav-user-info">
+        <span id="navUsername" class="nav-username"></span>
+        <button class="nav-btn" onclick="handleLogout()">ログアウト</button>
+      </div>
+      <button class="nav-btn primary" id="navLoginBtn" onclick="openAuthModal('login')">ログイン</button>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="テーマ切替">🌙</button>
+    </div>
+  </nav>
+
+  <!-- ── Auth Modal ── -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      <h2 class="modal-title" id="authTitle">ログイン</h2>
+      <p class="modal-sub">HGHome アカウント</p>
+      <form id="authForm">
+        <div class="form-group">
+          <label class="form-label" for="authUsername">ユーザー名</label>
+          <input class="form-input" id="authUsername" type="text" autocomplete="username" placeholder="username" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="authPassword">パスワード</label>
+          <input class="form-input" id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        </div>
+        <div class="form-error" id="authError"></div>
+        <button class="btn btn-primary" id="authSubmitBtn" type="submit">[ ログイン ]</button>
+        <p class="auth-switch" id="authSwitchText">
+          アカウントをお持ちでない方は <a onclick="switchAuthMode()">新規登録</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── News Post Modal (Admin) ── -->
+  <div class="modal-overlay" id="newsModal">
+    <div class="modal news-modal">
+      <button class="modal-close" onclick="closeNewsModal()">✕</button>
+      <h2 class="modal-title">ニュース投稿</h2>
+      <p class="modal-sub">管理者専用</p>
+      <form id="newsForm">
+        <div class="form-group">
+          <label class="form-label">カテゴリ</label>
+          <div class="category-btns">
+            <button type="button" class="cat-btn active" data-cat="info"   onclick="selectCategory('info',this)">INFO</button>
+            <button type="button" class="cat-btn"        data-cat="update" onclick="selectCategory('update',this)">UPDATE</button>
+            <button type="button" class="cat-btn"        data-cat="event"  onclick="selectCategory('event',this)">EVENT</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newsTitle">タイトル</label>
+          <input class="form-input" id="newsTitle" type="text" placeholder="ニュースのタイトル" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newsContent">内容</label>
+          <textarea class="form-input form-textarea" id="newsContent" placeholder="ニュースの内容..." required></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" id="newsPinned" style="width:16px;height:16px;accent-color:var(--yellow);">
+          <label for="newsPinned" class="form-label" style="margin-bottom:0;cursor:pointer;">固定する</label>
+        </div>
+        <div class="form-error" id="newsError"></div>
+        <button class="btn btn-primary" id="newsSubmitBtn" type="submit">[ 投稿する ]</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Notification Banner ── -->
+  <div class="notif-banner" id="notifBanner">
+    <span class="notif-tag" id="notifBannerTag">INFO</span>
+    <span id="notifBannerTitle"></span>
+    <button class="notif-banner-close" onclick="closeNotifBanner()">✕</button>
+  </div>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      公式ポータル
+    </div>
+    <h1 class="hero-title">
+      HG<span class="outline">HOME</span>
+    </h1>
+    <p class="hero-sub">
+      学習・Bot・コミュニティを一か所に。<br>
+      HGHome 公式ポータルへようこそ。
+    </p>
+    <div class="hero-actions">
+      <a href="../hgstudy/study.html" class="hero-btn primary">HGStudy を開く →</a>
+      <a href="../hgbotplus/bot.html" class="hero-btn outline">HGHomeBot+ →</a>
+    </div>
+    <div class="hero-scroll-hint">スクロール</div>
+  </section>
+
+  <!-- ── SERVICES ── -->
+  <section class="section" id="services">
+    <p class="section-label">サービス</p>
+    <h2 class="section-title">SERVICES</h2>
+    <div class="services-grid">
+      <a href="../hgstudy/study.html" class="service-card study">
+        <div class="service-icon">HGS</div>
+        <div>
+          <div class="service-name">HGStudy</div>
+          <p class="service-desc">
+            フラッシュカードで効率よく学習。間隔反復アルゴリズムで記憶を定着させる学習ツール。
+          </p>
+        </div>
+        <span class="service-arrow">→ 学習を始める</span>
+      </a>
+      <a href="../hgbotplus/bot.html" class="service-card bot">
+        <div class="service-icon">B+</div>
+        <div>
+          <div class="service-name">HGHomeBot<span style="color:var(--pink)">+</span></div>
+          <p class="service-desc">
+            Discord サーバー向け多機能 Bot。コイン・カジノ・XP・翻訳・バトルなど豊富な機能を搭載。
+          </p>
+        </div>
+        <span class="service-arrow">→ 詳細を見る</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── NEWS ── -->
+  <section class="section" id="news">
+    <div class="news-header">
+      <div>
+        <p class="section-label">最新情報</p>
+        <h2 class="section-title">NEWS</h2>
+      </div>
+      <button class="post-btn" onclick="openNewsModal()">
+        <span>＋</span> 投稿
+      </button>
+    </div>
+    <div id="newsGrid" class="news-grid">
+      <div class="news-loading">// 読み込み中...</div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-copy">HGHome &copy; 2024 — All Rights Reserved</span>
+      <div class="footer-links">
+        <a href="../hgstudy/study.html">HGStudy</a>
+        <a href="../hgbotplus/bot.html">HGHomeBot+</a>
+        <a href="#" onclick="openAuthModal();return false;">ログイン</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
