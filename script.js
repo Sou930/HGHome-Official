@@ -469,8 +469,24 @@ function setupKeyboard() {
   })
 }
 
+/* ── Expose to global scope (required for onclick="..." in HTML) ── */
+
+window.openAuthModal    = openAuthModal
+window.closeAuthModal   = closeAuthModal
+window.switchAuthMode   = switchAuthMode
+window.openNewsModal    = openNewsModal
+window.closeNewsModal   = closeNewsModal
+window.selectCategory   = selectCategory
+window.handleLogout     = handleLogout
+window.toggleTheme      = toggleTheme
+window.closeNotifBanner = closeNotifBanner
+window.deleteNews       = deleteNews
+
 /* ── Init ───────────────── */
 
+// loadTheme runs immediately (before DOMContentLoaded) so the theme
+// is applied before first paint and themeBtn icon is set as soon as
+// the element exists.
 document.addEventListener("DOMContentLoaded", () => {
   loadTheme()
   setupForms()
