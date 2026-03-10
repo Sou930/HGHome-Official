@@ -160,7 +160,7 @@ function showBlogEditView(){ ge('blogList').style.display='none'; ge('blogPost')
 
 async function loadBlogPosts(){
   try{
-    const snap = await db.ref('study_blog/posts').once('value');
+    const snap = await db.ref('blogs').once('value');
     allPosts = snap.val() || {};
     renderBlogGrid();
   } catch(e){
@@ -245,7 +245,7 @@ window.deletePost = async function(postId){
   if(!p) return;
   if(!confirm(`「${p.title}」を削除しますか？`)) return;
   try{
-    await db.ref(`study_blog/posts/${postId}`).remove();
+    await db.ref(`blogs/${postId}`).remove();
     delete allPosts[postId];
     renderBlogGrid();
     showBlogList();
@@ -326,12 +326,12 @@ window.savePost = async function(){
 
   try{
     if(editingPostId){
-      await db.ref(`study_blog/posts/${editingPostId}`).update(data);
+      await db.ref(`blogs/${editingPostId}`).update(data);
       allPosts[editingPostId] = { ...allPosts[editingPostId], ...data };
       showToast('記事を更新しました','success');
       openPost(editingPostId);
     } else {
-      const ref = db.ref('study_blog/posts').push();
+      const ref = db.ref('blogs').push();
       await ref.set(data);
       allPosts[ref.key] = data;
       showToast('記事を公開しました','success');
@@ -347,7 +347,7 @@ async function loadComments(postId){
   const list = ge('commentList');
   list.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:13px">読み込み中...</div>';
   try{
-    const snap = await db.ref(`study_blog/comments/${postId}`).orderByChild('createdAt').once('value');
+    const snap = await db.ref(`blogs_comments/${postId}`).orderByChild('createdAt').once('value');
     const comments = snap.val() || {};
     const arr = Object.entries(comments).sort((a,b)=>a[1].createdAt-b[1].createdAt);
     ge('commentCount').textContent = arr.length;
@@ -378,10 +378,10 @@ window.submitComment = async function(){
   if(!body) return;
   if(!currentPostId) return;
   try{
-    const ref = db.ref(`study_blog/comments/${currentPostId}`).push();
+    const ref = db.ref(`blogs_comments/${currentPostId}`).push();
     await ref.set({ author: currentSession.username, body, createdAt: Date.now() });
     const p = allPosts[currentPostId];
-    if(p){ p.commentCount = (p.commentCount||0)+1; await db.ref(`study_blog/posts/${currentPostId}/commentCount`).set(p.commentCount); }
+    if(p){ p.commentCount = (p.commentCount||0)+1; await db.ref(`blogs/${currentPostId}/commentCount`).set(p.commentCount); }
     input.value = '';
     loadComments(currentPostId);
     showToast('コメントを投稿しました','success');
@@ -391,9 +391,9 @@ window.submitComment = async function(){
 window.deleteComment = async function(postId, commentId){
   if(!confirm('このコメントを削除しますか？')) return;
   try{
-    await db.ref(`study_blog/comments/${postId}/${commentId}`).remove();
+    await db.ref(`blogs_comments/${postId}/${commentId}`).remove();
     const p = allPosts[postId];
-    if(p && p.commentCount>0){ p.commentCount--; await db.ref(`study_blog/posts/${postId}/commentCount`).set(p.commentCount); }
+    if(p && p.commentCount>0){ p.commentCount--; await db.ref(`blogs/${postId}/commentCount`).set(p.commentCount); }
     loadComments(postId);
     showToast('コメントを削除しました');
   } catch(e){ showToast('削除エラー','error'); }
@@ -608,7 +608,7 @@ window.handleLogout = function(){
 async function loadDecks(){
   if(!currentSession) return;
   try{
-    const snap=await db.ref(`study/${currentSession.uid}/decks`).once('value');
+    const snap=await db.ref(`decks/${currentSession.username}`).once('value');
     decks=snap.val()||{};
     refreshDeckSelect();
     if(Object.keys(decks).length===0) await createDeck('デフォルトデッキ');
@@ -619,7 +619,7 @@ async function createDeck(name){
   if(!currentSession) return;
   const uid=currentSession.uid, deckId='deck_'+Date.now(), deck={name,cards:{},createdAt:Date.now()};
   try{
-    await db.ref(`study/${uid}/decks/${deckId}`).set(deck);
+    await db.ref(`decks/${currentSession.username}/${deckId}`).set(deck);
     decks[deckId]=deck; currentDeckId=deckId;
     refreshDeckSelect(); showStudyView();
     showToast(`「${name}」を作成しました`,'success');
@@ -628,7 +628,7 @@ async function createDeck(name){
 async function deleteDeck(deckId){
   if(!currentSession||!confirm(`「${decks[deckId]?.name}」を削除しますか？`)) return;
   try{
-    await db.ref(`study/${currentSession.uid}/decks/${deckId}`).remove();
+    await db.ref(`decks/${currentSession.username}/${deckId}`).remove();
     delete decks[deckId]; currentDeckId=Object.keys(decks)[0]||null;
     refreshDeckSelect();
     if(currentDeckId) showStudyView(); else ge('studyArea').classList.remove('active');
@@ -652,7 +652,7 @@ async function addCard(front,back){
   const uid=currentSession.uid, cardId='card_'+Date.now();
   const card={front,back,createdAt:Date.now(),due:Date.now(),interval:0,ease:2.5,reps:0};
   try{
-    await db.ref(`study/${uid}/decks/${currentDeckId}/cards/${cardId}`).set(card);
+    await db.ref(`decks/${currentSession.username}/${currentDeckId}/cards/${cardId}`).set(card);
     if(!decks[currentDeckId].cards) decks[currentDeckId].cards={};
     decks[currentDeckId].cards[cardId]=card;
     renderCardsList(); showToast('カードを追加しました','success');
@@ -661,7 +661,7 @@ async function addCard(front,back){
 window.deleteCard = async function(cardId){
   if(!currentSession||!currentDeckId) return;
   try{
-    await db.ref(`study/${currentSession.uid}/decks/${currentDeckId}/cards/${cardId}`).remove();
+    await db.ref(`decks/${currentSession.username}/${currentDeckId}/cards/${cardId}`).remove();
     delete decks[currentDeckId].cards[cardId]; renderCardsList(); showToast('カードを削除しました');
   }catch(e){ showToast('削除エラー: '+e.message,'error'); }
 };
@@ -673,7 +673,7 @@ async function updateCardSRS(cardId,rating){
   else{if(reps===0)interval=4;else interval=Math.round(interval*ease*1.3);reps++;ease=Math.min(3.0,ease+.15);}
   const due=Date.now()+interval*86400000;
   decks[currentDeckId].cards[cardId]={...card,interval,ease,reps,due};
-  if(currentSession) await db.ref(`study/${currentSession.uid}/decks/${currentDeckId}/cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
+  if(currentSession) await db.ref(`decks/${currentSession.username}/${currentDeckId}/cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
 }
 
 // ── Views ─────────────────────────────────────────────
