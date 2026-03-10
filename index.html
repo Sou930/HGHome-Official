@@ -661,8 +661,9 @@ function updateHeaderUI(){
 async function checkAdminRole(){
   if(!session||!db){isAdmin=false;document.getElementById('adminBar').classList.remove('show');return;}
   try{
-    const snap=await db.ref('users/'+session.username+'/role').once('value');
-    isAdmin=snap.val()==='admin';
+    const snap=await db.ref('users/'+session.username).once('value');
+    const d=snap.val()||{};
+    isAdmin=d.isAdmin===true||d.role==='admin';
     document.getElementById('adminBar').classList.toggle('show',isAdmin);
   }catch(e){isAdmin=false;}
 }
