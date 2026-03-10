@@ -277,13 +277,6 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 }
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--navy)}
 .form-textarea{min-height:120px;resize:vertical;line-height:1.6}
-.form-tabs{display:flex;gap:2px;background:var(--paper2);border-radius:var(--r);padding:3px;margin-bottom:20px;}
-.form-tab{
-  flex:1;font-family:'Outfit',sans-serif;font-size:.83rem;font-weight:600;
-  padding:8px;border-radius:calc(var(--r) - 2px);border:none;cursor:pointer;
-  background:none;color:var(--text3);transition:all .15s;
-}
-.form-tab.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.1)}
 .form-err{
   font-size:.82rem;color:var(--red);padding:10px 14px;
   background:var(--red-l);border-radius:var(--r);margin-bottom:12px;
@@ -518,22 +511,11 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
         <label class="form-label">パスワード</label>
         <input class="form-input" id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
       </div>
+      <!-- 新規登録時の追加フィールド（パスワード確認のみ） -->
       <div id="authRegExtra" style="display:none">
         <div class="form-group">
           <label class="form-label">パスワード確認</label>
           <input class="form-input" id="authPassConfirm" type="password" onkeydown="if(event.key==='Enter')authSubmit()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">学年</label>
-          <select class="form-select" id="authGen">
-            <option value="">選択してください</option>
-            <option value="高1">高1</option>
-            <option value="高2">高2</option>
-            <option value="高3">高3</option>
-            <option value="浪人">浪人</option>
-            <option value="大学生">大学生</option>
-            <option value="その他">その他</option>
-          </select>
         </div>
       </div>
     </div>
@@ -695,24 +677,22 @@ async function authSubmit(){
   if(authMode==='reg'){
     const c=document.getElementById('authPassConfirm').value;
     if(pass!==c){showAuthErr('パスワードが一致しません');return;}
-    const gen=document.getElementById('authGen').value;
-    if(!gen){showAuthErr('学年を選択してください');return;}
-    await doRegister(username,pass,gen);
+    await doRegister(username,pass);
   } else {
     await doLogin(username,pass);
   }
 }
 
-async function doRegister(username,pass,gen){
+async function doRegister(username,pass){
   const btn=document.getElementById('authSubmitBtn');btn.textContent='登録中...';btn.disabled=true;
   try{
     const hash=await hashPass(pass);
     if(db){
       const snap=await db.ref('users/'+username).once('value');
       if(snap.exists()){showAuthErr('このユーザー名はすでに使われています');return;}
-      await db.ref('users/'+username).set({username,hash,displayName:username,bio:'',avatar:'',gen:gen||'',created:Date.now()});
+      await db.ref('users/'+username).set({username,hash,displayName:username,bio:'',avatar:'',created:Date.now()});
     }
-    saveSession({uid:username,username,displayName:username,gen:gen||''});
+    saveSession({uid:username,username,displayName:username});
     updateHeaderUI();checkAdminRole();
     showToast('アカウントを作成しました！');
     closeAuthModal();loadNews();
@@ -727,7 +707,7 @@ async function doLogin(username,pass){
     let stored=null;
     if(db){const snap=await db.ref('users/'+username).once('value');stored=snap.val();}
     if(!stored||stored.hash!==hash){showAuthErr('ユーザー名またはパスワードが間違っています');return;}
-    saveSession({uid:username,username,displayName:stored.displayName||username,gen:stored.gen||''});
+    saveSession({uid:username,username,displayName:stored.displayName||username});
     if(stored.avatar){try{localStorage.setItem('fm_avatar_'+username,stored.avatar);}catch(e){}}
     updateHeaderUI();checkAdminRole();
     showToast('ログインしました！');
@@ -866,10 +846,7 @@ let _deferredInstallPrompt = null;
 
 function initPWA() {
   if (!('serviceWorker' in navigator)) return;
-
   navigator.serviceWorker.register('/sw.js').then(reg => {
-    console.log('[SW] registered:', reg.scope);
-    // Check for updates
     reg.addEventListener('updatefound', () => {
       const newWorker = reg.installing;
       newWorker.addEventListener('statechange', () => {
@@ -880,17 +857,14 @@ function initPWA() {
     });
   }).catch(e => console.warn('[SW] registration failed:', e));
 
-  // Listen for install prompt (Android Chrome)
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     _deferredInstallPrompt = e;
-    // Show banner if not dismissed before
     if (!localStorage.getItem('pwa_dismissed')) {
       document.getElementById('pwaBanner').classList.add('show');
     }
   });
 
-  // Hide banner after install
   window.addEventListener('appinstalled', () => {
     document.getElementById('pwaBanner').classList.remove('show');
     _deferredInstallPrompt = null;
@@ -908,7 +882,6 @@ function installPWA() {
       _deferredInstallPrompt = null;
     });
   } else {
-    // iOS instructions
     showToast('Safari の「共有」→「ホーム画面に追加」でインストールできます');
     document.getElementById('pwaBanner').classList.remove('show');
   }
@@ -919,7 +892,6 @@ function dismissPWA() {
   localStorage.setItem('pwa_dismissed', '1');
 }
 
-// ── iOS: Show install hint if in Safari and not standalone ──
 function checkIOSInstall() {
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -931,13 +903,8 @@ function checkIOSInstall() {
 // ── Push Notifications ──
 function initNotifBar() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') {
-    // Already granted — subscribe silently
-    subscribePush();
-    return;
-  }
+  if (Notification.permission === 'granted') { subscribePush(); return; }
   if (Notification.permission === 'denied') return;
-  // Show bar if not dismissed
   if (!localStorage.getItem('notif_dismissed') && session) {
     document.getElementById('notifBar').classList.add('show');
   }
@@ -965,38 +932,25 @@ async function subscribePush() {
   try {
     const reg = await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
-    if (existing) return; // Already subscribed
-    // Note: In production, replace with your real VAPID public key
-    // For now we just subscribe without VAPID (works for local push triggers)
+    if (existing) return;
   } catch(e) { console.warn('[Push] subscribe error:', e); }
 }
 
-// ── Firebase: Watch for new news and notify ──
+// ── Firebase: Watch for new news ──
 let _latestNewsTs = 0;
 let _newsWatchActive = false;
 
 function startNewsWatch() {
   if (!db || _newsWatchActive) return;
   _newsWatchActive = true;
-
-  // Get current latest timestamp first
   db.ref('news').orderByChild('ts').limitToLast(1).once('value').then(snap => {
     const data = snap.val();
-    if (data) {
-      const entries = Object.values(data);
-      _latestNewsTs = entries[0].ts || 0;
-    }
-
-    // Now watch for new additions
+    if (data) { const entries = Object.values(data); _latestNewsTs = entries[0].ts || 0; }
     db.ref('news').orderByChild('ts').startAfter(_latestNewsTs).on('child_added', snap => {
       const n = snap.val();
       if (!n || n.ts <= _latestNewsTs) return;
       _latestNewsTs = n.ts;
-
-      // Reload news list
       loadNews();
-
-      // Show notification if permission granted and page not in focus
       if (Notification.permission === 'granted' && document.visibilityState !== 'visible') {
         sendLocalNotification(n.title || 'お知らせ', n.content ? n.content.slice(0, 80) : '新しいお知らせがあります');
       } else if (document.visibilityState === 'visible') {
@@ -1011,13 +965,8 @@ async function sendLocalNotification(title, body) {
   try {
     const reg = await navigator.serviceWorker.ready;
     reg.showNotification('HGHome — ' + title, {
-      body: body,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      tag: 'hghome-news',
-      renotify: true,
-      vibrate: [200, 100, 200],
-      data: { url: '/' }
+      body, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png',
+      tag: 'hghome-news', renotify: true, vibrate: [200, 100, 200], data: { url: '/' }
     });
   } catch(e) { console.warn('[Notif]', e); }
 }
@@ -1029,7 +978,6 @@ window.addEventListener('DOMContentLoaded', function() {
   loadNews().then(() => startNewsWatch());
   initPWA();
   checkIOSInstall();
-  // Show notif bar after short delay (after login state is known)
   setTimeout(initNotifBar, 1200);
 });
 </script>
