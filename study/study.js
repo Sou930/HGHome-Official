@@ -56,10 +56,32 @@ function hashPass(pw){
   return Promise.resolve(sha256(msg));
 }
 
-// ── Session ───────────────────────────────────────────
-function saveSession(d){ try{ localStorage.setItem('hgs_sess',JSON.stringify(d)); document.cookie=`hgs_sess=${encodeURIComponent(JSON.stringify(d))};path=/;max-age=2592000`; }catch(e){} }
-function loadSession(){ try{ const s=localStorage.getItem('hgs_sess'); if(s)return JSON.parse(s); const m=document.cookie.match(/(?:^|; )hgs_sess=([^;]*)/); if(m)return JSON.parse(decodeURIComponent(m[1])); }catch(e){} return null; }
-function clearSession(){ try{localStorage.removeItem('hgs_sess');}catch(e){} document.cookie='hgs_sess=;path=/;max-age=0'; }
+// ── Session (HGHome/HGStudy 共通キー) ─────────────────
+function saveSession(d){
+  try{
+    const str=JSON.stringify(d);
+    localStorage.setItem('hg_session_ls',str);
+    localStorage.setItem('hgs_sess',str);
+    const exp='; expires='+new Date(Date.now()+30*864e5).toUTCString();
+    const sec=location.protocol==='https:'?'; Secure':'';
+    document.cookie='hg_session='+encodeURIComponent(str)+exp+'; path=/; SameSite=Lax'+sec;
+    document.cookie='hgs_sess='+encodeURIComponent(str)+exp+'; path=/; SameSite=Lax'+sec;
+  }catch(e){}
+}
+function loadSession(){
+  try{
+    const n=localStorage.getItem('hg_session_ls'); if(n) return JSON.parse(n);
+    const o=localStorage.getItem('hgs_sess');      if(o) return JSON.parse(o);
+    const mc=document.cookie.match(/(?:^|; )hg_session=([^;]*)/); if(mc) return JSON.parse(decodeURIComponent(mc[1]));
+    const mo=document.cookie.match(/(?:^|; )hgs_sess=([^;]*)/);   if(mo) return JSON.parse(decodeURIComponent(mo[1]));
+  }catch(e){}
+  return null;
+}
+function clearSession(){
+  try{ localStorage.removeItem('hg_session_ls'); localStorage.removeItem('hgs_sess'); }catch(e){}
+  document.cookie='hg_session=;path=/;max-age=0';
+  document.cookie='hgs_sess=;path=/;max-age=0';
+}
 
 // ── App State ─────────────────────────────────────────
 let currentUser    = null;
@@ -413,62 +435,145 @@ document.addEventListener('click',e=>{
   if(m&&b&&!b.contains(e.target)&&!m.contains(e.target)) m.classList.remove('open');
 });
 
-// Profile modal
+// ── Profile ──────────────────────────────────────────
 async function fetchUserProfile(username){
   try{ const s=await db.ref(`users/${username}`).once('value'); return s.val(); }catch(e){return null;}
 }
-function openMyProfile(){ if(!currentSession){openAuthModal('login');return;} showProfileModal(currentSession); }
-window.openMyProfile = openMyProfile;
 
-function showProfileModal(session){
+window.openMyProfile = function(){ if(!currentSession){openAuthModal('login');return;} openProfileModal(currentSession.username); };
+
+// 他ユーザーのプロフィールを開く
+window.openUserProfile = function(username){ openProfileModal(username); };
+
+async function openProfileModal(targetUsername){
   const ex=ge('profileModal'); if(ex) ex.remove();
+
+  // オーバーレイ作成（ローディング状態）
   const ov=document.createElement('div');
   ov.id='profileModal';
-  ov.style.cssText='position:fixed;inset:0;z-index:600;background:rgba(8,13,28,.55);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;';
-  ov.innerHTML=`
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);width:100%;max-width:340px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;font-family:var(--Fb);">
-      <div style="height:5px;background:linear-gradient(90deg,var(--primary),var(--blog))"></div>
-      <button onclick="document.getElementById('profileModal').remove()" style="position:absolute;top:16px;right:14px;width:26px;height:26px;border-radius:var(--r-xs);background:var(--surface2);color:var(--text3);font-size:12px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;">✕</button>
-      <div style="padding:20px 22px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:18px">
-          <canvas id="profileModalAvatar" width="72" height="72" style="border-radius:8px"></canvas>
-          <div style="text-align:center">
-            <div id="pmDispName" style="font-family:var(--Fd);font-weight:800;font-size:18px;color:var(--text)"></div>
-            <div id="pmUsername" style="font-family:var(--Fm);font-size:11px;color:var(--text3);margin-top:3px"></div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px;text-align:center">
-            <div id="pmDecks" style="font-family:var(--Fm);font-size:22px;font-weight:700;color:var(--primary)">—</div>
-            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-top:4px">デッキ</div>
-          </div>
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px;text-align:center">
-            <div id="pmPosts" style="font-family:var(--Fm);font-size:22px;font-weight:700;color:var(--blog)">—</div>
-            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-top:4px">記事</div>
-          </div>
-        </div>
-        <div id="pmBio" style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:16px;line-height:1.6"></div>
-        <button onclick="document.getElementById('profileModal').remove()" style="width:100%;padding:10px;border-radius:var(--r-xs);background:var(--primary);color:#fff;font-weight:700;font-size:13px;border:none;cursor:pointer;font-family:var(--Fb)">閉じる</button>
-      </div>
-    </div>`;
+  ov.style.cssText='position:fixed;inset:0;z-index:600;background:rgba(8,13,28,.6);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
+  ov.innerHTML=`<div id="pmCard" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.4);font-family:var(--Fb);">
+    <div style="height:4px;background:linear-gradient(90deg,var(--primary),var(--blog),#F6C344)"></div>
+    <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">読み込み中...</div>
+  </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
 
-  const av=localStorage.getItem('fm_avatar_'+session.username)||null;
-  drawAvatar(ge('profileModalAvatar'), session.username, av, 72);
-  ge('pmDispName').textContent = session.username;
-  ge('pmUsername').textContent = '@'+session.username;
-  ge('pmDecks').textContent = Object.keys(decks).length;
+  // データ並列取得
+  const isSelf = currentSession && currentSession.username === targetUsername;
+  let profileData={}, followerSnap=null, followingSnap=null, deckSnap=null, amFollowing=false;
 
-  const postCount = Object.values(allPosts).filter(p=>p.author===session.username).length;
-  ge('pmPosts').textContent = postCount;
+  try{
+    const [pSnap, fwSnap, fgSnap, dSnap] = await Promise.all([
+      db.ref(`users/${targetUsername}`).once('value'),
+      db.ref(`follows/${targetUsername}/followers`).once('value'),
+      db.ref(`follows/${targetUsername}/following`).once('value'),
+      db.ref(`decks/${targetUsername}`).once('value'),
+    ]);
+    profileData = pSnap.val() || {};
+    followerSnap = fwSnap.val() || {};
+    followingSnap = fgSnap.val() || {};
+    deckSnap = dSnap.val() || {};
+    if(currentSession && !isSelf){
+      const amSnap = await db.ref(`follows/${targetUsername}/followers/${currentSession.username}`).once('value');
+      amFollowing = amSnap.val() === true;
+    }
+  }catch(e){}
 
-  fetchUserProfile(session.username).then(p=>{
-    if(!p) return;
-    if(p.bio) ge('pmBio').textContent = p.bio;
-    if(p.displayName) ge('pmDispName').textContent = p.displayName;
-  }).catch(()=>{});
+  const followerCount = Object.keys(followerSnap).length;
+  const followingCount = Object.keys(followingSnap).length;
+  const deckList = Object.entries(deckSnap);
+  const postCount = Object.values(allPosts).filter(p=>p.author===targetUsername).length;
+  const displayName = profileData.displayName || targetUsername;
+  const bio = profileData.bio || '';
+  const av = localStorage.getItem('fm_avatar_'+targetUsername) || (profileData.avatar||null);
+
+  // デッキカード HTML
+  const decksHTML = deckList.length === 0
+    ? `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">デッキがありません</div>`
+    : deckList.map(([id,dk])=>{
+        const cardCount = dk.cards ? Object.keys(dk.cards).length : 0;
+        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px">${esc(dk.name||'無題')}</div>
+          <div style="font-size:11px;color:var(--text3)">${cardCount} カード</div>
+        </div>`;
+      }).join('');
+
+  // フォローボタン
+  const followBtnHTML = (!currentSession || isSelf) ? '' : `
+    <button id="pmFollowBtn" onclick="toggleFollow('${targetUsername}')"
+      style="padding:7px 22px;border-radius:99px;font-weight:700;font-size:12px;cursor:pointer;border:1.5px solid ${amFollowing?'var(--border)':'var(--primary)'};background:${amFollowing?'transparent':'var(--primary)'};color:${amFollowing?'var(--text2)':'#fff'};font-family:var(--Fb);transition:all .18s;">
+      ${amFollowing?'フォロー中':'フォローする'}
+    </button>`;
+
+  ge('pmCard').innerHTML = `
+    <div style="height:4px;background:linear-gradient(90deg,var(--primary),var(--blog),#F6C344)"></div>
+    <button onclick="document.getElementById('profileModal').remove()" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:8px;background:var(--surface2);color:var(--text3);font-size:13px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;z-index:1;">✕</button>
+    <div style="position:relative;">
+
+      <!-- ヘッダー -->
+      <div style="padding:28px 24px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+        <canvas id="pmAvatarCanvas" width="80" height="80" style="border-radius:12px;flex-shrink:0"></canvas>
+        <div style="text-align:center">
+          <div style="font-family:var(--Fd);font-weight:800;font-size:20px;color:var(--text);line-height:1.2" id="pmDispName">${esc(displayName)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px">@${esc(targetUsername)}</div>
+          ${bio ? `<div style="font-size:13px;color:var(--text2);margin-top:8px;line-height:1.6;max-width:280px">${esc(bio)}</div>` : ''}
+        </div>
+        ${followBtnHTML}
+      </div>
+
+      <!-- 統計 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)">
+        ${[
+          ['フォロワー', followerCount, 'var(--primary)'],
+          ['フォロー中', followingCount, 'var(--blog)'],
+          ['デッキ', deckList.length, '#F6C344'],
+          ['記事', postCount, '#52C4A3'],
+        ].map(([lbl,val,col])=>`
+          <div style="padding:14px 8px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-family:var(--Fm);font-size:20px;font-weight:700;color:${col}">${val}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.3px">${lbl}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- デッキ一覧 -->
+      <div style="padding:16px 20px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px">公開デッキ</div>
+        <div style="display:grid;gap:8px;max-height:200px;overflow-y:auto">${decksHTML}</div>
+      </div>
+
+      <!-- 閉じる -->
+      <div style="padding:0 20px 20px">
+        <button onclick="document.getElementById('profileModal').remove()" style="width:100%;padding:10px;border-radius:8px;background:var(--surface2);color:var(--text2);font-weight:700;font-size:13px;border:1px solid var(--border);cursor:pointer;font-family:var(--Fb)">閉じる</button>
+      </div>
+    </div>`;
+
+  // アバター描画
+  drawAvatar(ge('pmAvatarCanvas'), targetUsername, av, 80);
 }
+
+// ── フォロー / アンフォロー ────────────────────────────
+window.toggleFollow = async function(targetUsername){
+  if(!currentSession){ openAuthModal('login'); return; }
+  const me = currentSession.username;
+  const btn = ge('pmFollowBtn');
+  const amSnap = await db.ref(`follows/${targetUsername}/followers/${me}`).once('value');
+  const am = amSnap.val() === true;
+
+  if(am){
+    // アンフォロー
+    await db.ref(`follows/${targetUsername}/followers/${me}`).remove();
+    await db.ref(`follows/${me}/following/${targetUsername}`).remove();
+    if(btn){ btn.textContent='フォローする'; btn.style.background='var(--primary)'; btn.style.color='#fff'; btn.style.borderColor='var(--primary)'; }
+    showToast(`@${targetUsername} のフォローを解除しました`);
+  } else {
+    // フォロー
+    await db.ref(`follows/${targetUsername}/followers/${me}`).set(true);
+    await db.ref(`follows/${me}/following/${targetUsername}`).set(true);
+    if(btn){ btn.textContent='フォロー中'; btn.style.background='transparent'; btn.style.color='var(--text2)'; btn.style.borderColor='var(--border)'; }
+    showToast(`@${targetUsername} をフォローしました`);
+  }
+};
 
 // Auth modal
 let authMode='login';
