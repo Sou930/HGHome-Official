@@ -6,297 +6,586 @@
   <title>HGStudy</title>
   <meta name="description" content="HGStudy — フラッシュカードと解説ブログで学習">
   <meta name="theme-color" content="#0D1120">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="HGStudy">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <link rel="stylesheet" href="study.css">
   <style>
-/* ═══════════════════════════════════════════════════════
-   Deck Browser — ブログデザインに統合
-═══════════════════════════════════════════════════════ */
-:root{
-  --cyan:#00BFFF;--cyan2:#0099CC;
+/* ══════════════════════════════════════════════════════
+   Deck Browser — ブログデザイン統合
+══════════════════════════════════════════════════════ */
+
+/* カテゴリ横スクロール */
+.cat-scroll {
+  display: flex; gap: 7px; padding: 10px 16px 8px;
+  overflow-x: auto; scrollbar-width: none;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-pill {
+  flex-shrink: 0; padding: 5px 14px; border-radius: 99px;
+  font-size: 11px; font-weight: 700; cursor: pointer; border: none;
+  background: var(--surface2); color: var(--text3);
+  transition: all .15s; white-space: nowrap; font-family: var(--Fb);
+}
+.cat-pill.on { background: var(--primary); color: #fff; }
+.cat-pill:hover:not(.on) { color: var(--text); }
+
+/* デッキヒーロー */
+.deck-hero {
+  padding: 28px 24px 20px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  position: relative; overflow: hidden;
+}
+.deck-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, #0044C0 0%, #002080 100%); z-index: 0;
+}
+[data-theme="dark"] .deck-hero::before {
+  background: linear-gradient(135deg, #0D2A5C 0%, #060E28 100%);
+}
+.deck-hero::after {
+  content: ''; position: absolute; right: -60px; top: -60px;
+  width: 260px; height: 260px; border-radius: 50%;
+  border: 60px solid rgba(255,255,255,.05); z-index: 0;
+}
+.deck-hero-inner { position: relative; z-index: 1; color: #fff; }
+.deck-hero-badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--Fm); font-size: 9px; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 99px;
+  background: rgba(255,255,255,.15); margin-bottom: 8px;
+}
+.deck-hero-title {
+  font-family: var(--Fd); font-size: clamp(22px, 5vw, 36px);
+  font-weight: 800; line-height: 1.05; letter-spacing: -.3px; margin-bottom: 4px;
+}
+.deck-hero-sub { font-size: 13px; opacity: .7; }
+.deck-hero-count {
+  font-family: var(--Fm); font-size: clamp(44px, 8vw, 68px);
+  font-weight: 700; color: rgba(255,255,255,.1);
+  line-height: 1; position: relative; z-index: 1; flex-shrink: 0;
 }
 
-/* ── カテゴリ横スクロール ── */
-.cat-scroll{
-  display:flex;gap:7px;padding:10px 16px 8px;
-  overflow-x:auto;scrollbar-width:none;
-  background:var(--surface);border-bottom:1px solid var(--border);
+/* ツールバー */
+.deck-toolbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+.deck-toolbar-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 18px;
 }
-.cat-scroll::-webkit-scrollbar{display:none}
-.cat-pill{
-  flex-shrink:0;padding:5px 14px;border-radius:99px;
-  font-size:11px;font-weight:700;cursor:pointer;border:none;
-  background:var(--surface2);color:var(--text3);
-  transition:all .15s;white-space:nowrap;font-family:var(--Fb);
-}
-.cat-pill.on{background:var(--primary);color:#fff;}
-.cat-pill:hover:not(.on){color:var(--text);}
-
-/* ── デッキヒーロー (blog-heroと同じ構造) ── */
-.deck-hero{
-  background:var(--primary);padding:28px 24px 20px;
-  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
-  position:relative;overflow:hidden;
-}
-.deck-hero::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,#0044C0 0%,#002080 100%);z-index:0;
-}
-[data-theme="dark"] .deck-hero::before{
-  background:linear-gradient(135deg,#0D2A5C 0%,#060E28 100%);
-}
-.deck-hero::after{
-  content:'';position:absolute;right:-60px;top:-60px;
-  width:260px;height:260px;border-radius:50%;
-  border:60px solid rgba(255,255,255,.05);z-index:0;
-}
-.deck-hero-inner{position:relative;z-index:1;color:#fff;}
-.deck-hero-badge{
-  display:inline-flex;align-items:center;
-  font-family:var(--Fm);font-size:9px;font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;
-  padding:4px 10px;border-radius:99px;
-  background:rgba(255,255,255,.15);margin-bottom:8px;
-}
-.deck-hero-title{
-  font-family:var(--Fd);font-size:clamp(22px,5vw,36px);
-  font-weight:800;line-height:1.05;letter-spacing:-.3px;margin-bottom:4px;
-}
-.deck-hero-sub{font-size:13px;opacity:.7;}
-.deck-hero-count{
-  font-family:var(--Fm);font-size:clamp(44px,8vw,68px);
-  font-weight:700;color:rgba(255,255,255,.1);
-  line-height:1;position:relative;z-index:1;flex-shrink:0;
+.deck-count-badge {
+  font-family: var(--Fm); font-size: 11px; color: var(--text3);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 3px 10px; border-radius: 99px;
 }
 
-/* ── デッキツールバー ── */
-.deck-toolbar{
-  background:var(--surface);border-bottom:1px solid var(--border);
+/* グリッド */
+.deck-grid-wrap { max-width: 1000px; margin: 0 auto; padding: 18px; }
+.deck-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
 }
-.deck-toolbar-bar{
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  padding:10px 18px;
+.deck-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; }
+.deck-empty .empty-emoji { font-size: 36px; margin-bottom: 10px; }
+.deck-empty p { font-size: 14px; color: var(--text3); }
+
+/* デッキカード */
+.deck-card-new {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 18px;
+  transition: transform .18s, box-shadow .18s;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
 }
-.deck-count-badge{
-  font-family:var(--Fm);font-size:11px;color:var(--text3);
-  background:var(--surface2);border:1px solid var(--border);
-  padding:3px 10px;border-radius:99px;white-space:nowrap;
+.deck-card-new::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--primary); transform: scaleX(0); transform-origin: left; transition: transform .2s;
+}
+.deck-card-new:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.deck-card-new:hover::after { transform: scaleX(1); }
+.dc-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; margin-bottom: 8px;
+}
+.dc-tag {
+  display: inline-flex; align-items: center;
+  font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: var(--r-xs); flex-shrink: 0;
+}
+.dc-owner-btns { display: flex; gap: 4px; }
+.dc-action-mini {
+  padding: 3px 9px; border-radius: var(--r-xs); font-size: 10px; font-weight: 700;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text3); cursor: pointer; transition: all .1s; white-space: nowrap;
+}
+.dc-action-mini:hover { background: var(--primary-l); color: var(--primary); border-color: var(--primary); }
+.dc-action-mini.danger:hover { background: #FFF0F0; color: #E03030; border-color: #E03030; }
+[data-theme="dark"] .dc-action-mini.danger:hover { background: #200808; color: #FF6060; }
+.dc-title-new {
+  font-family: var(--Fd); font-size: 17px; font-weight: 700;
+  line-height: 1.3; color: var(--text); margin-bottom: 6px;
+}
+.dc-desc-new {
+  font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dc-meta-new {
+  font-size: 11px; color: var(--text3);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 12px; margin-top: auto;
+}
+.dc-author-new { color: var(--primary); font-weight: 600; cursor: pointer; }
+.dc-author-new:hover { text-decoration: underline; }
+.dc-actions-new {
+  display: flex; gap: 8px; align-items: center;
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+.study-start-btn-new {
+  flex: 1; padding: 9px; background: var(--primary);
+  color: #fff; border: none; border-radius: var(--r-xs);
+  font-weight: 800; font-size: 13px; cursor: pointer;
+  font-family: var(--Fb); transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.study-start-btn-new:hover { background: var(--primary-d); }
+.fav-btn-new {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 13px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  color: var(--text3); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--Fb); transition: all .15s; white-space: nowrap;
+}
+.fav-btn-new.on { color: #F59E0B; border-color: #F59E0B; background: rgba(245,158,11,.1); }
+
+/* もっと読み込む */
+.load-more-wrap { grid-column: 1 / -1; text-align: center; padding: 20px 0; }
+.load-more-btn {
+  padding: 12px 32px; border-radius: 99px;
+  border: 1.5px solid var(--border); background: var(--surface2);
+  color: var(--text2); font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: var(--Fb); transition: all .15s;
+}
+.load-more-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-l); }
+
+/* セッションバー */
+.sess-bar {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 56px; z-index: 10;
+}
+.sess-deckname {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.back-list-btn, .edit-deck-btn {
+  padding: 7px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text2); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--Fb); white-space: nowrap;
+}
+.edit-deck-btn { display: none; }
+
+/* ══════════════════════════════════════════════════════
+   学習モード選択モーダル
+══════════════════════════════════════════════════════ */
+.mode-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 600;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(10px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.mode-modal-overlay.open { display: flex; }
+.mode-modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; width: 100%; max-width: 420px;
+  overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  animation: fadeUp .2s ease;
+}
+.mode-modal-head {
+  padding: 24px 24px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.mode-modal-deck {
+  font-family: var(--Fd); font-size: 19px; font-weight: 800;
+  color: var(--text); margin-bottom: 4px;
+}
+.mode-modal-sub { font-size: 12px; color: var(--text3); font-family: var(--Fm); }
+.mode-modal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 10px; }
+.mode-btn {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--surface2);
+  cursor: pointer; transition: all .15s; text-align: left; width: 100%;
+}
+.mode-btn:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-l); transform: translateX(3px); }
+.mode-btn:disabled { opacity: .35; cursor: not-allowed; }
+.mode-btn-icon { font-size: 28px; flex-shrink: 0; }
+.mode-btn-info { flex: 1; }
+.mode-btn-label {
+  font-family: var(--Fd); font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px;
+}
+.mode-btn-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+.mode-btn-arrow { color: var(--text3); font-size: 16px; }
+.mode-btn:hover:not(:disabled) .mode-btn-arrow { color: var(--primary); }
+
+/* ══════════════════════════════════════════════════════
+   4択クイズ
+══════════════════════════════════════════════════════ */
+#quizArea { display: none; }
+.quiz-card-wrap {
+  max-width: 580px; margin: 0 auto; padding: 20px 16px;
+}
+.quiz-progress-wrap { margin-bottom: 16px; }
+.quiz-progress-bar-outer {
+  height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-bottom: 6px;
+}
+.quiz-progress-bar-inner {
+  height: 100%; background: linear-gradient(90deg, var(--blog), var(--primary));
+  border-radius: 2px; transition: width .4s ease;
+}
+.quiz-progress-text { font-family: var(--Fm); font-size: 11px; color: var(--text3); text-align: center; }
+.quiz-question-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 32px 28px 24px;
+  text-align: center; margin-bottom: 18px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.quiz-question-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--blog), var(--primary));
+}
+.quiz-q-label {
+  font-family: var(--Fm); font-size: 9px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase; color: var(--blog);
+  margin-bottom: 14px;
+}
+.quiz-question-text {
+  font-family: var(--Fd); font-size: clamp(18px, 4vw, 28px);
+  font-weight: 800; color: var(--text); line-height: 1.3;
+}
+.quiz-choices {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 16px;
+}
+@media(max-width:480px) { .quiz-choices { grid-template-columns: 1fr; } }
+.quiz-choice {
+  padding: 14px 16px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--surface2);
+  color: var(--text); font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: var(--Fb); transition: all .14s;
+  text-align: left; line-height: 1.4; min-height: 52px;
+}
+.quiz-choice:hover:not(:disabled) { border-color: var(--blog); background: var(--blog-l); color: var(--blog); }
+.quiz-choice:disabled { cursor: not-allowed; }
+.quiz-choice.correct { border-color: var(--green) !important; background: var(--green-l) !important; color: var(--green) !important; font-weight: 800; }
+.quiz-choice.wrong   { border-color: #E03030 !important; background: #FFF0F0 !important; color: #E03030 !important; }
+[data-theme="dark"] .quiz-choice.wrong { background: #200808 !important; color: #FF6060 !important; }
+.quiz-result {
+  font-size: 14px; font-weight: 700; text-align: center;
+  min-height: 22px; padding: 4px 0; margin-bottom: 8px;
+}
+.quiz-result.correct-msg { color: var(--green); }
+.quiz-result.wrong-msg   { color: #E03030; }
+[data-theme="dark"] .quiz-result.wrong-msg { color: #FF6060; }
+.quiz-next-btn {
+  width: 100%; padding: 13px; background: var(--primary);
+  color: #fff; border: none; border-radius: var(--r-xs);
+  font-weight: 800; font-size: 14px; cursor: pointer;
+  font-family: var(--Fb); transition: all .15s;
+}
+.quiz-next-btn:hover { background: var(--primary-d); }
+
+/* ══════════════════════════════════════════════════════
+   デッキ編集ページ
+══════════════════════════════════════════════════════ */
+#pageDeckEdit {
+  min-height: 100vh; background: var(--bg);
+}
+.edit-page-bar {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.edit-page-bar-title {
+  font-family: var(--Fd); font-size: 16px; font-weight: 800;
+  color: var(--text); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.edit-page-body {
+  max-width: 720px; margin: 0 auto; padding: 24px 18px 60px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.edit-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); overflow: hidden;
+}
+.edit-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.edit-section-title {
+  font-family: var(--Fd); font-size: 14px; font-weight: 800; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.edit-section-body { padding: 18px; }
+.ep-field { margin-bottom: 16px; }
+.ep-label { font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.ep-input-full {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 14px;
+  padding: 10px 13px; font-family: var(--Fb); outline: none; box-sizing: border-box;
+}
+.ep-input-full:focus { border-color: var(--primary); }
+.ep-textarea { resize: vertical; min-height: 72px; font-size: 13px; }
+.ep-cats { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* カード一覧 */
+.ep-card-list { display: flex; flex-direction: column; gap: 8px; }
+.ep-card-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; transition: border-color .15s;
+}
+.ep-card-item:hover { border-color: rgba(0,88,230,.3); }
+.ep-display {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+}
+.ep-texts { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.ep-front { font-size: 13px; font-weight: 700; color: var(--text); }
+.ep-arrow { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.ep-back { font-size: 12px; color: var(--text3); }
+.ep-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.ep-btn-edit, .ep-btn-del {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; cursor: pointer; border: none; transition: all .12s;
+}
+.ep-btn-edit { background: var(--primary-l); color: var(--primary); }
+.ep-btn-edit:hover { background: var(--primary); color: #fff; }
+.ep-btn-del { background: transparent; color: var(--text3); }
+.ep-btn-del:hover { background: #FFF0F0; color: #E03030; }
+[data-theme="dark"] .ep-btn-del:hover { background: #200808; color: #FF6060; }
+.ep-editor { padding: 12px 14px; border-top: 1px solid var(--border); background: var(--surface); }
+.ep-editor-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ep-editor-input {
+  flex: 1; min-width: 120px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 13px; padding: 8px 11px;
+  font-family: var(--Fb); outline: none;
+}
+.ep-editor-input:focus { border-color: var(--primary); }
+.ep-editor-btns { display: flex; gap: 6px; }
+.ep-save-btn {
+  padding: 8px 16px; background: var(--primary); color: #fff;
+  border: none; border-radius: 7px; font-weight: 800; font-size: 12px;
+  cursor: pointer; font-family: var(--Fb);
+}
+.ep-cancel-btn {
+  padding: 8px 12px; background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 7px;
+  font-weight: 700; font-size: 12px; cursor: pointer; font-family: var(--Fb);
 }
 
-/* ── デッキグリッド ── */
-.deck-grid-wrap{max-width:1000px;margin:0 auto;padding:18px;}
-.deck-posts-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:14px;
+/* カード追加フォーム */
+.ep-add-form { padding: 18px; border-top: 1px solid var(--border); background: var(--surface2); }
+.ep-add-label { font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--primary); margin-bottom: 10px; }
+.ep-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ep-add-input {
+  flex: 1; min-width: 120px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 13px; padding: 9px 12px;
+  font-family: var(--Fb); outline: none;
 }
-.deck-empty{
-  grid-column:1/-1;text-align:center;padding:60px 20px;
+.ep-add-input:focus { border-color: var(--primary); }
+.ep-add-btn {
+  padding: 9px 18px; background: var(--primary); color: #fff;
+  border: none; border-radius: 8px; font-weight: 800; font-size: 13px;
+  cursor: pointer; font-family: var(--Fb); white-space: nowrap;
 }
-.deck-empty .empty-emoji{font-size:36px;margin-bottom:10px;}
-.deck-empty p{font-size:14px;color:var(--text3);}
+.ep-add-btn:hover { background: var(--primary-d); }
+.ep-empty { font-size: 13px; color: var(--text3); text-align: center; padding: 24px 0; }
+.ep-danger-zone { margin-top: 8px; }
+.ep-danger-btn {
+  width: 100%; padding: 11px; border: 1px solid rgba(220,50,50,.3);
+  background: transparent; border-radius: 8px; color: rgba(220,80,80,.8);
+  font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--Fb); transition: all .15s;
+}
+.ep-danger-btn:hover { background: rgba(220,50,50,.08); border-color: rgba(220,50,50,.6); }
 
-/* ── デッキカード (ブログカードと同構造) ── */
-.deck-card-new{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:18px;
-  transition:transform .18s,box-shadow .18s;
-  position:relative;overflow:hidden;
-  display:flex;flex-direction:column;gap:0;
+/* ══════════════════════════════════════════════════════
+   プロフィールページ
+══════════════════════════════════════════════════════ */
+#pageProfile { min-height: 100vh; background: var(--bg); }
+.profile-bar {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
 }
-.deck-card-new::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--primary);
-  transform:scaleX(0);transform-origin:left;transition:transform .2s;
-}
-.deck-card-new:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
-.deck-card-new:hover::after{transform:scaleX(1);}
+.profile-bar-title { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+.profile-loading { padding: 80px; text-align: center; }
 
-.dc-card-top{
-  display:flex;align-items:flex-start;
-  justify-content:space-between;gap:8px;margin-bottom:8px;
+.profile-hero {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 28px 24px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
 }
-.dc-tag{
-  display:inline-flex;align-items:center;
-  font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
-  padding:3px 8px;border-radius:var(--r-xs);flex-shrink:0;
+.profile-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--primary-l) 0%, transparent 60%);
+  pointer-events: none;
 }
-.dc-owner-btns{display:flex;gap:4px;}
-.dc-action-mini{
-  padding:3px 9px;border-radius:var(--r-xs);font-size:10px;font-weight:700;
-  border:1px solid var(--border);background:var(--surface2);
-  color:var(--text3);cursor:pointer;transition:all .1s;white-space:nowrap;
+[data-theme="dark"] .profile-hero::before {
+  background: linear-gradient(135deg, rgba(56,184,255,.06) 0%, transparent 60%);
 }
-.dc-action-mini:hover{background:var(--primary-l);color:var(--primary);border-color:var(--primary);}
-.dc-action-mini.danger:hover{background:#FFF0F0;color:#E03030;border-color:#E03030;}
-[data-theme="dark"] .dc-action-mini.danger:hover{background:#200808;color:#FF6060;}
+.profile-avatar-canvas {
+  border-radius: 14px; flex-shrink: 0; position: relative; z-index: 1;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+.profile-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.profile-dispname {
+  font-family: var(--Fd); font-size: 22px; font-weight: 800;
+  color: var(--text); line-height: 1.2; margin-bottom: 3px;
+}
+.profile-username { font-family: var(--Fm); font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+.profile-bio { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; max-width: 400px; }
+.profile-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.pbadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; padding: 3px 9px;
+  border-radius: 99px; font-family: var(--Fm);
+}
+.pbadge.fire  { background: rgba(249,115,22,.12); color: #F97316; border: 1px solid rgba(249,115,22,.25); }
+.pbadge.admin { background: rgba(99,102,241,.12); color: #6366F1; border: 1px solid rgba(99,102,241,.25); }
+.pbadge.date  { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+.follow-btn-profile {
+  flex-shrink: 0; padding: 9px 22px; border-radius: 99px;
+  font-weight: 800; font-size: 12px; cursor: pointer;
+  border: 1.5px solid var(--primary); background: var(--primary);
+  color: #fff; font-family: var(--Fb); transition: all .18s;
+  position: relative; z-index: 1;
+}
+.follow-btn-profile.following {
+  background: transparent; color: var(--text2); border-color: var(--border);
+}
+.follow-btn-profile:hover { opacity: .85; }
 
-.dc-title-new{
-  font-family:var(--Fd);font-size:17px;font-weight:700;
-  line-height:1.3;color:var(--text);margin-bottom:6px;
+/* 統計 */
+.profile-stats-row {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  background: var(--surface); border-bottom: 1px solid var(--border);
 }
-.dc-desc-new{
-  font-size:13px;color:var(--text2);line-height:1.5;
-  margin-bottom:8px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+.pstat {
+  padding: 14px 8px; text-align: center;
+  border-right: 1px solid var(--border);
 }
-.dc-meta-new{
-  font-size:11px;color:var(--text3);
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  margin-bottom:12px;margin-top:auto;
-}
-.dc-author-new{
-  color:var(--primary);font-weight:600;cursor:pointer;
-}
-.dc-author-new:hover{text-decoration:underline;}
+.pstat:last-child { border-right: none; }
+.pstat-n { font-family: var(--Fm); font-size: 22px; font-weight: 700; line-height: 1; }
+.pstat-l { font-size: 10px; color: var(--text3); margin-top: 4px; letter-spacing: .3px; }
 
-/* アクション行 */
-.dc-actions-new{
-  display:flex;gap:8px;align-items:center;
-  padding-top:12px;border-top:1px solid var(--border);
-  margin-top:auto;
+/* タブ */
+.profile-tabs-bar {
+  display: flex; background: var(--surface); border-bottom: 1px solid var(--border);
 }
-.study-start-btn-new{
-  flex:1;padding:9px;background:var(--primary);
-  color:#fff;border:none;border-radius:var(--r-xs);
-  font-weight:800;font-size:13px;cursor:pointer;
-  font-family:var(--Fb);transition:all .15s;
-  display:flex;align-items:center;justify-content:center;gap:5px;
+.profile-tab {
+  flex: 1; padding: 12px; font-size: 13px; font-weight: 700; color: var(--text3);
+  cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent;
+  transition: all .14s; font-family: var(--Fb);
 }
-.study-start-btn-new:hover{background:var(--primary-d);}
-.fav-btn-new{
-  display:flex;align-items:center;gap:4px;
-  padding:8px 13px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:var(--r-xs);
-  color:var(--text3);font-size:12px;font-weight:700;
-  cursor:pointer;font-family:var(--Fb);transition:all .15s;
-  white-space:nowrap;
-}
-.fav-btn-new.on{color:#F59E0B;border-color:#F59E0B;background:rgba(245,158,11,.1);}
-.fav-btn-new:hover:not(.on){border-color:rgba(255,255,255,.2);}
+.profile-tab.on { color: var(--primary); border-bottom-color: var(--primary); }
 
-/* ── 学習セッションバー ── */
-.sess-bar{
-  display:flex;align-items:center;gap:10px;padding:10px 16px;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:56px;z-index:10;
+/* コンテンツ */
+.profile-body { max-width: 800px; margin: 0 auto; padding: 18px; }
+.profile-deck-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px;
 }
-.sess-deckname{
-  font-size:14px;font-weight:700;color:var(--text);
-  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.pdeck-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; cursor: pointer; transition: all .15s;
 }
-.back-list-btn,.edit-deck-btn{
-  padding:7px 14px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:8px;
-  color:var(--text2);font-size:12px;font-weight:700;
-  cursor:pointer;font-family:var(--Fb);white-space:nowrap;
+.pdeck-card:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.pdeck-name { font-size: 14px; font-weight: 700; color: var(--text); margin: 6px 0 4px; line-height: 1.3; }
+.pdeck-meta { font-size: 11px; color: var(--text3); }
+.ppost-list { display: flex; flex-direction: column; gap: 10px; }
+.ppost-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; cursor: pointer; transition: all .15s;
 }
-.edit-deck-btn{display:none;}
+.ppost-item:hover { border-color: var(--blog); transform: translateY(-1px); }
+.ppost-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 4px 0 5px; }
+.ppost-meta { font-size: 11px; color: var(--text3); }
+.profile-empty { padding: 48px 0; text-align: center; color: var(--text3); font-size: 14px; }
 
-/* ── デッキモーダル ── */
-.dm-overlay{
-  display:none;position:fixed;inset:0;z-index:700;
-  background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
-  align-items:flex-start;justify-content:center;
-  padding:20px 16px;overflow-y:auto;
+/* ══════════════════════════════════════════════════════
+   デッキ作成モーダル
+══════════════════════════════════════════════════════ */
+.dm-overlay {
+  display: none; position: fixed; inset: 0; z-index: 700;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(8px);
+  align-items: flex-start; justify-content: center;
+  padding: 20px 16px; overflow-y: auto;
 }
-.dm-overlay.open{display:flex;}
-.dm-box{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;width:100%;max-width:520px;margin:auto;
-  box-shadow:0 24px 64px rgba(0,0,0,.5);
+.dm-overlay.open { display: flex; }
+.dm-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; width: 100%; max-width: 480px; margin: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5); animation: fadeUp .2s ease;
 }
-.dm-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 20px 12px;border-bottom:1px solid var(--border);
+.dm-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
 }
-.dm-title{font-size:16px;font-weight:800;color:var(--text);font-family:var(--Fd);}
-.dm-close{
-  width:28px;height:28px;background:var(--surface2);border:none;
-  border-radius:8px;color:var(--text3);font-size:13px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+.dm-title { font-size: 16px; font-weight: 800; color: var(--text); font-family: var(--Fd); }
+.dm-close {
+  width: 28px; height: 28px; background: var(--surface2); border: none;
+  border-radius: 8px; color: var(--text3); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
-.dm-body{padding:18px 20px;}
-.dm-lbl{
-  font-size:11px;font-weight:700;color:var(--text3);
-  text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;
+.dm-body { padding: 18px 20px 22px; }
+.dm-lbl { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+.dm-input, .dm-textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 14px;
+  padding: 9px 13px; margin-bottom: 14px; font-family: var(--Fb); outline: none; box-sizing: border-box;
 }
-.dm-input,.dm-textarea{
-  width:100%;background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;color:var(--text);font-size:14px;
-  padding:9px 13px;margin-bottom:14px;font-family:var(--Fb);outline:none;
-  box-sizing:border-box;
+.dm-textarea { resize: vertical; min-height: 60px; font-size: 13px; }
+.dm-input:focus, .dm-textarea:focus { border-color: var(--primary); }
+.dm-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.dm-cat-btn {
+  padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 700;
+  border: 1.5px solid var(--border); background: transparent; color: var(--text3);
+  cursor: pointer; font-family: var(--Fb); transition: all .12s;
 }
-.dm-textarea{resize:vertical;min-height:60px;font-size:13px;}
-.dm-input:focus,.dm-textarea:focus{border-color:var(--primary);}
-.dm-cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
-.dm-cat-btn{
-  padding:5px 12px;border-radius:99px;font-size:11px;
-  font-weight:700;border:1.5px solid var(--border);
-  background:transparent;color:var(--text3);cursor:pointer;
-  font-family:var(--Fb);transition:all .12s;
+.dm-cat-btn.on { border-color: var(--primary); color: var(--primary); background: var(--primary-l); }
+.dm-save {
+  width: 100%; padding: 12px; background: var(--primary); border: none;
+  border-radius: 8px; color: #fff; font-weight: 800; font-size: 14px;
+  cursor: pointer; font-family: var(--Fb);
 }
-.dm-cat-btn.on{border-color:var(--primary);color:var(--primary);background:var(--primary-l);}
-.dm-save{
-  width:100%;padding:12px;background:var(--primary);border:none;
-  border-radius:8px;color:#fff;font-weight:800;font-size:14px;
-  cursor:pointer;font-family:var(--Fb);margin-top:4px;
-}
-.dm-save:hover{background:var(--primary-d);}
-.dm-danger{
-  width:100%;padding:10px;background:transparent;border:1px solid rgba(255,80,80,.3);
-  border-radius:8px;color:rgba(255,100,100,.8);font-weight:700;font-size:12px;
-  cursor:pointer;font-family:var(--Fb);margin-top:8px;
-}
-.dm-danger:hover{background:rgba(255,80,80,.1);}
-.dm-cards-section{margin-top:20px;padding-top:18px;border-top:1px solid var(--border);}
-.dm-card-item{
-  display:flex;gap:8px;align-items:center;
-  background:var(--surface2);border-radius:8px;
-  padding:8px 12px;margin-bottom:6px;
-}
-.dm-card-f{flex:1;font-size:13px;color:var(--text);}
-.dm-card-b{flex:1;font-size:12px;color:var(--text3);}
-.dm-card-del{
-  width:24px;height:24px;border-radius:6px;
-  background:transparent;border:none;color:var(--text3);
-  font-size:11px;cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-}
-.dm-card-del:hover{background:rgba(255,80,80,.15);color:#FF5050;}
-.dm-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
-.dm-add-input{
-  flex:1;min-width:100px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:8px;
-  color:var(--text);font-size:13px;padding:7px 11px;
-  font-family:var(--Fb);outline:none;
-}
-.dm-add-input:focus{border-color:var(--primary);}
-.dm-add-btn{
-  padding:7px 14px;background:var(--primary);color:#fff;
-  border:none;border-radius:8px;font-weight:800;font-size:12px;
-  cursor:pointer;font-family:var(--Fb);white-space:nowrap;
-}
-.dm-add-btn:hover{background:var(--primary-d);}
+.dm-save:hover { background: var(--primary-d); }
 
-@media(max-width:640px){
-  .deck-posts-grid{grid-template-columns:1fr;padding:12px;}
-  .deck-grid-wrap{padding:0;}
-  .deck-hero{padding:18px 14px 14px;}
-  .deck-hero-count{display:none;}
+/* ══════════════════════════════════════════════════════
+   Responsive
+══════════════════════════════════════════════════════ */
+@media(max-width:640px) {
+  .deck-hero-count { display: none; }
+  .deck-grid-wrap { padding: 10px; }
+  .deck-posts-grid { grid-template-columns: 1fr; }
+  .profile-hero { padding: 20px 16px; }
+  .profile-dispname { font-size: 18px; }
+  .profile-stats-row .pstat-n { font-size: 18px; }
+  .edit-page-body { padding: 14px 12px 48px; }
+  .quiz-choices { grid-template-columns: 1fr; }
 }
   </style>
 </head>
 <body>
 <div class="bg-mesh"><div class="bg-static"></div></div>
 
-<!-- NAV -->
+<!-- ══════════ NAV ══════════ -->
 <nav>
   <a href="../index.html" class="nav-logo"><span class="accent">←</span> HGHome</a>
-  <div class="nav-tabs">
+  <div class="nav-tabs" id="navTabsWrap">
     <button class="nav-tab on" id="tabStudy" onclick="switchTab('study')">学習</button>
     <button class="nav-tab"   id="tabBlog"  onclick="switchTab('blog')">解説ブログ</button>
   </div>
@@ -325,7 +614,7 @@
   </div>
 </nav>
 
-<!-- AUTH MODAL -->
+<!-- ══════════ AUTH MODAL ══════════ -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
     <button class="modal-close" onclick="closeAuthModal()">✕</button>
@@ -342,49 +631,80 @@
       </div>
       <div class="form-error" id="authError"></div>
       <button class="btn btn-primary" id="authSubmitBtn" type="submit">[ ログイン ]</button>
-      <p class="auth-switch" id="authSwitchText">アカウントをお持ちでない方は<a onclick="switchAuthMode()">こちら</a></p>
+      <p class="auth-switch" id="authSwitchText">
+        アカウントをお持ちでない方は<a onclick="switchAuthMode()">こちら</a>
+      </p>
     </form>
   </div>
 </div>
 
-<!-- DECK MODAL -->
+<!-- ══════════ DECK CREATE MODAL ══════════ -->
 <div class="dm-overlay" id="deckModal">
   <div class="dm-box">
     <div class="dm-head">
-      <div class="dm-title" id="deckModalTitle">デッキを作る</div>
+      <div class="dm-title">デッキを作る</div>
       <button class="dm-close" onclick="closeDeckModal()">✕</button>
     </div>
     <div class="dm-body">
       <div class="dm-lbl">タイトル</div>
       <input class="dm-input" id="dmName" placeholder="例: 不定詞">
-
       <div class="dm-lbl">説明（任意）</div>
       <textarea class="dm-textarea" id="dmDesc" placeholder="このデッキの内容を簡単に..."></textarea>
-
       <div class="dm-lbl">カテゴリ</div>
       <div class="dm-cats" id="dmCats"></div>
-
-      <button class="dm-save" id="dmSaveBtn" onclick="saveDeckFromModal()">💾 保存する</button>
-      <button class="dm-danger" id="dmDeleteBtn" onclick="deleteDeckFromModal()" style="display:none">🗑️ このデッキを削除</button>
-
-      <!-- カード一覧（編集時のみ） -->
-      <div class="dm-cards-section" id="dmCardsSection" style="display:none">
-        <div class="dm-lbl" style="margin-bottom:10px">カード一覧</div>
-        <div id="dmCardsList"></div>
-        <div class="dm-add-row">
-          <input class="dm-add-input" id="dmFront" placeholder="表面（問題）">
-          <input class="dm-add-input" id="dmBack" placeholder="裏面（答え）">
-          <button class="dm-add-btn" onclick="dmAddCard()">＋ 追加</button>
-        </div>
-      </div>
+      <button class="dm-save" id="dmSaveBtn" onclick="saveDeckFromModal()">💾 作成してカードを追加</button>
     </div>
   </div>
 </div>
 
-<!-- ======= PAGE: 学習 ======= -->
+<!-- ══════════ STUDY MODE MODAL ══════════ -->
+<div class="mode-modal-overlay" id="studyModeModal">
+  <div class="mode-modal">
+    <div class="mode-modal-head">
+      <div class="mode-modal-deck" id="modeModalDeckName">デッキ名</div>
+      <div class="mode-modal-sub">学習モードを選択してください &nbsp;·&nbsp; <span id="modeModalCardCount">0枚</span></div>
+    </div>
+    <div class="mode-modal-body">
+
+      <button class="mode-btn" onclick="startStudyWithMode('normal')">
+        <span class="mode-btn-icon">📖</span>
+        <div class="mode-btn-info">
+          <div class="mode-btn-label">通常モード</div>
+          <div class="mode-btn-desc">間隔反復アルゴリズムで効率よく学習。期限が来たカードを優先。</div>
+        </div>
+        <span class="mode-btn-arrow">›</span>
+      </button>
+
+      <button class="mode-btn" onclick="startStudyWithMode('random')">
+        <span class="mode-btn-icon">🔀</span>
+        <div class="mode-btn-info">
+          <div class="mode-btn-label">ランダムモード</div>
+          <div class="mode-btn-desc">全カードをシャッフルして学習。復習や総仕上げに。</div>
+        </div>
+        <span class="mode-btn-arrow">›</span>
+      </button>
+
+      <button class="mode-btn" id="mode4Btn" onclick="startStudyWithMode('4choice')">
+        <span class="mode-btn-icon">🎯</span>
+        <div class="mode-btn-info">
+          <div class="mode-btn-label">4択クイズ</div>
+          <div class="mode-btn-desc">4つの選択肢から正解を選ぶ。記憶の確認に最適。（4枚以上必要）</div>
+        </div>
+        <span class="mode-btn-arrow">›</span>
+      </button>
+
+      <button style="padding:11px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--Fb);" onclick="closeStudyModeModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     PAGE: 学習
+════════════════════════════════════════════════════ -->
 <div id="pageStudy" class="page-view active">
 
-  <!-- ウェルカム（未ログイン） -->
+  <!-- ウェルカム -->
   <div id="welcomeScreen" class="welcome-screen" style="display:none">
     <div class="welcome-badge"><span class="badge-dot"></span>スマート学習ツール</div>
     <h1 class="welcome-title">HG<span class="grad-text">STUDY</span></h1>
@@ -419,14 +739,14 @@
         </div>
         <div style="flex:1"></div>
         <span class="deck-count-badge" id="deckCountBadge">0</span>
-        <button class="btn btn-blog" id="createDeckBtn" onclick="openDeckModal(null)" style="display:none">＋ 作る</button>
+        <button class="btn btn-blog" id="createDeckBtn" onclick="openCreateDeckModal()" style="display:none">＋ 作る</button>
       </div>
     </div>
 
-    <!-- デッキグリッド -->
+    <!-- グリッド -->
     <div class="deck-grid-wrap">
       <div id="deckGrid" class="deck-posts-grid">
-        <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
+        <div style="padding:60px;text-align:center;grid-column:1/-1"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -437,30 +757,54 @@
     <div class="sess-bar">
       <button class="back-list-btn" onclick="backToBrowser()">← 一覧</button>
       <div class="sess-deckname" id="sessDeckName"></div>
-      <button class="edit-deck-btn" id="editDeckBtn" onclick="openDeckModal(currentDeckId)">✏️ 編集</button>
+      <button class="edit-deck-btn" id="editDeckBtn" onclick="openDeckEditPage(currentDeckId)">✏️ 編集</button>
     </div>
     <div class="app-container">
       <div class="study-area active" id="studyArea">
-        <div class="card-area">
-          <div>
-            <div class="flashcard" id="flashcard">
-              <div class="card-side-label">表面</div>
-              <div class="card-content" id="cardFront"></div>
-              <div id="cardBackArea" style="display:none;width:100%;flex-direction:column;align-items:center">
-                <div class="card-side-label" style="margin-top:20px">裏面</div>
-                <div class="card-content" id="cardBack"></div>
+
+        <!-- フラッシュカードエリア -->
+        <div id="flashcardArea">
+          <div class="card-area">
+            <div>
+              <div class="flashcard" id="flashcard">
+                <div class="card-side-label">表面</div>
+                <div class="card-content" id="cardFront"></div>
+                <div id="cardBackArea" style="display:none;width:100%;flex-direction:column;align-items:center">
+                  <div class="card-side-label" style="margin-top:20px">裏面</div>
+                  <div class="card-content" id="cardBack"></div>
+                </div>
+                <span class="card-flip-hint">クリックでめくる</span>
               </div>
-              <span class="card-flip-hint">クリックでめくる</span>
-            </div>
-            <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-            <p class="card-progress" id="cardProgress">0 / 0</p>
-            <div class="card-controls">
-              <button class="ctrl-btn again" onclick="rateCard(1)" disabled>もう一度</button>
-              <button class="ctrl-btn good"  onclick="rateCard(2)" disabled>Good</button>
-              <button class="ctrl-btn easy"  onclick="rateCard(3)" disabled>Easy</button>
+              <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+              <p class="card-progress" id="cardProgress">0 / 0</p>
+              <div class="card-controls">
+                <button class="ctrl-btn again" onclick="rateCard(1)" disabled>もう一度</button>
+                <button class="ctrl-btn good"  onclick="rateCard(2)" disabled>Good</button>
+                <button class="ctrl-btn easy"  onclick="rateCard(3)" disabled>Easy</button>
+              </div>
             </div>
           </div>
-        </div>
+        </div><!-- /flashcardArea -->
+
+        <!-- 4択クイズエリア -->
+        <div id="quizArea">
+          <div class="quiz-card-wrap">
+            <div class="quiz-progress-wrap">
+              <div class="quiz-progress-bar-outer">
+                <div class="quiz-progress-bar-inner" id="quizProgressBar" style="width:0%"></div>
+              </div>
+              <div class="quiz-progress-text" id="quizProgress">1 / 0</div>
+            </div>
+            <div class="quiz-question-card">
+              <div class="quiz-q-label">問題</div>
+              <div class="quiz-question-text" id="quizQuestion"></div>
+            </div>
+            <div class="quiz-choices" id="quizChoices"></div>
+            <div class="quiz-result" id="quizResult"></div>
+            <button class="quiz-next-btn" id="quizNextBtn" onclick="nextQuizCard()" style="display:none">次の問題 →</button>
+          </div>
+        </div><!-- /quizArea -->
+
         <!-- カード編集 -->
         <div id="cardsListView" class="cards-list-view">
           <form class="add-card-form" onsubmit="handleAddCard(event)">
@@ -473,6 +817,7 @@
           </form>
           <div id="cardsList"></div>
         </div>
+
         <!-- セッション完了 -->
         <div id="sessionComplete" class="session-complete">
           <div class="complete-icon">🎉</div>
@@ -483,20 +828,24 @@
             <button class="action-btn outline" onclick="backToBrowser()">一覧へ</button>
           </div>
         </div>
+
       </div>
     </div>
-  </div>
+  </div><!-- /studySession -->
 
 </div><!-- /pageStudy -->
 
-<!-- ======= PAGE: 解説ブログ ======= -->
+
+<!-- ════════════════════════════════════════════════════
+     PAGE: 解説ブログ
+════════════════════════════════════════════════════ -->
 <div id="pageBlog" class="page-view">
   <div id="blogList">
     <div class="blog-hero">
       <div class="blog-hero-inner">
         <span class="blog-hero-badge">解説ブログ</span>
         <h1 class="blog-hero-title">学習の<span class="grad-text">解説記事</span></h1>
-        <p class="blog-hero-sub">フラッシュカードを補完する、詳しい解説ノート</p>
+        <p class="blog-hero-sub">フラッシュカードを補完する詳しい解説ノート</p>
       </div>
       <div id="blogHeroCount" class="blog-hero-count">0</div>
     </div>
@@ -515,12 +864,13 @@
       </div>
     </div>
   </div>
+
   <div id="blogPost" style="display:none">
     <div class="blog-post-bar">
       <button class="back-btn" onclick="showBlogList()">← 一覧に戻る</button>
       <div style="flex:1"></div>
-      <button class="btn btn-blog btn-sm"   id="editPostBtn"   onclick="openBlogEdit(currentPostId)" style="display:none">編集</button>
-      <button class="btn btn-danger btn-sm" id="deletePostBtn" onclick="deletePost(currentPostId)"   style="display:none">削除</button>
+      <button class="btn btn-blog btn-sm"   id="editPostBtn"   onclick="openBlogEdit(currentPostId)"  style="display:none">編集</button>
+      <button class="btn btn-danger btn-sm" id="deletePostBtn" onclick="deletePost(currentPostId)"    style="display:none">削除</button>
     </div>
     <div class="blog-post-body">
       <div class="blog-post-header">
@@ -548,6 +898,7 @@
       </div>
     </div>
   </div>
+
   <div id="blogEdit" style="display:none">
     <div class="blog-edit-bar">
       <button class="back-btn" onclick="cancelBlogEdit()">← キャンセル</button>
@@ -584,6 +935,91 @@
     </div>
   </div>
 </div><!-- /pageBlog -->
+
+
+<!-- ════════════════════════════════════════════════════
+     PAGE: プロフィール (JS で動的生成)
+════════════════════════════════════════════════════ -->
+<div id="pageProfile" class="page-view">
+  <div class="profile-bar">
+    <button class="back-btn" onclick="goBackFromProfile()">← 戻る</button>
+    <div class="profile-bar-title">プロフィール</div>
+  </div>
+  <div class="profile-loading"><div class="spinner"></div></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     PAGE: デッキ編集
+════════════════════════════════════════════════════ -->
+<div id="pageDeckEdit" class="page-view">
+  <div class="edit-page-bar">
+    <button class="back-btn" onclick="goBackFromEdit()">← 一覧に戻る</button>
+    <div class="edit-page-bar-title" id="editPageTitle">デッキ編集</div>
+    <button class="btn btn-blog btn-sm" id="editPageSaveBtn" onclick="saveEditPageDeck()">💾 保存</button>
+  </div>
+
+  <div class="edit-page-body">
+
+    <!-- デッキ情報 -->
+    <div class="edit-section">
+      <div class="edit-section-head">
+        <div class="edit-section-title">📋 デッキ情報</div>
+      </div>
+      <div class="edit-section-body">
+        <div class="ep-field">
+          <div class="ep-label">タイトル</div>
+          <input class="ep-input-full" id="editPageDeckName" placeholder="デッキのタイトル">
+        </div>
+        <div class="ep-field">
+          <div class="ep-label">説明（任意）</div>
+          <textarea class="ep-input-full ep-textarea" id="editPageDesc" placeholder="デッキの説明..."></textarea>
+        </div>
+        <div class="ep-field">
+          <div class="ep-label">カテゴリ</div>
+          <div class="ep-cats dm-cats" id="editPageCats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- カード一覧 -->
+    <div class="edit-section">
+      <div class="edit-section-head">
+        <div class="edit-section-title">
+          🃏 カード一覧
+          <span style="font-family:var(--Fm);font-size:11px;color:var(--text3);font-weight:400" id="editPageCardCount">0枚</span>
+        </div>
+      </div>
+      <div class="edit-section-body" style="padding:12px 14px;">
+        <div class="ep-card-list" id="editPageCardList">
+          <p class="ep-empty">カードがまだありません</p>
+        </div>
+      </div>
+
+      <!-- カード追加フォーム -->
+      <div class="ep-add-form">
+        <div class="ep-add-label">＋ 新しいカードを追加</div>
+        <div class="ep-add-row">
+          <input class="ep-add-input" id="epAddFront" placeholder="表面（問題）">
+          <input class="ep-add-input" id="epAddBack"  placeholder="裏面（答え）">
+          <button class="ep-add-btn" onclick="addEditPageCard()">追加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 危険ゾーン -->
+    <div class="edit-section">
+      <div class="edit-section-head">
+        <div class="edit-section-title" style="color:#E03030">⚠️ 危険な操作</div>
+      </div>
+      <div class="edit-section-body ep-danger-zone">
+        <button class="ep-danger-btn" onclick="deleteEditPageDeck()">🗑️ このデッキを削除（カードもすべて削除）</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /pageDeckEdit -->
+
 
 <div id="toast" class="toast"></div>
 <script src="study.js"></script>
