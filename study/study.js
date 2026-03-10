@@ -86,13 +86,6 @@ function clearSession(){
 // ── App State ─────────────────────────────────────────
 let currentUser    = null;
 let currentSession = null;
-let decks          = {};
-let currentDeckId  = null;
-let studyQueue     = [];
-let currentCardIdx = 0;
-let cardFlipped    = false;
-let sessionStats   = {total:0,again:0,good:0,easy:0};
-let isEditMode     = false;
 
 // ── Blog State ────────────────────────────────────────
 let allPosts     = {};
@@ -723,86 +716,346 @@ window.handleLogout = function(){
   showToast('ログアウトしました');
 };
 
-// ── Decks ─────────────────────────────────────────────
-async function loadDecks(){
-  if(!currentSession) return;
-  try{
-    const me = currentSession.username;
 
-    // decks/ 全件取得 → JS側でownerフィルタ
+// ══════════════════════════════════════════════════════
+//  DECK BROWSER & FLASHCARD STUDY
+// ══════════════════════════════════════════════════════
+
+const DECK_CATS = ['ALL','代数','幾何','甲','乙','漢文','歴史','地理','物理','生物','英語A','英語B','ロシア語','PYTHON','C','その他'];
+const CAT_COLORS = {
+  '代数':'#F59E0B','幾何':'#10B981','甲':'#6366F1','乙':'#8B5CF6',
+  '漢文':'#EC4899','歴史':'#F97316','地理':'#14B8A6','物理':'#3B82F6',
+  '生物':'#22C55E','英語A':'#EAB308','英語B':'#F59E0B','ロシア語':'#EF4444',
+  'PYTHON':'#06B6D4','C':'#64748B','その他':'#6B7280'
+};
+function catColor(cat){ return CAT_COLORS[cat]||'#6B7280'; }
+function catBg(cat){ const c=catColor(cat); return `background:${c}22;color:${c};`; }
+
+// ── State ─────────────────────────────────────────────
+let allPublicDecks = {};   // {deckId: deck+cards}
+let allFavs        = {};   // {deckId: true} for current user
+let deckSort       = 'pop';
+let deckCat        = 'ALL';
+let currentDeckId  = null;
+let decks          = {};   // alias for current session deck access
+let studyQueue     = [];
+let currentCardIdx = 0;
+let cardFlipped    = false;
+let sessionStats   = {total:0,again:0,good:0,easy:0};
+let isEditMode     = false;
+let dmEditDeckId   = null; // deck being edited in modal
+
+// ── Init categories ───────────────────────────────────
+function initCatFilter(){
+  const wrap = ge('catScroll'); if(!wrap) return;
+  wrap.innerHTML = DECK_CATS.map(c=>
+    `<button class="cat-pill${c==='ALL'?' on':''}" onclick="setDeckCat('${c}')" id="cat_${c.replace(/[^a-zA-Z0-9]/g,'_')}">${c}</button>`
+  ).join('');
+  // Modal cat buttons
+  const dm = ge('dmCats'); if(!dm) return;
+  dm.innerHTML = DECK_CATS.filter(c=>c!=='ALL').map(c=>
+    `<button class="dm-cat-btn" onclick="dmToggleCat('${c}')" id="dmcat_${c.replace(/[^a-zA-Z0-9]/g,'_')}">${c}</button>`
+  ).join('');
+}
+window.setDeckCat = function(cat){
+  deckCat = cat;
+  document.querySelectorAll('.cat-pill').forEach(b=>b.classList.remove('on'));
+  const id = 'cat_'+cat.replace(/[^a-zA-Z0-9]/g,'_');
+  const btn = ge(id); if(btn) btn.classList.add('on');
+  renderDeckGrid();
+};
+window.setDeckSort = function(sort){
+  deckSort = sort;
+  ge('sortPopBtn').classList.toggle('on', sort==='pop');
+  ge('sortNewBtn').classList.toggle('on', sort==='new');
+  renderDeckGrid();
+};
+
+// ── Load all public decks ─────────────────────────────
+async function loadAllDecks(){
+  try{
     const [dSnap, cSnap] = await Promise.all([
       db.ref('decks').once('value'),
       db.ref('cards').once('value'),
     ]);
+    const rawDecks = dSnap.val() || {};
+    const rawCards = cSnap.val() || {};
 
-    const allDecks = dSnap.val() || {};
-    const allCards = cSnap.val() || {};
-
-    decks = {};
-    for(const [deckId, deck] of Object.entries(allDecks)){
-      if(deck.owner === me){
-        decks[deckId] = {...deck, cards:{}};
+    allPublicDecks = {};
+    for(const [id, dk] of Object.entries(rawDecks)){
+      allPublicDecks[id] = {...dk, cards:{}, cardCount:0};
+    }
+    for(const [cardId, card] of Object.entries(rawCards)){
+      if(card.deckId && allPublicDecks[card.deckId]){
+        allPublicDecks[card.deckId].cards[cardId] = card;
+        allPublicDecks[card.deckId].cardCount++;
       }
     }
-    // カードをデッキに紐付け（deckIdで紐付け、ownerで確認）
-    for(const [cardId, card] of Object.entries(allCards)){
-      if(card.deckId && decks[card.deckId]){
-        decks[card.deckId].cards[cardId] = card;
+    // Populate decks alias (for current user)
+    if(currentSession){
+      decks = {};
+      for(const [id,dk] of Object.entries(allPublicDecks)){
+        if(dk.owner === currentSession.username) decks[id] = dk;
       }
     }
+    // Load favs
+    if(currentSession){
+      const fSnap = await db.ref(`favs/${currentSession.username}`).once('value');
+      allFavs = fSnap.val() || {};
+    }
+    renderDeckGrid();
+  }catch(e){ showToast('デッキ読み込みエラー: '+e.message,'error'); }
+}
 
-    refreshDeckSelect();
-    if(Object.keys(decks).length === 0) await createDeck('デフォルトデッキ');
-    else{ currentDeckId = Object.keys(decks)[0]; showStudyView(); }
-  }catch(e){ showToast('デッキ読み込みエラー: '+e.message, 'error'); }
+// ── Render deck grid ──────────────────────────────────
+function renderDeckGrid(){
+  const grid = ge('deckGrid'); if(!grid) return;
+  let list = Object.entries(allPublicDecks);
+
+  // Filter by category
+  if(deckCat !== 'ALL') list = list.filter(([,d])=> d.cat === deckCat);
+
+  // Sort
+  if(deckSort === 'pop'){
+    list.sort((a,b) => (b[1].favCount||0) - (a[1].favCount||0));
+  } else {
+    list.sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
+  }
+
+  ge('deckCountBadge').textContent = list.length;
+
+  if(list.length === 0){
+    grid.innerHTML = `<div class="browser-empty"><div class="browser-empty-icon">📭</div>デッキがまだありません</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(([id, dk]) => {
+    const isMine = currentSession && dk.owner === currentSession.username;
+    const isFav  = !!allFavs[id];
+    const cnt    = dk.cardCount || Object.keys(dk.cards||{}).length;
+    const catS   = dk.cat ? `<span class="dc-cat" style="${catBg(dk.cat)}">${esc(dk.cat)}</span>` : '';
+    const dateStr= fmtDate(dk.createdAt);
+    return `<div class="deck-card" id="dcard_${id}">
+      <div class="dc-inner">
+        <div class="dc-top">
+          <div class="dc-title">${esc(dk.name||'無題')}</div>
+          <div class="dc-cnt">${cnt}枚</div>
+        </div>
+        ${catS}
+        <div class="dc-desc">${esc(dk.desc||'')}</div>
+        <div class="dc-meta">
+          <span class="dc-meta-icon">★ ${dk.favCount||0}</span>
+          <span class="dc-meta-icon">👁 ${dk.viewCount||0}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="dc-author" onclick="openUserProfile('${esc(dk.owner||'')}')">${esc(dk.owner||'')}</span>
+          <span class="dc-date">${dateStr}</span>
+        </div>
+      </div>
+      <div class="dc-actions">
+        <button class="study-start-btn" onclick="startStudySession('${id}')">▶ 学習する</button>
+        <button class="fav-btn${isFav?' on':''}" id="favbtn_${id}" onclick="toggleFav('${id}')">
+          ☆ ${dk.favCount||0}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
 }
-async function createDeck(name){
-  if(!currentSession) return;
-  const deckId='deck_'+Date.now();
-  const deck={name, owner:currentSession.username, createdAt:Date.now()};
-  try{
-    await db.ref(`decks/${deckId}`).set(deck);
-    decks[deckId]={...deck, cards:{}}; currentDeckId=deckId;
-    refreshDeckSelect(); showStudyView();
-    showToast(`「${name}」を作成しました`,'success');
-  }catch(e){ showToast('デッキ作成エラー: '+e.message,'error'); }
+
+// ── Fav toggle ────────────────────────────────────────
+window.toggleFav = async function(deckId){
+  if(!currentSession){ openAuthModal('login'); return; }
+  const me = currentSession.username;
+  const was = !!allFavs[deckId];
+  const dk  = allPublicDecks[deckId]; if(!dk) return;
+
+  if(was){
+    delete allFavs[deckId];
+    dk.favCount = Math.max(0,(dk.favCount||1)-1);
+    await db.ref(`favs/${me}/${deckId}`).remove();
+    await db.ref(`decks/${deckId}/favCount`).set(dk.favCount);
+  } else {
+    allFavs[deckId] = true;
+    dk.favCount = (dk.favCount||0)+1;
+    await db.ref(`favs/${me}/${deckId}`).set(true);
+    await db.ref(`decks/${deckId}/favCount`).set(dk.favCount);
+  }
+  // Update button
+  const btn = ge('favbtn_'+deckId);
+  if(btn){
+    btn.className = 'fav-btn' + (was?'':' on');
+    btn.innerHTML = `☆ ${dk.favCount}`;
+  }
+};
+
+// ── Start study session ───────────────────────────────
+async function startStudySession(deckId){
+  currentDeckId = deckId;
+  const dk = allPublicDecks[deckId]; if(!dk) return;
+
+  // Increment view count
+  db.ref(`decks/${deckId}/viewCount`).transaction(v=>(v||0)+1).catch(()=>{});
+  if(!allPublicDecks[deckId].viewCount) allPublicDecks[deckId].viewCount=0;
+  allPublicDecks[deckId].viewCount++;
+
+  // Show session UI
+  ge('deckBrowser').style.display = 'none';
+  ge('studySession').style.display = '';
+  ge('sessDeckName').textContent = dk.name || '無題';
+  ge('cardsListView').classList.remove('active');
+  ge('sessionComplete').classList.remove('active');
+
+  // Edit button only for owner
+  const editBtn = ge('editDeckBtn');
+  if(editBtn) editBtn.style.display = (currentSession && dk.owner===currentSession.username) ? '' : 'none';
+
+  // decks alias for SRS functions
+  if(!decks[deckId]) decks[deckId] = dk;
+
+  buildStudyQueue();
+  renderFlashcard();
 }
-async function deleteDeck(deckId){
-  if(!currentSession||!confirm(`「${decks[deckId]?.name}」を削除しますか？`)) return;
-  try{
-    // デッキに属するカードも削除
-    const cardIds=Object.keys(decks[deckId]?.cards||{});
-    const updates={};
-    updates[`decks/${deckId}`]=null;
-    for(const cid of cardIds) updates[`cards/${cid}`]=null;
-    await db.ref().update(updates);
-    delete decks[deckId]; currentDeckId=Object.keys(decks)[0]||null;
-    refreshDeckSelect();
-    if(currentDeckId) showStudyView(); else ge('studyArea').classList.remove('active');
-    showToast('デッキを削除しました');
-  }catch(e){ showToast('削除エラー: '+e.message,'error'); }
-}
-function refreshDeckSelect(){
-  const sel=ge('deckSelect'); sel.innerHTML='';
-  Object.entries(decks).forEach(([id,d])=>{
-    const o=document.createElement('option'); o.value=id; o.textContent=d.name;
-    if(id===currentDeckId) o.selected=true; sel.appendChild(o);
+
+window.backToBrowser = function(){
+  ge('studySession').style.display = 'none';
+  ge('deckBrowser').style.display  = '';
+  currentDeckId = null;
+};
+
+// ── Deck Modal ────────────────────────────────────────
+let dmSelectedCat = '';
+
+window.openDeckModal = function(deckId){
+  if(!currentSession){ openAuthModal('login'); return; }
+  dmEditDeckId = deckId;
+  const isEdit = !!deckId;
+  ge('deckModalTitle').textContent = isEdit ? 'デッキを編集' : 'デッキを作る';
+  ge('dmDeleteBtn').style.display  = isEdit ? '' : 'none';
+  ge('dmCardsSection').style.display = isEdit ? '' : 'none';
+
+  if(isEdit){
+    const dk = allPublicDecks[deckId] || {};
+    ge('dmName').value = dk.name || '';
+    ge('dmDesc').value = dk.desc || '';
+    dmSelectedCat = dk.cat || '';
+    renderDmCards(deckId);
+  } else {
+    ge('dmName').value = '';
+    ge('dmDesc').value = '';
+    dmSelectedCat = '';
+  }
+  // Update cat buttons
+  document.querySelectorAll('.dm-cat-btn').forEach(b=>{
+    const c = b.textContent;
+    b.classList.toggle('on', c===dmSelectedCat);
   });
-}
-window.onDeckChange    = function(v){ currentDeckId=v; isEditMode?showEditView():showStudyView(); };
-window.promptNewDeck   = function(){ const n=prompt('デッキ名を入力してください'); if(n&&n.trim()) createDeck(n.trim()); };
-window.confirmDeleteDeck = function(){ if(currentDeckId) deleteDeck(currentDeckId); };
+  ge('deckModal').classList.add('open');
+};
+window.closeDeckModal = function(){ ge('deckModal').classList.remove('open'); };
+window.dmToggleCat = function(cat){
+  dmSelectedCat = dmSelectedCat===cat ? '' : cat;
+  document.querySelectorAll('.dm-cat-btn').forEach(b=>{
+    b.classList.toggle('on', b.textContent===dmSelectedCat);
+  });
+};
+window.saveDeckFromModal = async function(){
+  if(!currentSession) return;
+  const name = ge('dmName').value.trim();
+  if(!name){ showToast('タイトルを入力してください','error'); return; }
+  const btn = ge('dmSaveBtn'); btn.disabled=true; btn.textContent='保存中...';
+  try{
+    if(dmEditDeckId){
+      // Update existing
+      await db.ref(`decks/${dmEditDeckId}`).update({name, desc:ge('dmDesc').value.trim(), cat:dmSelectedCat, updatedAt:Date.now()});
+      if(allPublicDecks[dmEditDeckId]){
+        allPublicDecks[dmEditDeckId].name = name;
+        allPublicDecks[dmEditDeckId].desc = ge('dmDesc').value.trim();
+        allPublicDecks[dmEditDeckId].cat  = dmSelectedCat;
+      }
+      showToast('デッキを更新しました','success');
+    } else {
+      // Create new
+      const deckId = 'deck_'+Date.now();
+      const dk = {name, desc:ge('dmDesc').value.trim(), cat:dmSelectedCat,
+                  owner:currentSession.username, createdAt:Date.now(), favCount:0, viewCount:0};
+      await db.ref(`decks/${deckId}`).set(dk);
+      allPublicDecks[deckId] = {...dk, cards:{}, cardCount:0};
+      decks[deckId] = allPublicDecks[deckId];
+      dmEditDeckId = deckId;
+      ge('dmCardsSection').style.display = '';
+      ge('dmDeleteBtn').style.display = '';
+      ge('deckModalTitle').textContent = 'デッキを編集';
+      showToast(`「${name}」を作成しました！カードを追加してください`,'success');
+    }
+    renderDeckGrid();
+  }catch(e){ showToast('エラー: '+e.message,'error'); }
+  finally{ btn.disabled=false; btn.textContent='💾 保存する'; }
+};
+window.deleteDeckFromModal = async function(){
+  if(!dmEditDeckId || !currentSession) return;
+  const dk = allPublicDecks[dmEditDeckId];
+  if(!dk || dk.owner !== currentSession.username){ showToast('権限がありません','error'); return; }
+  if(!confirm(`「${dk.name}」を削除しますか？カードも全て削除されます。`)) return;
+  try{
+    const updates = {[`decks/${dmEditDeckId}`]: null};
+    for(const cid of Object.keys(dk.cards||{})) updates[`cards/${cid}`] = null;
+    await db.ref().update(updates);
+    delete allPublicDecks[dmEditDeckId]; delete decks[dmEditDeckId];
+    closeDeckModal(); renderDeckGrid(); showToast('デッキを削除しました');
+  }catch(e){ showToast('削除エラー: '+e.message,'error'); }
+};
 
-// ── Cards ─────────────────────────────────────────────
+// カード一覧 in modal
+function renderDmCards(deckId){
+  const dk = allPublicDecks[deckId]; if(!dk) return;
+  const list = ge('dmCardsList'); if(!list) return;
+  const cards = dk.cards || {};
+  if(Object.keys(cards).length===0){
+    list.innerHTML = '<p style="color:var(--text3);font-size:12px;padding:8px 0">カードがまだありません</p>';
+    return;
+  }
+  list.innerHTML = Object.entries(cards).map(([id,c])=>
+    `<div class="dm-card-item">
+      <div class="dm-card-f">${esc(c.front)}</div>
+      <div class="dm-card-b">→ ${esc(c.back)}</div>
+      <button class="dm-card-del" onclick="dmDeleteCard('${deckId}','${id}')">✕</button>
+    </div>`
+  ).join('');
+}
+window.dmAddCard = async function(){
+  if(!currentSession||!dmEditDeckId) return;
+  const front=ge('dmFront').value.trim(), back=ge('dmBack').value.trim();
+  if(!front||!back){ showToast('表面と裏面を入力してください','error'); return; }
+  const cardId='card_'+Date.now();
+  const card={front,back,deckId:dmEditDeckId,owner:currentSession.username,
+               createdAt:Date.now(),due:Date.now(),interval:0,ease:2.5,reps:0};
+  await db.ref(`cards/${cardId}`).set(card);
+  if(!allPublicDecks[dmEditDeckId].cards) allPublicDecks[dmEditDeckId].cards={};
+  allPublicDecks[dmEditDeckId].cards[cardId]=card;
+  allPublicDecks[dmEditDeckId].cardCount=(allPublicDecks[dmEditDeckId].cardCount||0)+1;
+  if(decks[dmEditDeckId]) decks[dmEditDeckId]=allPublicDecks[dmEditDeckId];
+  ge('dmFront').value=''; ge('dmBack').value=''; ge('dmFront').focus();
+  renderDmCards(dmEditDeckId); renderDeckGrid(); showToast('カードを追加しました','success');
+};
+window.dmDeleteCard = async function(deckId, cardId){
+  await db.ref(`cards/${cardId}`).remove();
+  if(allPublicDecks[deckId]?.cards) delete allPublicDecks[deckId].cards[cardId];
+  allPublicDecks[deckId].cardCount=Math.max(0,(allPublicDecks[deckId].cardCount||1)-1);
+  renderDmCards(deckId); renderDeckGrid(); showToast('カードを削除しました');
+};
+
+// ── Cards (legacy, kept for SRS) ─────────────────────
 async function addCard(front,back){
   if(!currentSession||!currentDeckId) return;
   const cardId='card_'+Date.now();
-  const card={front, back, deckId:currentDeckId, owner:currentSession.username,
-               createdAt:Date.now(), due:Date.now(), interval:0, ease:2.5, reps:0};
+  const card={front,back,deckId:currentDeckId,owner:currentSession.username,
+               createdAt:Date.now(),due:Date.now(),interval:0,ease:2.5,reps:0};
   try{
     await db.ref(`cards/${cardId}`).set(card);
     if(!decks[currentDeckId].cards) decks[currentDeckId].cards={};
     decks[currentDeckId].cards[cardId]=card;
+    decks[currentDeckId].cardCount=(decks[currentDeckId].cardCount||0)+1;
+    if(allPublicDecks[currentDeckId]) allPublicDecks[currentDeckId]=decks[currentDeckId];
     renderCardsList(); showToast('カードを追加しました','success');
   }catch(e){ showToast('追加エラー: '+e.message,'error'); }
 }
@@ -810,7 +1063,9 @@ window.deleteCard = async function(cardId){
   if(!currentSession||!currentDeckId) return;
   try{
     await db.ref(`cards/${cardId}`).remove();
-    delete decks[currentDeckId].cards[cardId]; renderCardsList(); showToast('カードを削除しました');
+    delete decks[currentDeckId].cards[cardId];
+    decks[currentDeckId].cardCount=Math.max(0,(decks[currentDeckId].cardCount||1)-1);
+    renderCardsList(); showToast('カードを削除しました');
   }catch(e){ showToast('削除エラー: '+e.message,'error'); }
 };
 async function updateCardSRS(cardId,rating){
@@ -824,57 +1079,21 @@ async function updateCardSRS(cardId,rating){
   if(currentSession) await db.ref(`cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
 }
 
-// ── Views ─────────────────────────────────────────────
-function showStudyView(){
-  ge('studyArea').classList.add('active');
-  ge('cardsListView').classList.remove('active');
-  ge('sessionComplete').classList.remove('active');
-  isEditMode=false; buildStudyQueue(); renderFlashcard(); updateToolbarStats(); updateEditToggleBtn();
-}
-function showEditView(){
-  ge('studyArea').classList.add('active');
-  ge('cardsListView').classList.add('active');
-  ge('sessionComplete').classList.remove('active');
-  isEditMode=true; renderCardsList(); updateEditToggleBtn();
-}
-function showSessionComplete(){
-  ge('studyArea').classList.add('active');
-  ge('sessionComplete').classList.add('active');
-  ge('sessionComplete').querySelector('.complete-stats').innerHTML=
-    `総数: <strong>${sessionStats.total}</strong> &nbsp;|&nbsp; もう一度: <strong>${sessionStats.again}</strong> &nbsp;|&nbsp; Good: <strong>${sessionStats.good}</strong> &nbsp;|&nbsp; Easy: <strong>${sessionStats.easy}</strong>`;
-}
-function updateEditToggleBtn(){
-  const b=ge('editToggleBtn'); if(!b) return;
-  b.textContent=isEditMode?'学習モード':'カード編集';
-  b.classList.toggle('active',isEditMode);
-}
-function updateToolbarStats(){
-  const d=decks[currentDeckId]; if(!d) return;
-  const total=d.cards?Object.keys(d.cards).length:0;
-  const due=d.cards?Object.values(d.cards).filter(c=>c.due<=Date.now()+300000).length:0;
-  const el=ge('toolbarStats'); if(el) el.innerHTML=`カード: <span>${total}</span> &nbsp; 学習中: <span>${due}</span>`;
-}
-window.toggleEditMode = function(){ isEditMode?showStudyView():showEditView(); };
-
-// ── Flashcard ─────────────────────────────────────────
+// ── Flashcard Views ───────────────────────────────────
 function buildStudyQueue(){
   const d=decks[currentDeckId];
   if(!d||!d.cards||Object.keys(d.cards).length===0){studyQueue=[];return;}
   const now=Date.now();
-  studyQueue=Object.entries(d.cards).filter(([_,c])=>c.due<=now+300000).sort((a,b)=>a[1].due-b[1].due).map(([id])=>id);
+  studyQueue=Object.entries(d.cards).filter(([,c])=>c.due<=now+300000).sort((a,b)=>a[1].due-b[1].due).map(([id])=>id);
   if(studyQueue.length===0) studyQueue=Object.keys(d.cards);
   for(let i=studyQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[studyQueue[i],studyQueue[j]]=[studyQueue[j],studyQueue[i]];}
   currentCardIdx=0; cardFlipped=false; sessionStats={total:studyQueue.length,again:0,good:0,easy:0};
 }
 function renderFlashcard(){
   const d=decks[currentDeckId];
-  if(!d){ ge('studyArea').classList.remove('active'); return; }
-  if(!d.cards || Object.keys(d.cards).length===0){
-    // カードがないデッキ → 編集モードを表示してカード追加を促す
-    showEditView(); return;
-  }
-  if(studyQueue.length===0){ showSessionComplete(); return; }
-  if(currentCardIdx>=studyQueue.length){showSessionComplete();return;}
+  if(!d){ return; }
+  if(!d.cards||Object.keys(d.cards).length===0){ showEditViewInSession(); return; }
+  if(studyQueue.length===0||currentCardIdx>=studyQueue.length){ showSessionComplete(); return; }
   const cardId=studyQueue[currentCardIdx], card=d.cards[cardId];
   if(!card){currentCardIdx++;renderFlashcard();return;}
   cardFlipped=false;
@@ -884,74 +1103,182 @@ function renderFlashcard(){
   ge('cardProgress').textContent=`${currentCardIdx} / ${studyQueue.length}`;
   ge('progressBar').style.width=`${(currentCardIdx/studyQueue.length)*100}%`;
 }
-window.flipCard = function(){ if(cardFlipped)return; cardFlipped=true; ge('cardBackArea').style.display='flex'; document.querySelectorAll('.ctrl-btn').forEach(b=>b.disabled=false); };
-window.rateCard = async function(rating){
+function showEditViewInSession(){
+  ge('cardsListView').classList.add('active');
+  ge('sessionComplete').classList.remove('active');
+  isEditMode=true; renderCardsList();
+}
+function showSessionComplete(){
+  ge('sessionComplete').classList.add('active');
+  ge('cardsListView').classList.remove('active');
+  ge('sessionComplete').querySelector('.complete-stats').innerHTML=
+    `総数: <strong>${sessionStats.total}</strong> &nbsp;|&nbsp; もう一度: <strong>${sessionStats.again}</strong> &nbsp;|&nbsp; Good: <strong>${sessionStats.good}</strong> &nbsp;|&nbsp; Easy: <strong>${sessionStats.easy}</strong>`;
+}
+window.flipCard=function(){if(cardFlipped)return;cardFlipped=true;ge('cardBackArea').style.display='flex';document.querySelectorAll('.ctrl-btn').forEach(b=>b.disabled=false);};
+window.rateCard=async function(rating){
   const cardId=studyQueue[currentCardIdx];
-  if(rating===1) sessionStats.again++; else if(rating===2) sessionStats.good++; else sessionStats.easy++;
+  if(rating===1)sessionStats.again++;else if(rating===2)sessionStats.good++;else sessionStats.easy++;
   await updateCardSRS(cardId,rating);
-  if(rating===1){ const r=Math.min(currentCardIdx+3,studyQueue.length); studyQueue.splice(r,0,cardId); }
-  currentCardIdx++; renderFlashcard();
+  if(rating===1){const r=Math.min(currentCardIdx+3,studyQueue.length);studyQueue.splice(r,0,cardId);}
+  currentCardIdx++;renderFlashcard();
 };
-window.restartSession = function(){ buildStudyQueue(); renderFlashcard(); ge('sessionComplete').classList.remove('active'); };
-
-// ── Edit mode card list ───────────────────────────────
+window.restartSession=function(){buildStudyQueue();renderFlashcard();ge('sessionComplete').classList.remove('active');};
 function renderCardsList(){
   const d=decks[currentDeckId], list=ge('cardsList');
   if(!d||!d.cards||Object.keys(d.cards).length===0){
-    list.innerHTML='<p style="color:var(--text3);font-family:var(--Fm);font-size:12px;padding:16px 0">カードがまだありません。上のフォームから追加してください。</p>'; return;
+    list.innerHTML='<p style="color:var(--text3);font-family:var(--Fm);font-size:12px;padding:16px 0">カードがまだありません。上のフォームから追加してください。</p>';return;
   }
   list.innerHTML='';
   Object.entries(d.cards).forEach(([id,card])=>{
-    const item=document.createElement('div'); item.className='card-item';
+    const item=document.createElement('div');item.className='card-item';
     item.innerHTML=`<div class="card-item-body"><div class="card-item-front">${esc(card.front)}</div><div class="card-item-back">→ ${esc(card.back)}</div></div><button class="card-delete" onclick="deleteCard('${id}')">✕</button>`;
     list.appendChild(item);
   });
 }
-window.handleAddCard = function(e){
+window.handleAddCard=function(e){
   e.preventDefault();
-  const front=ge('addFront').value.trim(), back=ge('addBack').value.trim();
+  const front=ge('addFront').value.trim(),back=ge('addBack').value.trim();
   if(!front||!back){showToast('表面・裏面を入力してください','error');return;}
-  addCard(front,back); ge('addFront').value=''; ge('addBack').value=''; ge('addFront').focus();
+  addCard(front,back);ge('addFront').value='';ge('addBack').value='';ge('addFront').focus();
 };
+
+// ── Nav / Login UI ────────────────────────────────────
+function updateNavUI(){
+  if(currentSession){
+    ge('navLoginBtn').style.display='none';
+    ge('navUserBtn').style.display='flex';
+    ge('navUsername').textContent=currentSession.username+(currentSession.isAdmin?' [ADMIN]':'');
+    ge('acctMenuDispName').textContent=currentSession.displayName||currentSession.username;
+    ge('acctMenuUsername').textContent='@'+currentSession.username;
+    const av=currentSession._avatar||localStorage.getItem('fm_avatar_'+currentSession.username)||null;
+    drawAvatar(ge('navAvatarCanvas'),currentSession.username,av,28);
+    drawAvatar(ge('acctMenuAvatar'), currentSession.username,av,40);
+    ge('newPostBtn').style.display='';
+    if(ge('createDeckBtn')) ge('createDeckBtn').classList.add('show');
+  } else {
+    ge('navLoginBtn').style.display='';
+    ge('navUserBtn').style.display='none';
+    ge('newPostBtn').style.display='none';
+    if(ge('createDeckBtn')) ge('createDeckBtn').classList.remove('show');
+  }
+}
+
+async function onLogin(){
+  // DBからアバター・displayName取得
+  try{
+    const snap = await db.ref(`users/${currentSession.username}`).once('value');
+    const ud = snap.val()||{};
+    if(ud.avatar){
+      localStorage.setItem('fm_avatar_'+currentSession.username, ud.avatar);
+      currentSession._avatar = ud.avatar;
+    }
+    if(ud.displayName) currentSession.displayName = ud.displayName;
+  }catch(e){}
+
+  updateNavUI();
+  ge('welcomeScreen').style.display='none';
+  ge('deckBrowser').style.display='';
+  loadAllDecks();
+  requestNotifPermission();
+  startNewsWatch();
+  showToast(`ようこそ、${currentSession.username}さん！`);
+  if(ge('pageBlog').classList.contains('active')) loadBlogPosts();
+  if(currentPostId){
+    ge('commentFormWrap').style.display='';
+    ge('commentLoginPrompt').style.display='none';
+  }
+}
+function onLogout(){
+  updateNavUI();
+  ge('deckBrowser').style.display='none';
+  ge('studySession').style.display='none';
+  ge('welcomeScreen').style.display='flex';
+  allPublicDecks={}; decks={}; currentDeckId=null; allFavs={};
+  if(ge('pageBlog').classList.contains('active')){
+    renderBlogGrid();
+    ge('commentFormWrap').style.display='none';
+    ge('commentLoginPrompt').style.display='';
+  }
+}
+window.handleLogout=function(){currentSession=null;clearSession();onLogout();showToast('ログアウトしました');};
+
+// ── Push Notifications ────────────────────────────────
+async function requestNotifPermission(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default'){
+    await Notification.requestPermission().catch(()=>{});
+  }
+}
+let _newsWatchActive=false, _latestNewsTs=0;
+function startNewsWatch(){
+  if(!db||_newsWatchActive) return;
+  _newsWatchActive=true;
+  db.ref('news').orderByChild('ts').limitToLast(1).once('value').then(snap=>{
+    const data=snap.val();
+    if(data) _latestNewsTs=Object.values(data)[0].ts||0;
+    db.ref('news').orderByChild('ts').startAfter(_latestNewsTs).on('child_added',snap=>{
+      const n=snap.val(); if(!n||n.ts<=_latestNewsTs) return;
+      _latestNewsTs=n.ts;
+      if(Notification.permission==='granted'&&document.visibilityState!=='visible'){
+        sendLocalNotif(n.title||'お知らせ',(n.content||'新しいお知らせがあります').slice(0,80));
+      } else {
+        showToast('🔔 新着: '+(n.title||'お知らせ'));
+      }
+    });
+  }).catch(()=>{});
+}
+async function sendLocalNotif(title,body){
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification('HGStudy — '+title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'hgstudy-news',renotify:true,vibrate:[200,100,200]});
+  }catch(e){}
+}
 
 // ── Toast ─────────────────────────────────────────────
 let toastTimer;
 function showToast(msg,type=''){
-  const t=ge('toast'); t.textContent=msg;
+  const t=ge('toast');t.textContent=msg;
   t.className='toast'+(type?' '+type:'')+' show';
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
 // ── Theme ─────────────────────────────────────────────
 let themeIdx=localStorage.getItem('hgstudy_theme')==='dark'?1:0;
 function applyTheme(){
   document.documentElement.setAttribute('data-theme',themeIdx===0?'light':'dark');
-  const b=ge('themeToggle'); if(b) b.textContent=themeIdx===0?'🌙':'☀️';
+  const b=ge('themeToggle');if(b)b.textContent=themeIdx===0?'🌙':'☀️';
 }
-window.toggleTheme=function(){ themeIdx=(themeIdx+1)%2; localStorage.setItem('hgstudy_theme',themeIdx===0?'light':'dark'); applyTheme(); };
+window.toggleTheme=function(){themeIdx=(themeIdx+1)%2;localStorage.setItem('hgstudy_theme',themeIdx===0?'light':'dark');applyTheme();};
 applyTheme();
 
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  ge('authForm')?.addEventListener('submit', handleAuthSubmit);
-  ge('authModal')?.addEventListener('click', e=>{ if(e.target===ge('authModal')) closeAuthModal(); });
-  ge('flashcard')?.addEventListener('click', ()=>window.flipCard());
-  ge('welcomeScreen').style.display='flex';
-  ge('studyArea').classList.remove('active');
+  ge('authForm')?.addEventListener('submit',handleAuthSubmit);
+  ge('authModal')?.addEventListener('click',e=>{if(e.target===ge('authModal'))closeAuthModal();});
+  ge('deckModal')?.addEventListener('click',e=>{if(e.target===ge('deckModal'))closeDeckModal();});
+  ge('flashcard')?.addEventListener('click',()=>window.flipCard());
+  ge('welcomeScreen').style.display='none';
+  ge('deckBrowser').style.display='none';
+  ge('studySession').style.display='none';
+
+  initCatFilter();
 
   // セッション復元
-  const sess = loadSession();
-  if(sess && sess.uid){
-    currentSession = sess;
-    // DBから最新のisadmin状態を取得してセッションに反映
+  const sess=loadSession();
+  if(sess&&sess.uid){
+    currentSession=sess;
     db.ref(`users/${sess.username}`).once('value').then(snap=>{
-      const d = snap.val()||{};
-      const isAdm = !!d.isAdmin || !!d.isadmin || d.role==='admin';
-      if(isAdm !== currentSession.isAdmin){
-        currentSession = {...currentSession, isAdmin: isAdm};
-        saveSession(currentSession);
-      }
+      const d=snap.val()||{};
+      const isAdm=!!d.isAdmin||!!d.isadmin||d.role==='admin';
+      currentSession={...currentSession,isAdmin:isAdm,displayName:d.displayName||sess.username};
+      if(d.avatar) currentSession._avatar=d.avatar;
+      saveSession(currentSession);
       onLogin();
-    }).catch(()=>{ onLogin(); });
+    }).catch(()=>onLogin());
+  } else {
+    // 未ログインでもデッキブラウザは表示
+    ge('deckBrowser').style.display='';
+    loadAllDecks();
   }
 });
