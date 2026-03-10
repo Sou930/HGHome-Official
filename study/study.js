@@ -214,7 +214,7 @@ function renderBlogGrid(){
              </div>` : ''}
       </div>
       <div class="blog-card-title">${esc(p.title||'無題')}</div>
-      <div class="blog-card-preview">${esc((p.body||'').slice(0,120))}${(p.body||'').length>120?'…':''}</div>
+      <div class="blog-card-preview">${esc((p.content||'').slice(0,120))}${(p.content||'').length>120?'…':''}</div>
       <div class="blog-card-meta">
         <span class="blog-card-author">@${esc(p.author||'')}</span>
         <span>${fmtDate(p.createdAt)}</span>
@@ -242,7 +242,7 @@ window.openPost = async function(postId){
   ge('postTitle').textContent  = p.title || '無題';
   ge('postAuthor').textContent = '@' + (p.author||'');
   ge('postDate').textContent   = fmtDate(p.createdAt);
-  ge('postBody').innerHTML     = renderMarkdown(p.body||'');
+  ge('postBody').innerHTML     = renderMarkdown(p.content||'');
 
   const isOwner = currentSession && (currentSession.username===p.author || currentSession.isAdmin);
   ge('editPostBtn').style.display   = isOwner ? '' : 'none';
@@ -289,7 +289,7 @@ window.openBlogEdit = function(postId){
   if(postId && allPosts[postId]){
     const p = allPosts[postId];
     ge('editTitle').value = p.title || '';
-    ge('editBody').value  = p.body  || '';
+    ge('editBody').value  = p.content || '';
     selectedTag = p.tag || '';
   } else {
     ge('editTitle').value = '';
@@ -331,13 +331,13 @@ window.setBlogEditMode = function(mode){
 window.savePost = async function(){
   if(!currentSession){ openAuthModal('login'); return; }
   const title = ge('editTitle').value.trim();
-  const body  = ge('editBody').value.trim();
+  const content = ge('editBody').value.trim();
   if(!title){ showToast('タイトルを入力してください','error'); return; }
-  if(!body){  showToast('本文を入力してください','error');    return; }
+  if(!content){  showToast('本文を入力してください','error');    return; }
 
   const now = Date.now();
   const data = {
-    title, body,
+    title, content,
     tag: selectedTag || 'その他',
     author: currentSession.username,
     updatedAt: now,
@@ -461,27 +461,33 @@ async function openProfileModal(targetUsername){
 
   // データ並列取得
   const isSelf = currentSession && currentSession.username === targetUsername;
-  let profileData={}, followerSnap=null, followingSnap=null, deckSnap=null, amFollowing=false;
+  let profileData={}, allFollows={}, deckSnap={}, amFollowing=false;
 
   try{
-    const [pSnap, fwSnap, fgSnap, dSnap] = await Promise.all([
+    // follows/{user} = そのユーザーがフォローしているユーザーの map {targetUser: true}
+    const [pSnap, fSnap, dSnap, allFollowsSnap] = await Promise.all([
       db.ref(`users/${targetUsername}`).once('value'),
-      db.ref(`follows/${targetUsername}/followers`).once('value'),
-      db.ref(`follows/${targetUsername}/following`).once('value'),
-      db.ref(`decks/${targetUsername}`).once('value'),
+      db.ref(`follows/${targetUsername}`).once('value'),        // targetが誰をフォローしてるか
+      db.ref('decks').orderByChild('owner').equalTo(targetUsername).once('value'),
+      db.ref('follows').once('value'),                          // 全フォローデータ（フォロワー計算用）
     ]);
     profileData = pSnap.val() || {};
-    followerSnap = fwSnap.val() || {};
-    followingSnap = fgSnap.val() || {};
+    const followingMap = fSnap.val() || {};   // targetUsername がフォローしている人
     deckSnap = dSnap.val() || {};
-    if(currentSession && !isSelf){
-      const amSnap = await db.ref(`follows/${targetUsername}/followers/${currentSession.username}`).once('value');
-      amFollowing = amSnap.val() === true;
-    }
-  }catch(e){}
+    allFollows = allFollowsSnap.val() || {};
 
-  const followerCount = Object.keys(followerSnap).length;
-  const followingCount = Object.keys(followingSnap).length;
+    // フォロワー: follows/{otherUser}/{targetUsername} === true な人を数える
+    // フォロー中: follows/{targetUsername} のキー数
+    if(currentSession && !isSelf){
+      const myFollows = allFollows[currentSession.username] || {};
+      amFollowing = myFollows[targetUsername] === true;
+    }
+
+    // followerCount: allFollows の各ユーザーのフォローリストに targetUsername が含まれる数
+    var followerCount = Object.values(allFollows).filter(f=> f && f[targetUsername]===true).length;
+    var followingCount = Object.keys(followingMap).length;
+  }catch(e){ var followerCount=0, followingCount=0; }
+
   const deckList = Object.entries(deckSnap);
   const postCount = Object.values(allPosts).filter(p=>p.author===targetUsername).length;
   const displayName = profileData.displayName || targetUsername;
@@ -492,7 +498,7 @@ async function openProfileModal(targetUsername){
   const decksHTML = deckList.length === 0
     ? `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">デッキがありません</div>`
     : deckList.map(([id,dk])=>{
-        const cardCount = dk.cards ? Object.keys(dk.cards).length : 0;
+        const cardCount = dk.cardCount || 0;  // cards/ は別ノード、概算表示
         return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
           <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px">${esc(dk.name||'無題')}</div>
           <div style="font-size:11px;color:var(--text3)">${cardCount} カード</div>
@@ -553,23 +559,22 @@ async function openProfileModal(targetUsername){
 }
 
 // ── フォロー / アンフォロー ────────────────────────────
+// follows/{me}/{target}: true  — meがtargetをフォローしている
 window.toggleFollow = async function(targetUsername){
   if(!currentSession){ openAuthModal('login'); return; }
   const me = currentSession.username;
   const btn = ge('pmFollowBtn');
-  const amSnap = await db.ref(`follows/${targetUsername}/followers/${me}`).once('value');
+  const amSnap = await db.ref(`follows/${me}/${targetUsername}`).once('value');
   const am = amSnap.val() === true;
 
   if(am){
     // アンフォロー
-    await db.ref(`follows/${targetUsername}/followers/${me}`).remove();
-    await db.ref(`follows/${me}/following/${targetUsername}`).remove();
+    await db.ref(`follows/${me}/${targetUsername}`).remove();
     if(btn){ btn.textContent='フォローする'; btn.style.background='var(--primary)'; btn.style.color='#fff'; btn.style.borderColor='var(--primary)'; }
     showToast(`@${targetUsername} のフォローを解除しました`);
   } else {
     // フォロー
-    await db.ref(`follows/${targetUsername}/followers/${me}`).set(true);
-    await db.ref(`follows/${me}/following/${targetUsername}`).set(true);
+    await db.ref(`follows/${me}/${targetUsername}`).set(true);
     if(btn){ btn.textContent='フォロー中'; btn.style.background='transparent'; btn.style.color='var(--text2)'; btn.style.borderColor='var(--border)'; }
     showToast(`@${targetUsername} をフォローしました`);
   }
@@ -713,8 +718,24 @@ window.handleLogout = function(){
 async function loadDecks(){
   if(!currentSession) return;
   try{
-    const snap=await db.ref(`decks/${currentSession.username}`).once('value');
-    decks=snap.val()||{};
+    // decks/{id} フラット構造、owner フィールドで絞り込み
+    const snap=await db.ref('decks').orderByChild('owner').equalTo(currentSession.username).once('value');
+    const raw=snap.val()||{};
+    // 各デッキのカードを cards/ から別途取得
+    decks={};
+    for(const [deckId, deck] of Object.entries(raw)){
+      decks[deckId]={...deck, cards:{}};
+    }
+    // カードを一括取得してデッキに紐付け
+    if(Object.keys(decks).length>0){
+      const cSnap=await db.ref('cards').orderByChild('owner').equalTo(currentSession.username).once('value');
+      const allCards=cSnap.val()||{};
+      for(const [cardId,card] of Object.entries(allCards)){
+        if(card.deckId && decks[card.deckId]){
+          decks[card.deckId].cards[cardId]=card;
+        }
+      }
+    }
     refreshDeckSelect();
     if(Object.keys(decks).length===0) await createDeck('デフォルトデッキ');
     else{ currentDeckId=Object.keys(decks)[0]; showStudyView(); }
@@ -722,10 +743,11 @@ async function loadDecks(){
 }
 async function createDeck(name){
   if(!currentSession) return;
-  const uid=currentSession.uid, deckId='deck_'+Date.now(), deck={name,cards:{},createdAt:Date.now()};
+  const deckId='deck_'+Date.now();
+  const deck={name, owner:currentSession.username, createdAt:Date.now()};
   try{
-    await db.ref(`decks/${currentSession.username}/${deckId}`).set(deck);
-    decks[deckId]=deck; currentDeckId=deckId;
+    await db.ref(`decks/${deckId}`).set(deck);
+    decks[deckId]={...deck, cards:{}}; currentDeckId=deckId;
     refreshDeckSelect(); showStudyView();
     showToast(`「${name}」を作成しました`,'success');
   }catch(e){ showToast('デッキ作成エラー: '+e.message,'error'); }
@@ -733,7 +755,12 @@ async function createDeck(name){
 async function deleteDeck(deckId){
   if(!currentSession||!confirm(`「${decks[deckId]?.name}」を削除しますか？`)) return;
   try{
-    await db.ref(`decks/${currentSession.username}/${deckId}`).remove();
+    // デッキに属するカードも削除
+    const cardIds=Object.keys(decks[deckId]?.cards||{});
+    const updates={};
+    updates[`decks/${deckId}`]=null;
+    for(const cid of cardIds) updates[`cards/${cid}`]=null;
+    await db.ref().update(updates);
     delete decks[deckId]; currentDeckId=Object.keys(decks)[0]||null;
     refreshDeckSelect();
     if(currentDeckId) showStudyView(); else ge('studyArea').classList.remove('active');
@@ -754,10 +781,11 @@ window.confirmDeleteDeck = function(){ if(currentDeckId) deleteDeck(currentDeckI
 // ── Cards ─────────────────────────────────────────────
 async function addCard(front,back){
   if(!currentSession||!currentDeckId) return;
-  const uid=currentSession.uid, cardId='card_'+Date.now();
-  const card={front,back,createdAt:Date.now(),due:Date.now(),interval:0,ease:2.5,reps:0};
+  const cardId='card_'+Date.now();
+  const card={front, back, deckId:currentDeckId, owner:currentSession.username,
+               createdAt:Date.now(), due:Date.now(), interval:0, ease:2.5, reps:0};
   try{
-    await db.ref(`decks/${currentSession.username}/${currentDeckId}/cards/${cardId}`).set(card);
+    await db.ref(`cards/${cardId}`).set(card);
     if(!decks[currentDeckId].cards) decks[currentDeckId].cards={};
     decks[currentDeckId].cards[cardId]=card;
     renderCardsList(); showToast('カードを追加しました','success');
@@ -766,7 +794,7 @@ async function addCard(front,back){
 window.deleteCard = async function(cardId){
   if(!currentSession||!currentDeckId) return;
   try{
-    await db.ref(`decks/${currentSession.username}/${currentDeckId}/cards/${cardId}`).remove();
+    await db.ref(`cards/${cardId}`).remove();
     delete decks[currentDeckId].cards[cardId]; renderCardsList(); showToast('カードを削除しました');
   }catch(e){ showToast('削除エラー: '+e.message,'error'); }
 };
@@ -778,7 +806,7 @@ async function updateCardSRS(cardId,rating){
   else{if(reps===0)interval=4;else interval=Math.round(interval*ease*1.3);reps++;ease=Math.min(3.0,ease+.15);}
   const due=Date.now()+interval*86400000;
   decks[currentDeckId].cards[cardId]={...card,interval,ease,reps,due};
-  if(currentSession) await db.ref(`decks/${currentSession.username}/${currentDeckId}/cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
+  if(currentSession) await db.ref(`cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
 }
 
 // ── Views ─────────────────────────────────────────────
