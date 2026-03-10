@@ -639,8 +639,18 @@ function loadSession(){
   updateHeaderUI();
   if(session)checkAdminRole();
 }
-function saveSession(s){session=s;const str=JSON.stringify(s);setCookie('hg_session',str,30);try{localStorage.setItem('hg_session_ls',str);}catch(e){}}
-function clearSession(){session=null;deleteCookie('hg_session');try{localStorage.removeItem('hg_session_ls');}catch(e){};}
+function saveSession(s){
+  session=s;
+  const str=JSON.stringify(s);
+  setCookie('hg_session',str,30);
+  setCookie('hgs_sess',str,30);   // HGStudy 共通
+  try{localStorage.setItem('hg_session_ls',str);localStorage.setItem('hgs_sess',str);}catch(e){}
+}
+function clearSession(){
+  session=null;
+  deleteCookie('hg_session'); deleteCookie('hgs_sess');
+  try{localStorage.removeItem('hg_session_ls');localStorage.removeItem('hgs_sess');}catch(e){};
+}
 
 function updateHeaderUI(){
   const li=document.getElementById('hdrLoginBtn'),re=document.getElementById('hdrRegBtn'),hu=document.getElementById('hdrUser');
