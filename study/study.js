@@ -21,9 +21,14 @@ const firebaseConfig = {
   messagingSenderId:"720150712775",
   appId:            _d(_cfg._f)
 };
-const app  = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.database();
+const app = firebase.initializeApp(firebaseConfig);
+const db  = firebase.database();
+
+// ── Password Hashing ──────────────────────────────────
+async function hashPass(pw){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('hgstudy:'+pw));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
 // ── Session ───────────────────────────────────────────
 function saveSession(d){ try{ localStorage.setItem('hgs_sess',JSON.stringify(d)); document.cookie=`hgs_sess=${encodeURIComponent(JSON.stringify(d))};path=/;max-age=2592000`; }catch(e){} }
@@ -78,34 +83,22 @@ function renderMarkdown(src){
   if(!src) return '';
   let s = src
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    // headings
     .replace(/^#{3} (.+)$/gm,'<h3>$1</h3>')
     .replace(/^#{2} (.+)$/gm,'<h2>$1</h2>')
     .replace(/^# (.+)$/gm,'<h1>$1</h1>')
-    // blockquote
     .replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>')
-    // hr
     .replace(/^---$/gm,'<hr>')
-    // bold / italic / code
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
     .replace(/`(.+?)`/g,'<code>$1</code>')
-    // spoiler ||text||
     .replace(/\|\|(.+?)\|\|/g,'<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>')
-    // link [text](url)
     .replace(/\[(.+?)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
-    // table
     .replace(/^\|(.+)\|$/gm, m => '<tr>' + m.slice(1,-1).split('|').map(c=>`<td>${c.trim()}</td>`).join('') + '</tr>')
     .replace(/(<tr>.*<\/tr>\n?){2,}/gs, t => `<table>${t.replace(/<tr>(<td>.*?<\/td>)+<\/tr>/,'m => m.replace(/<td>/g,"<th>").replace(/<\/td>/g,"</th>">')}</table>`);
 
-  // lists
   s = s.replace(/(^- .+\n?)+/gm, m => '<ul>' + m.split('\n').filter(l=>l.startsWith('- ')).map(l=>`<li>${l.slice(2)}</li>`).join('') + '</ul>');
   s = s.replace(/(^\d+\. .+\n?)+/gm, m => '<ol>' + m.split('\n').filter(l=>/^\d+\./.test(l)).map(l=>`<li>${l.replace(/^\d+\. /,'')}</li>`).join('') + '</ol>');
-
-  // code block
   s = s.replace(/```[\w]*\n?([\s\S]+?)```/g,'<pre><code>$1</code></pre>');
-
-  // paragraphs (non-block lines)
   s = s.replace(/\n{2,}/g,'\n\n');
   const lines = s.split('\n');
   const out = []; let buf = [];
@@ -135,12 +128,10 @@ window.switchTab = function(tab){
 //  BLOG FEATURE
 // ══════════════════════════════════════════════════════
 
-// ── Blog sub-view switcher ────────────────────────────
 function showBlogList(){ ge('blogList').style.display=''; ge('blogPost').style.display='none'; ge('blogEdit').style.display='none'; }
 function showBlogPostView(){ ge('blogList').style.display='none'; ge('blogPost').style.display=''; ge('blogEdit').style.display='none'; }
 function showBlogEditView(){ ge('blogList').style.display='none'; ge('blogPost').style.display='none'; ge('blogEdit').style.display=''; }
 
-// ── Load all posts ────────────────────────────────────
 async function loadBlogPosts(){
   try{
     const snap = await db.ref('study_blog/posts').once('value');
@@ -151,7 +142,6 @@ async function loadBlogPosts(){
   }
 }
 
-// ── Render grid ───────────────────────────────────────
 function renderBlogGrid(){
   const grid  = ge('blogPostsGrid');
   const count = ge('blogHeroCount');
@@ -193,7 +183,6 @@ window.setBlogSort = function(s){
   renderBlogGrid();
 };
 
-// ── Open post ─────────────────────────────────────────
 window.openPost = async function(postId){
   currentPostId = postId;
   showBlogPostView();
@@ -207,13 +196,10 @@ window.openPost = async function(postId){
   ge('postDate').textContent   = fmtDate(p.createdAt);
   ge('postBody').innerHTML     = renderMarkdown(p.body||'');
 
-  // spoiler click already via renderMarkdown onclick
-
   const isOwner = currentSession && (currentSession.username===p.author || currentSession.isAdmin);
   ge('editPostBtn').style.display   = isOwner ? '' : 'none';
   ge('deletePostBtn').style.display = isOwner ? '' : 'none';
 
-  // comments
   loadComments(postId);
 
   if(currentSession){
@@ -224,11 +210,9 @@ window.openPost = async function(postId){
     ge('commentLoginPrompt').style.display= '';
   }
 
-  // scroll to top
   window.scrollTo({top:0,behavior:'smooth'});
 };
 
-// ── Delete post ───────────────────────────────────────
 window.deletePost = async function(postId){
   if(!currentSession) return;
   const p = allPosts[postId];
@@ -243,14 +227,12 @@ window.deletePost = async function(postId){
   } catch(e){ showToast('削除エラー: '+e.message,'error'); }
 };
 
-// ── Blog Edit ─────────────────────────────────────────
 window.openBlogEdit = function(postId){
   if(!currentSession){ openAuthModal('login'); return; }
   editingPostId = postId || null;
   showBlogEditView();
   setBlogEditMode('edit');
 
-  // Build tag selector
   const grid = ge('tagSelGrid');
   grid.innerHTML = BLOG_TAGS.map(t=>`
     <button class="tag-opt${selectedTag===t?' on':''}" onclick="selectBlogTag('${t}')">${t}</button>
@@ -372,7 +354,6 @@ window.submitComment = async function(){
   try{
     const ref = db.ref(`study_blog/comments/${currentPostId}`).push();
     await ref.set({ author: currentSession.username, body, createdAt: Date.now() });
-    // increment comment count
     const p = allPosts[currentPostId];
     if(p){ p.commentCount = (p.commentCount||0)+1; await db.ref(`study_blog/posts/${currentPostId}/commentCount`).set(p.commentCount); }
     input.value = '';
@@ -393,22 +374,8 @@ window.deleteComment = async function(postId, commentId){
 };
 
 // ══════════════════════════════════════════════════════
-//  FLASHCARD ENGINE
+//  AUTH (DB hash-based — no Firebase Auth)
 // ══════════════════════════════════════════════════════
-window.switchTab = (function(orig){
-  return function(tab){
-    orig(tab);
-  };
-})(window.switchTab);
-
-// re-define clean (closure from above is fine)
-window.switchTab = function(tab){
-  ge('pageStudy').classList.toggle('active', tab==='study');
-  ge('pageBlog').classList.toggle('active',  tab==='blog');
-  ge('tabStudy').classList.toggle('on', tab==='study');
-  ge('tabBlog').classList.toggle('on',  tab==='blog');
-  if(tab==='blog'){ loadBlogPosts(); }
-};
 
 // Nav
 function toggleAcctMenu(){ ge('acctMenu').classList.toggle('open'); }
@@ -467,7 +434,6 @@ function showProfileModal(session){
   ge('pmUsername').textContent = '@'+session.username;
   ge('pmDecks').textContent = Object.keys(decks).length;
 
-  // count user's posts
   const postCount = Object.values(allPosts).filter(p=>p.author===session.username).length;
   ge('pmPosts').textContent = postCount;
 
@@ -478,7 +444,7 @@ function showProfileModal(session){
   }).catch(()=>{});
 }
 
-// Auth
+// Auth modal
 let authMode='login';
 function openAuthModal(mode='login'){
   authMode=mode;
@@ -507,43 +473,63 @@ async function handleAuthSubmit(e){
   const password = ge('authPassword').value;
   const errEl    = ge('authError');
   errEl.classList.remove('visible');
+
   if(!username||!password){errEl.textContent='ユーザー名とパスワードを入力してください';errEl.classList.add('visible');return;}
   if(username.length<3){errEl.textContent='ユーザー名は3文字以上必要です';errEl.classList.add('visible');return;}
-  const email=`${username}@hghome.app`;
-  const btn=ge('authSubmitBtn'); btn.disabled=true; btn.textContent='...';
-  try{
-    if(authMode==='login'){
-      await auth.signInWithEmailAndPassword(email,password);
-    } else {
-      if(password.length<6) throw new Error('パスワードは6文字以上必要です');
-      const cred=await auth.createUserWithEmailAndPassword(email,password);
-      await db.ref(`users/${username}`).set({uid:cred.user.uid,username,createdAt:Date.now(),isAdmin:false,bio:'',displayName:username});
-    }
-    closeAuthModal();
-  } catch(err){
-    let msg=err.message;
-    if(err.code==='auth/user-not-found'||err.code==='auth/wrong-password') msg='ユーザー名またはパスワードが違います';
-    if(err.code==='auth/email-already-in-use') msg='このユーザー名はすでに使われています';
-    if(err.code==='auth/weak-password') msg='パスワードは6文字以上にしてください';
-    if(err.code==='auth/too-many-requests') msg='しばらく待ってから再試行してください';
-    errEl.textContent=msg; errEl.classList.add('visible');
-  } finally{ btn.disabled=false; updateAuthUI(); }
-}
+  if(!/^[a-zA-Z0-9_]+$/.test(username)){errEl.textContent='ユーザー名は英数字・アンダースコアのみ使用できます';errEl.classList.add('visible');return;}
+  if(password.length<6){errEl.textContent='パスワードは6文字以上必要です';errEl.classList.add('visible');return;}
 
-// Auth state observer
-auth.onAuthStateChanged(async user=>{
-  if(user){
-    currentUser=user;
-    const username=user.email.replace('@hghome.app','');
-    let isAdmin=false;
-    try{ const s=await db.ref(`users/${username}`).once('value'); const d=s.val(); if(d) isAdmin=!!d.isAdmin; }catch(e){}
-    currentSession={uid:user.uid,username,isAdmin};
-    saveSession(currentSession);
-    onLogin();
-  } else {
-    currentUser=null; currentSession=null; clearSession(); onLogout();
+  const btn=ge('authSubmitBtn'); btn.disabled=true; btn.textContent='...';
+
+  try{
+    const hash = await hashPass(password);
+
+    if(authMode==='login'){
+      // DB-based login
+      const snap = await db.ref(`users/${username}`).once('value');
+      const userData = snap.val();
+      if(!userData || userData.hash !== hash){
+        errEl.textContent='ユーザー名またはパスワードが違います';
+        errEl.classList.add('visible');
+        return;
+      }
+      const isAdmin = !!userData.isAdmin || userData.role === 'admin';
+      currentSession = { uid: username, username, isAdmin };
+      saveSession(currentSession);
+      closeAuthModal();
+      onLogin();
+
+    } else {
+      // DB-based register
+      const snap = await db.ref(`users/${username}`).once('value');
+      if(snap.exists()){
+        errEl.textContent='このユーザー名はすでに使われています';
+        errEl.classList.add('visible');
+        return;
+      }
+      await db.ref(`users/${username}`).set({
+        uid: username,
+        username,
+        hash,
+        displayName: username,
+        bio: '',
+        avatar: '',
+        isAdmin: false,
+        createdAt: Date.now()
+      });
+      currentSession = { uid: username, username, isAdmin: false };
+      saveSession(currentSession);
+      closeAuthModal();
+      onLogin();
+    }
+  } catch(err){
+    errEl.textContent = 'エラー: ' + err.message;
+    errEl.classList.add('visible');
+  } finally{
+    btn.disabled=false;
+    updateAuthUI();
   }
-});
+}
 
 function updateNavUI(){
   if(currentSession){
@@ -568,9 +554,7 @@ function onLogin(){
   ge('welcomeScreen').style.display='none';
   loadDecks();
   showToast(`ようこそ、${currentSession.username}さん！`);
-  // refresh blog UI if on blog tab
   if(ge('pageBlog').classList.contains('active')) loadBlogPosts();
-  // update comment form visibility
   if(currentPostId){
     ge('commentFormWrap').style.display='';
     ge('commentLoginPrompt').style.display='none';
@@ -583,17 +567,22 @@ function onLogout(){
   decks={}; currentDeckId=null;
   if(ge('pageBlog').classList.contains('active')){
     renderBlogGrid();
-    // update comment form
     ge('commentFormWrap').style.display='none';
     ge('commentLoginPrompt').style.display='';
   }
 }
-window.handleLogout = async function(){ await auth.signOut(); showToast('ログアウトしました'); };
+window.handleLogout = function(){
+  currentSession = null;
+  clearSession();
+  onLogout();
+  showToast('ログアウトしました');
+};
 
 // ── Decks ─────────────────────────────────────────────
 async function loadDecks(){
+  if(!currentSession) return;
   try{
-    const snap=await db.ref(`study/${currentUser.uid}/decks`).once('value');
+    const snap=await db.ref(`study/${currentSession.uid}/decks`).once('value');
     decks=snap.val()||{};
     refreshDeckSelect();
     if(Object.keys(decks).length===0) await createDeck('デフォルトデッキ');
@@ -601,7 +590,8 @@ async function loadDecks(){
   }catch(e){ showToast('デッキ読み込みエラー: '+e.message,'error'); }
 }
 async function createDeck(name){
-  const uid=currentUser.uid, deckId='deck_'+Date.now(), deck={name,cards:{},createdAt:Date.now()};
+  if(!currentSession) return;
+  const uid=currentSession.uid, deckId='deck_'+Date.now(), deck={name,cards:{},createdAt:Date.now()};
   try{
     await db.ref(`study/${uid}/decks/${deckId}`).set(deck);
     decks[deckId]=deck; currentDeckId=deckId;
@@ -610,9 +600,9 @@ async function createDeck(name){
   }catch(e){ showToast('デッキ作成エラー: '+e.message,'error'); }
 }
 async function deleteDeck(deckId){
-  if(!currentUser||!confirm(`「${decks[deckId]?.name}」を削除しますか？`)) return;
+  if(!currentSession||!confirm(`「${decks[deckId]?.name}」を削除しますか？`)) return;
   try{
-    await db.ref(`study/${currentUser.uid}/decks/${deckId}`).remove();
+    await db.ref(`study/${currentSession.uid}/decks/${deckId}`).remove();
     delete decks[deckId]; currentDeckId=Object.keys(decks)[0]||null;
     refreshDeckSelect();
     if(currentDeckId) showStudyView(); else ge('studyArea').classList.remove('active');
@@ -632,8 +622,8 @@ window.confirmDeleteDeck = function(){ if(currentDeckId) deleteDeck(currentDeckI
 
 // ── Cards ─────────────────────────────────────────────
 async function addCard(front,back){
-  if(!currentUser||!currentDeckId) return;
-  const uid=currentUser.uid, cardId='card_'+Date.now();
+  if(!currentSession||!currentDeckId) return;
+  const uid=currentSession.uid, cardId='card_'+Date.now();
   const card={front,back,createdAt:Date.now(),due:Date.now(),interval:0,ease:2.5,reps:0};
   try{
     await db.ref(`study/${uid}/decks/${currentDeckId}/cards/${cardId}`).set(card);
@@ -643,9 +633,9 @@ async function addCard(front,back){
   }catch(e){ showToast('追加エラー: '+e.message,'error'); }
 }
 window.deleteCard = async function(cardId){
-  if(!currentUser||!currentDeckId) return;
+  if(!currentSession||!currentDeckId) return;
   try{
-    await db.ref(`study/${currentUser.uid}/decks/${currentDeckId}/cards/${cardId}`).remove();
+    await db.ref(`study/${currentSession.uid}/decks/${currentDeckId}/cards/${cardId}`).remove();
     delete decks[currentDeckId].cards[cardId]; renderCardsList(); showToast('カードを削除しました');
   }catch(e){ showToast('削除エラー: '+e.message,'error'); }
 };
@@ -657,7 +647,7 @@ async function updateCardSRS(cardId,rating){
   else{if(reps===0)interval=4;else interval=Math.round(interval*ease*1.3);reps++;ease=Math.min(3.0,ease+.15);}
   const due=Date.now()+interval*86400000;
   decks[currentDeckId].cards[cardId]={...card,interval,ease,reps,due};
-  if(currentUser) await db.ref(`study/${currentUser.uid}/decks/${currentDeckId}/cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
+  if(currentSession) await db.ref(`study/${currentSession.uid}/decks/${currentDeckId}/cards/${cardId}`).update({interval,ease,reps,due}).catch(()=>{});
 }
 
 // ── Views ─────────────────────────────────────────────
@@ -763,9 +753,16 @@ applyTheme();
 
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  ge('authForm')?.addEventListener('submit',handleAuthSubmit);
-  ge('authModal')?.addEventListener('click',e=>{if(e.target===ge('authModal'))closeAuthModal();});
-  ge('flashcard')?.addEventListener('click',()=>window.flipCard());
+  ge('authForm')?.addEventListener('submit', handleAuthSubmit);
+  ge('authModal')?.addEventListener('click', e=>{ if(e.target===ge('authModal')) closeAuthModal(); });
+  ge('flashcard')?.addEventListener('click', ()=>window.flipCard());
   ge('welcomeScreen').style.display='flex';
   ge('studyArea').classList.remove('active');
+
+  // セッション復元
+  const sess = loadSession();
+  if(sess && sess.uid){
+    currentSession = sess;
+    onLogin();
+  }
 });
