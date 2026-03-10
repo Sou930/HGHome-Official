@@ -845,17 +845,28 @@ async function deleteNews(id){
 }
 
 async function submitNews(){
-  if(!isAdmin){showToast('管理者権限が必要です');return;}
+  // isAdmin が未確定の場合は再チェック
+  if(!isAdmin){
+    if(session && db){
+      try{
+        const snap=await db.ref('users/'+session.username).once('value');
+        const d=snap.val()||{};
+        isAdmin=d.isAdmin===true||d.role==='admin';
+      }catch(e){}
+    }
+    if(!isAdmin){showToast('管理者権限が必要です');return;}
+  }
+  if(!session){showToast('ログインが必要です');return;}
   const title=document.getElementById('newsTitle').value.trim();
   const cat=document.getElementById('newsCat').value;
-  const content=document.getElementById('newsContent').value.trim();
+  const newsContent=document.getElementById('newsContent').value.trim();
   const errEl=document.getElementById('newsErr');
   errEl.classList.remove('show');
   if(!title){errEl.textContent='タイトルを入力してください';errEl.classList.add('show');return;}
-  if(!content){errEl.textContent='内容を入力してください';errEl.classList.add('show');return;}
+  if(!newsContent){errEl.textContent='内容を入力してください';errEl.classList.add('show');return;}
   const btn=document.getElementById('newsSubmitBtn');btn.disabled=true;btn.textContent='送信中...';
   try{
-    const data={title,cat,content,author:session.username,uid:session.uid,ut:Date.now()};
+    const data={title,cat,content:newsContent,author:session.username,uid:session.uid,ut:Date.now()};
     if(editingNewsId){
       await db.ref('news/'+editingNewsId).update(data);
       showToast('更新しました ✓');
