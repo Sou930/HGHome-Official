@@ -659,7 +659,7 @@ function updateHeaderUI(){
     document.getElementById('hdrUsername').textContent=session.displayName||session.username;
     document.getElementById('acctDispName').textContent=session.displayName||session.username;
     document.getElementById('acctUsername').textContent='@'+session.username;
-    const av=localStorage.getItem('fm_avatar_'+session.username)||null;
+    const av=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;
     drawAvatarCanvas(document.getElementById('hdrAvatarCanvas'),session.username,av,28);
   } else {
     li.style.display='';re.style.display='';hu.style.display='none';
@@ -722,8 +722,16 @@ async function doRegister(username,pass){
       if(snap.exists()){showAuthErr('このユーザー名はすでに使われています');return;}
       await db.ref('users/'+username).set({username,hash,displayName:username,bio:'',avatar:'',created:Date.now()});
     }
-    saveSession({uid:username,username,displayName:username});
+    // DBからアバター取得してセッションに保存
+    let avatarData = null;
+    try{
+      const avSnap=await db.ref(`users/${username}/avatar`).once('value');
+      avatarData=avSnap.val()||null;
+      if(avatarData) localStorage.setItem('fm_avatar_'+username, avatarData);
+    }catch(e){}
+    saveSession({uid:username,username,displayName:stored.displayName||username,_avatar:avatarData});
     updateHeaderUI();checkAdminRole();
+    requestNotifPermission();
     showToast('アカウントを作成しました！');
     closeAuthModal();loadNews();
   }catch(e){showAuthErr('エラー: '+e.message);}
@@ -737,9 +745,11 @@ async function doLogin(username,pass){
     let stored=null;
     if(db){const snap=await db.ref('users/'+username).once('value');stored=snap.val();}
     if(!stored||stored.hash!==hash){showAuthErr('ユーザー名またはパスワードが間違っています');return;}
-    saveSession({uid:username,username,displayName:stored.displayName||username});
-    if(stored.avatar){try{localStorage.setItem('fm_avatar_'+username,stored.avatar);}catch(e){}}
+    const loginAvatar = stored.avatar||null;
+    if(loginAvatar){try{localStorage.setItem('fm_avatar_'+username,loginAvatar);}catch(e){}}
+    saveSession({uid:username,username,displayName:stored.displayName||username,_avatar:loginAvatar});
     updateHeaderUI();checkAdminRole();
+    requestNotifPermission();
     showToast('ログインしました！');
     closeAuthModal();loadNews();
     setTimeout(initNotifBar, 800);
