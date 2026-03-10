@@ -1,19 +1,265 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="light">
+<html lang="ja" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HGStudy</title>
   <meta name="description" content="HGStudy — フラッシュカードと解説ブログで学習">
-  <meta name="theme-color" content="#0058E6">
+  <meta name="theme-color" content="#0D1120">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="HGStudy">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <link rel="stylesheet" href="study.css">
+  <style>
+/* ── Deck Browser ──────────────────────────────────────── */
+:root{
+  --cyan:#00BFFF; --cyan2:#0099CC;
+  --deck-bg:#0F1628; --deck-border:rgba(255,255,255,.07);
+}
+
+/* カテゴリ横スクロール */
+.cat-scroll{
+  display:flex; gap:7px; padding:12px 16px 10px;
+  overflow-x:auto; scrollbar-width:none;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  position:sticky; top:56px; z-index:10;
+}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-pill{
+  flex-shrink:0; padding:5px 15px; border-radius:99px;
+  font-size:12px; font-weight:700; cursor:pointer; border:none;
+  background:var(--surface2); color:var(--text3);
+  transition:all .15s; white-space:nowrap; font-family:var(--Fb);
+}
+.cat-pill.on{background:var(--cyan);color:#000;}
+.cat-pill:hover:not(.on){color:var(--text);}
+
+/* ソートバー + セクションタイトル */
+.browser-bar{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:12px 16px 10px;
+}
+.sort-pills{
+  display:flex; gap:3px; background:var(--surface2);
+  border-radius:99px; padding:3px;
+}
+.sort-pill-btn{
+  padding:5px 14px; border-radius:99px; font-size:12px;
+  font-weight:700; border:none; cursor:pointer;
+  background:transparent; color:var(--text3);
+  font-family:var(--Fb); transition:all .15s;
+  display:flex; align-items:center; gap:5px;
+}
+.sort-pill-btn.on{background:var(--cyan);color:#000;}
+.sec-title{
+  display:flex; align-items:center; gap:8px;
+  font-size:15px; font-weight:800; color:var(--text); font-family:var(--Fd);
+}
+.sec-badge{
+  background:var(--surface2); color:var(--text3);
+  font-size:11px; padding:2px 8px; border-radius:99px; font-family:var(--Fm);
+}
+.create-btn{
+  margin-left:auto; padding:8px 18px;
+  background:var(--cyan); color:#000;
+  border:none; border-radius:8px; font-weight:800;
+  font-size:13px; cursor:pointer; font-family:var(--Fb);
+  transition:all .15s; white-space:nowrap; display:none;
+}
+.create-btn:hover{background:var(--cyan2);}
+.create-btn.show{display:block;}
+
+/* デッキグリッド */
+.deck-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:14px; padding:0 16px 40px;
+}
+@media(max-width:640px){.deck-grid{grid-template-columns:1fr;}}
+
+.deck-card{
+  background:var(--deck-bg);
+  border:1px solid var(--deck-border);
+  border-radius:12px; overflow:hidden;
+  transition:transform .15s,border-color .15s;
+}
+.deck-card:hover{transform:translateY(-2px);border-color:rgba(0,191,255,.25);}
+
+.dc-inner{padding:14px 16px 10px;}
+.dc-top{
+  display:flex; align-items:flex-start;
+  justify-content:space-between; gap:8px; margin-bottom:6px;
+}
+.dc-title{
+  font-size:16px; font-weight:800; color:var(--text);
+  font-family:var(--Fd); line-height:1.3; flex:1;
+}
+.dc-cnt{
+  flex-shrink:0; font-size:11px; color:var(--text3);
+  background:rgba(255,255,255,.06); padding:3px 9px;
+  border-radius:99px; font-family:var(--Fm); margin-top:2px;
+  white-space:nowrap;
+}
+.dc-cat{
+  display:inline-block; font-size:11px; font-weight:700;
+  padding:3px 10px; border-radius:5px; margin-bottom:6px;
+  font-family:var(--Fb);
+}
+.dc-desc{
+  font-size:12px; color:var(--text3); line-height:1.5;
+  margin-bottom:8px; min-height:18px;
+}
+.dc-meta{
+  display:flex; align-items:center; gap:14px;
+  font-size:11px; color:var(--text3); margin-bottom:8px;
+}
+.dc-meta-icon{display:flex;align-items:center;gap:3px;}
+.dc-author{
+  font-size:12px; color:var(--cyan); cursor:pointer;
+  font-weight:600; text-decoration:none;
+}
+.dc-author:hover{text-decoration:underline;}
+.dc-date{font-size:11px;color:var(--text3);}
+
+.dc-actions{
+  display:flex; gap:8px; align-items:center;
+  padding:10px 16px 12px;
+  border-top:1px solid var(--deck-border);
+}
+.study-start-btn{
+  flex:1; padding:10px; background:var(--cyan);
+  color:#000; border:none; border-radius:8px;
+  font-weight:800; font-size:13px; cursor:pointer;
+  font-family:var(--Fb); transition:all .15s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.study-start-btn:hover{background:var(--cyan2);}
+.fav-btn{
+  display:flex; align-items:center; gap:5px;
+  padding:8px 12px; background:rgba(255,255,255,.05);
+  border:1px solid var(--deck-border); border-radius:8px;
+  color:var(--text3); font-size:12px; font-weight:700;
+  cursor:pointer; font-family:var(--Fb); transition:all .15s;
+  white-space:nowrap;
+}
+.fav-btn.on{color:#FFB800;border-color:#FFB800;background:rgba(255,184,0,.08);}
+.fav-btn:hover:not(.on){border-color:rgba(255,255,255,.2);}
+
+/* 学習セッションヘッダー */
+.sess-bar{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 16px; background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:56px; z-index:10;
+}
+.sess-deckname{
+  font-size:14px; font-weight:700; color:var(--text);
+  flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.back-list-btn,.edit-deck-btn{
+  padding:7px 14px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:8px;
+  color:var(--text2); font-size:12px; font-weight:700;
+  cursor:pointer; font-family:var(--Fb); white-space:nowrap;
+}
+.edit-deck-btn{display:none;}
+
+/* デッキ作成/編集モーダル */
+.dm-overlay{
+  display:none; position:fixed; inset:0; z-index:700;
+  background:rgba(0,0,0,.75); backdrop-filter:blur(8px);
+  align-items:flex-start; justify-content:center;
+  padding:20px 16px; overflow-y:auto;
+}
+.dm-overlay.open{display:flex;}
+.dm-box{
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; width:100%; max-width:520px; margin:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+}
+.dm-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px 12px; border-bottom:1px solid var(--border);
+}
+.dm-title{font-size:16px;font-weight:800;color:var(--text);font-family:var(--Fd);}
+.dm-close{
+  width:28px;height:28px;background:var(--surface2);border:none;
+  border-radius:8px;color:var(--text3);font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.dm-body{padding:18px 20px;}
+.dm-lbl{
+  font-size:11px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;
+}
+.dm-input,.dm-textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:14px;
+  padding:9px 13px;margin-bottom:14px;font-family:var(--Fb);outline:none;
+  box-sizing:border-box;
+}
+.dm-textarea{resize:vertical;min-height:60px;font-size:13px;}
+.dm-input:focus,.dm-textarea:focus{border-color:var(--cyan);}
+.dm-cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.dm-cat-btn{
+  padding:5px 12px;border-radius:99px;font-size:11px;
+  font-weight:700;border:1.5px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;
+  font-family:var(--Fb);transition:all .12s;
+}
+.dm-cat-btn.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,191,255,.08);}
+.dm-save{
+  width:100%;padding:12px;background:var(--cyan);border:none;
+  border-radius:8px;color:#000;font-weight:800;font-size:14px;
+  cursor:pointer;font-family:var(--Fb);margin-top:4px;
+}
+.dm-save:hover{background:var(--cyan2);}
+.dm-danger{
+  width:100%;padding:10px;background:transparent;border:1px solid rgba(255,80,80,.3);
+  border-radius:8px;color:rgba(255,100,100,.8);font-weight:700;font-size:12px;
+  cursor:pointer;font-family:var(--Fb);margin-top:8px;
+}
+.dm-danger:hover{background:rgba(255,80,80,.1);}
+.dm-cards-section{
+  margin-top:20px;padding-top:18px;
+  border-top:1px solid var(--border);
+}
+.dm-card-item{
+  display:flex;gap:8px;align-items:center;
+  background:var(--surface2);border-radius:8px;
+  padding:8px 12px;margin-bottom:6px;
+}
+.dm-card-f{flex:1;font-size:13px;color:var(--text);}
+.dm-card-b{flex:1;font-size:12px;color:var(--text3);}
+.dm-card-del{
+  width:24px;height:24px;border-radius:6px;
+  background:transparent;border:none;color:var(--text3);
+  font-size:11px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.dm-card-del:hover{background:rgba(255,80,80,.15);color:#FF5050;}
+.dm-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.dm-add-input{
+  flex:1;min-width:100px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:13px;padding:7px 11px;
+  font-family:var(--Fb);outline:none;
+}
+.dm-add-input:focus{border-color:var(--cyan);}
+.dm-add-btn{
+  padding:7px 14px;background:var(--cyan);color:#000;
+  border:none;border-radius:8px;font-weight:800;font-size:12px;
+  cursor:pointer;font-family:var(--Fb);white-space:nowrap;
+}
+
+/* ローディング / 空 */
+.browser-loading{padding:60px;text-align:center;color:var(--text3);font-size:14px;}
+.browser-empty{padding:60px 20px;text-align:center;color:var(--text3);}
+.browser-empty-icon{font-size:48px;margin-bottom:12px;}
+  </style>
 </head>
 <body>
-
 <div class="bg-mesh"><div class="bg-static"></div></div>
 
 <!-- NAV -->
@@ -26,14 +272,14 @@
   <div class="nav-actions">
     <button class="nav-btn primary" id="navLoginBtn" onclick="openAuthModal('login')">ログイン</button>
     <div class="nav-user-wrap">
-      <button class="nav-user-btn" id="navUserBtn" onclick="toggleAcctMenu()">
-        <canvas id="navAvatarCanvas" width="24" height="24"></canvas>
+      <button class="nav-user-btn" id="navUserBtn" onclick="toggleAcctMenu()" style="display:none">
+        <canvas id="navAvatarCanvas" width="28" height="28" style="border-radius:6px;flex-shrink:0"></canvas>
         <span class="nav-user-name" id="navUsername"></span>
         <span style="font-size:10px;opacity:.5;margin-left:2px">▾</span>
       </button>
       <div class="acct-menu" id="acctMenu">
         <div class="acct-menu-header">
-          <canvas id="acctMenuAvatar" width="36" height="36" style="border-radius:6px;flex-shrink:0"></canvas>
+          <canvas id="acctMenuAvatar" width="40" height="40" style="border-radius:8px;flex-shrink:0"></canvas>
           <div class="acct-menu-info">
             <div class="acct-menu-dispname" id="acctMenuDispName"></div>
             <div class="acct-menu-username" id="acctMenuUsername"></div>
@@ -70,79 +316,131 @@
   </div>
 </div>
 
-<!-- ====== PAGE: 学習 ====== -->
-<div id="pageStudy" class="page-view active">
-  <div class="app-container">
-
-    <div id="welcomeScreen" class="welcome-screen">
-      <div class="welcome-badge"><span class="badge-dot"></span>スマート学習ツール</div>
-      <h1 class="welcome-title">HG<span class="grad-text">STUDY</span></h1>
-      <p class="welcome-sub">フラッシュカードで効率よく学習。<br>間隔反復アルゴリズムで記憶を強化。</p>
-      <div class="welcome-actions">
-        <button class="action-btn primary" onclick="openAuthModal('login')">ログインして始める</button>
-        <button class="action-btn outline" onclick="openAuthModal('register')">新規登録</button>
-      </div>
+<!-- DECK MODAL -->
+<div class="dm-overlay" id="deckModal">
+  <div class="dm-box">
+    <div class="dm-head">
+      <div class="dm-title" id="deckModalTitle">デッキを作る</div>
+      <button class="dm-close" onclick="closeDeckModal()">✕</button>
     </div>
+    <div class="dm-body">
+      <div class="dm-lbl">タイトル</div>
+      <input class="dm-input" id="dmName" placeholder="例: 世界史（中1）">
 
-    <div id="studyArea" class="study-area">
-      <div class="study-toolbar">
-        <span class="toolbar-label">デッキ:</span>
-        <select class="deck-select" id="deckSelect" onchange="onDeckChange(this.value)"></select>
-        <button class="tool-btn" onclick="promptNewDeck()">+ 新規</button>
-        <button class="tool-btn danger" onclick="confirmDeleteDeck()">削除</button>
-        <span class="toolbar-spacer"></span>
-        <div class="toolbar-stats" id="toolbarStats"></div>
-        <button class="tool-btn" id="editToggleBtn" onclick="toggleEditMode()">カード編集</button>
-      </div>
+      <div class="dm-lbl">説明（任意）</div>
+      <textarea class="dm-textarea" id="dmDesc" placeholder="このデッキの内容を簡単に..."></textarea>
 
-      <div class="card-area">
-        <div>
-          <div class="flashcard" id="flashcard">
-            <div class="card-side-label">表面</div>
-            <div class="card-content" id="cardFront">カードを読み込み中...</div>
-            <div id="cardBackArea" style="display:none;width:100%;flex-direction:column;align-items:center">
-              <div class="card-side-label" style="margin-top:20px">裏面</div>
-              <div class="card-content" id="cardBack"></div>
-            </div>
-            <span class="card-flip-hint">クリックでめくる</span>
-          </div>
-          <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-          <p class="card-progress" id="cardProgress">0 / 0</p>
-          <div class="card-controls">
-            <button class="ctrl-btn again" onclick="rateCard(1)" disabled>もう一度</button>
-            <button class="ctrl-btn good"  onclick="rateCard(2)" disabled>Good</button>
-            <button class="ctrl-btn easy"  onclick="rateCard(3)" disabled>Easy</button>
-          </div>
+      <div class="dm-lbl">カテゴリ</div>
+      <div class="dm-cats" id="dmCats"></div>
+
+      <button class="dm-save" id="dmSaveBtn" onclick="saveDeckFromModal()">💾 保存する</button>
+      <button class="dm-danger" id="dmDeleteBtn" onclick="deleteDeckFromModal()" style="display:none">🗑️ このデッキを削除</button>
+
+      <!-- カード一覧（編集時のみ） -->
+      <div class="dm-cards-section" id="dmCardsSection" style="display:none">
+        <div class="dm-lbl" style="margin-bottom:10px">カード一覧</div>
+        <div id="dmCardsList"></div>
+        <div class="dm-add-row">
+          <input class="dm-add-input" id="dmFront" placeholder="表面（問題）">
+          <input class="dm-add-input" id="dmBack" placeholder="裏面（答え）">
+          <button class="dm-add-btn" onclick="dmAddCard()">＋ 追加</button>
         </div>
       </div>
-
-      <div id="cardsListView" class="cards-list-view">
-        <form class="add-card-form" onsubmit="handleAddCard(event)">
-          <p class="section-micro-label">新しいカードを追加</p>
-          <div class="form-row">
-            <div><label>表面（問題）</label><textarea id="addFront" placeholder="例: こんにちは" required></textarea></div>
-            <div><label>裏面（答え）</label><textarea id="addBack"  placeholder="例: Hello"    required></textarea></div>
-          </div>
-          <button class="btn btn-primary" type="submit">+ カードを追加</button>
-        </form>
-        <div id="cardsList"></div>
-      </div>
-
-      <div id="sessionComplete" class="session-complete">
-        <div class="complete-icon">🎉</div>
-        <h2 class="complete-title">SESSION COMPLETE</h2>
-        <p class="complete-stats"></p>
-        <button class="action-btn primary" onclick="restartSession()">もう一度学習する</button>
-      </div>
     </div>
-
   </div>
 </div>
 
-<!-- ====== PAGE: 解説ブログ ====== -->
-<div id="pageBlog" class="page-view">
+<!-- ======= PAGE: 学習 ======= -->
+<div id="pageStudy" class="page-view active">
 
-  <!-- 一覧 -->
+  <!-- ウェルカム（未ログイン） -->
+  <div id="welcomeScreen" class="welcome-screen" style="display:none">
+    <div class="welcome-badge"><span class="badge-dot"></span>スマート学習ツール</div>
+    <h1 class="welcome-title">HG<span class="grad-text">STUDY</span></h1>
+    <p class="welcome-sub">フラッシュカードで効率よく学習。<br>間隔反復アルゴリズムで記憶を強化。</p>
+    <div class="welcome-actions">
+      <button class="action-btn primary" onclick="openAuthModal('login')">ログインして始める</button>
+      <button class="action-btn outline" onclick="openAuthModal('register')">新規登録</button>
+    </div>
+  </div>
+
+  <!-- デッキブラウザ -->
+  <div id="deckBrowser" style="display:none">
+    <div class="cat-scroll" id="catScroll"></div>
+    <div class="browser-bar">
+      <div class="sort-pills">
+        <button class="sort-pill-btn on" id="sortPopBtn" onclick="setDeckSort('pop')">🔥 人気順</button>
+        <button class="sort-pill-btn"    id="sortNewBtn" onclick="setDeckSort('new')">
+          <span style="background:#00BFFF;color:#000;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:800">NEW</span> 新着順
+        </button>
+      </div>
+      <div class="sec-title">📚 単語帳 <span class="sec-badge" id="deckCountBadge">0</span></div>
+      <button class="create-btn" id="createDeckBtn" onclick="openDeckModal(null)">＋ 作る</button>
+    </div>
+    <div class="deck-grid" id="deckGrid">
+      <div class="browser-loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- フラッシュカードセッション -->
+  <div id="studySession" style="display:none">
+    <div class="sess-bar">
+      <button class="back-list-btn" onclick="backToBrowser()">← 一覧</button>
+      <div class="sess-deckname" id="sessDeckName"></div>
+      <button class="edit-deck-btn" id="editDeckBtn" onclick="openDeckModal(currentDeckId)">✏️ 編集</button>
+    </div>
+    <div class="app-container">
+      <div class="study-area active" id="studyArea">
+        <div class="card-area">
+          <div>
+            <div class="flashcard" id="flashcard">
+              <div class="card-side-label">表面</div>
+              <div class="card-content" id="cardFront"></div>
+              <div id="cardBackArea" style="display:none;width:100%;flex-direction:column;align-items:center">
+                <div class="card-side-label" style="margin-top:20px">裏面</div>
+                <div class="card-content" id="cardBack"></div>
+              </div>
+              <span class="card-flip-hint">クリックでめくる</span>
+            </div>
+            <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+            <p class="card-progress" id="cardProgress">0 / 0</p>
+            <div class="card-controls">
+              <button class="ctrl-btn again" onclick="rateCard(1)" disabled>もう一度</button>
+              <button class="ctrl-btn good"  onclick="rateCard(2)" disabled>Good</button>
+              <button class="ctrl-btn easy"  onclick="rateCard(3)" disabled>Easy</button>
+            </div>
+          </div>
+        </div>
+        <!-- カード編集 -->
+        <div id="cardsListView" class="cards-list-view">
+          <form class="add-card-form" onsubmit="handleAddCard(event)">
+            <p class="section-micro-label">新しいカードを追加</p>
+            <div class="form-row">
+              <div><label>表面（問題）</label><textarea id="addFront" placeholder="例: こんにちは" required></textarea></div>
+              <div><label>裏面（答え）</label><textarea id="addBack"  placeholder="例: Hello"    required></textarea></div>
+            </div>
+            <button class="btn btn-primary" type="submit">+ カードを追加</button>
+          </form>
+          <div id="cardsList"></div>
+        </div>
+        <!-- セッション完了 -->
+        <div id="sessionComplete" class="session-complete">
+          <div class="complete-icon">🎉</div>
+          <h2 class="complete-title">SESSION COMPLETE</h2>
+          <p class="complete-stats"></p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+            <button class="action-btn primary" onclick="restartSession()">もう一度</button>
+            <button class="action-btn outline" onclick="backToBrowser()">一覧へ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pageStudy -->
+
+<!-- ======= PAGE: 解説ブログ ======= -->
+<div id="pageBlog" class="page-view">
   <div id="blogList">
     <div class="blog-hero">
       <div class="blog-hero-inner">
@@ -152,7 +450,6 @@
       </div>
       <div id="blogHeroCount" class="blog-hero-count">0</div>
     </div>
-
     <div class="blog-toolbar">
       <div class="sort-bar">
         <span class="sort-lbl">並び替え</span>
@@ -162,15 +459,12 @@
       <div style="flex:1"></div>
       <button class="btn btn-blog" id="newPostBtn" onclick="openBlogEdit(null)" style="display:none">✏️ 記事を書く</button>
     </div>
-
     <div class="blog-grid-wrap">
       <div id="blogPostsGrid" class="blog-posts-grid">
         <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
       </div>
     </div>
   </div>
-
-  <!-- 記事詳細 -->
   <div id="blogPost" style="display:none">
     <div class="blog-post-bar">
       <button class="back-btn" onclick="showBlogList()">← 一覧に戻る</button>
@@ -182,15 +476,11 @@
       <div class="blog-post-header">
         <span class="blog-post-tag" id="postTag"></span>
         <h1 class="blog-post-title" id="postTitle"></h1>
-        <div class="blog-post-meta">
-          <span id="postAuthor"></span><span>·</span><span id="postDate"></span>
-        </div>
+        <div class="blog-post-meta"><span id="postAuthor"></span><span>·</span><span id="postDate"></span></div>
       </div>
       <div class="blog-post-divider"></div>
       <div class="md-body" id="postBody"></div>
       <div class="blog-post-divider" style="margin-top:40px"></div>
-
-      <!-- コメント -->
       <div class="comments-wrap" style="padding:0;margin-top:24px">
         <div class="comments-title">コメント <span class="comments-title-cnt" id="commentCount">0</span></div>
         <div id="commentFormWrap">
@@ -208,8 +498,6 @@
       </div>
     </div>
   </div>
-
-  <!-- 記事編集 -->
   <div id="blogEdit" style="display:none">
     <div class="blog-edit-bar">
       <button class="back-btn" onclick="cancelBlogEdit()">← キャンセル</button>
@@ -245,7 +533,6 @@
       </div>
     </div>
   </div>
-
 </div><!-- /pageBlog -->
 
 <div id="toast" class="toast"></div>
