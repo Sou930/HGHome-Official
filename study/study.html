@@ -1,620 +1,266 @@
 <!DOCTYPE html>
 <html lang="ja" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="HGStudy">
-<link rel="manifest" href="../manifest-study.json">
-<link rel="apple-touch-icon" href="../icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
-<meta name="theme-color" content="#5B50F8">
-<title>HGStudy</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<link rel="stylesheet" href="study.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HGStudy</title>
+  <meta name="description" content="HGStudy — フラッシュカードで学習">
+  <meta name="theme-color" content="#ffe600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HGStudy">
+
+  <!-- Firebase v8 compat -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <link rel="stylesheet" href="study.css">
+  <style>
+    /* ── Profile Nav Styles ── */
+    .nav-user-btn {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid var(--border, rgba(255,255,255,0.1));
+      border-radius: 20px;
+      padding: 4px 12px 4px 4px;
+      cursor: pointer;
+      color: inherit;
+      font-family: inherit;
+      font-size: 13px;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .nav-user-btn:hover { background: var(--card, rgba(255,255,255,0.06)); }
+    .nav-user-btn canvas { border-radius: 50%; display: block; }
+    .nav-user-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--text2, #aaa);
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Dropdown menu */
+    .acct-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--card-bg, #16141f);
+      border: 1px solid var(--border, rgba(255,255,255,0.1));
+      border-radius: 12px;
+      min-width: 180px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      overflow: hidden;
+      display: none;
+      z-index: 200;
+    }
+    .acct-menu.open { display: block; }
+    .acct-menu-header {
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+    }
+    .acct-menu-dispname {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text, #fff);
+    }
+    .acct-menu-username {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text3, #666);
+      margin-top: 2px;
+    }
+    .acct-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 10px 16px;
+      cursor: pointer;
+      color: var(--text2, #aaa);
+      font-size: 13px;
+      font-family: inherit;
+      text-align: left;
+      transition: background 0.1s;
+    }
+    .acct-menu-item:hover { background: var(--hover, rgba(255,255,255,0.05)); color: var(--text, #fff); }
+    .acct-menu-item.danger:hover { background: rgba(255,80,80,0.1); color: #ff6060; }
+    .nav-user-wrap {
+      position: relative;
+    }
+  </style>
 </head>
 <body>
-
-<header class="hdr">
-  <div class="hdr-brand" onclick="goHome()">
-    <div class="hdr-brand-icon">HG</div>
-    <span class="hdr-brand-text">HGStudy</span>
+  <!-- Background mesh -->
+  <div class="bg-mesh">
+    <div class="bg-static"></div>
   </div>
-  <nav class="hdr-nav">
-    <button class="nav-tab on" id="tab-all"  onclick="switchTab('all')">みんなの</button>
-    <button class="nav-tab"   id="tab-mine" onclick="switchTab('mine')">マイ</button>
-    <button class="nav-tab"   id="tab-fav"  onclick="switchTab('fav')">★ お気に入り</button>
-    <button class="nav-tab"   id="tab-hist" onclick="showHistoryView()">📊 記録</button>
+
+  <!-- ── Navigation ── -->
+  <nav>
+    <a href="../hghome-official/index.html" class="nav-logo">
+      <span class="accent">←</span> HGHome
+    </a>
+    <div class="nav-center">
+      <span class="nav-title">HGStudy</span>
+    </div>
+    <div class="nav-actions">
+      <!-- ログアウト済み -->
+      <button class="nav-btn primary" id="navLoginBtn" onclick="openAuthModal('login')">ログイン</button>
+
+      <!-- ログイン済み: アバター+名前ボタン -->
+      <div class="nav-user-wrap">
+        <button class="nav-user-btn" id="navUserBtn" onclick="toggleAcctMenu()">
+          <canvas id="navAvatarCanvas" width="24" height="24"></canvas>
+          <span class="nav-user-name" id="navUsername"></span>
+          <span style="font-size:10px;opacity:0.5;margin-left:2px;">▾</span>
+        </button>
+
+        <!-- ドロップダウン -->
+        <div class="acct-menu" id="acctMenu">
+          <div class="acct-menu-header">
+            <div class="acct-menu-dispname" id="acctMenuDispName"></div>
+            <div class="acct-menu-username" id="acctMenuUsername"></div>
+          </div>
+          <button class="acct-menu-item" onclick="openMyProfile(); closeAcctMenu();">
+            👤 プロフィール
+          </button>
+          <button class="acct-menu-item danger" onclick="handleLogout(); closeAcctMenu();">
+            → ログアウト
+          </button>
+        </div>
+      </div>
+
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="テーマ切替">🌙</button>
+    </div>
   </nav>
-  <div class="hdr-actions" style="position:relative">
-    <div id="hdrUserBtn" class="hdr-user" onclick="toggleAcctMenu()" style="display:none">
-      <canvas id="hdrAvatarCanvas" class="hdr-avatar-sm" width="24" height="24"></canvas>
-      <span class="hdr-username-text" id="hdrUserName">ゲスト</span>
-    </div>
-    <div class="acct-menu" id="acctMenu">
-      <div class="acct-menu-user">
-        <canvas id="acctMenuAvatarCanvas" class="acct-menu-avatar" width="38" height="38"></canvas>
-        <div class="acct-menu-info">
-          <div class="acct-menu-name" id="acctMenuDispName">—</div>
-          <div class="acct-menu-sub" id="acctMenuUsername">—</div>
+
+  <!-- ── Auth Modal ── -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      <h2 class="modal-title" id="authTitle">ログイン</h2>
+      <p class="modal-sub">HGHome アカウントでログイン</p>
+      <form id="authForm">
+        <div class="form-group">
+          <label class="form-label" for="authUsername">ユーザー名</label>
+          <input class="form-input" id="authUsername" type="text" autocomplete="username"
+                 placeholder="username" required>
         </div>
-      </div>
-      <div class="acct-menu-item" onclick="closeAcctMenu();openMyProfile()">👤 プロフィール</div>
-      <div class="acct-menu-item" onclick="closeAcctMenu();openCreateModal()">＋ デッキを作る</div>
-      <div class="acct-menu-item" onclick="closeAcctMenu();openCreateBlogModal()">✏ ブログを書く</div>
-      <div class="acct-menu-item red" onclick="closeAcctMenu();logout()">ログアウト</div>
-    </div>
-    <button class="btn btn-ghost btn-sm" id="hdrRegBtn"   onclick="showAuth('reg')"   style="display:none">新規登録</button>
-    <button class="btn btn-primary btn-sm" id="hdrLoginBtn" onclick="showAuth('login')" style="display:none">ログイン</button>
-    <button class="btn-icon" id="themeToggleBtn" onclick="toggleTheme()" title="テーマ切替">☾</button>
-    <button class="btn-icon" onclick="openSettings()" title="設定">⚙</button>
-  </div>
-</header>
-
-<!-- HOME -->
-<div id="view-home" class="view active">
-  <div class="home-hero" style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
-    <div>
-      <div class="home-hero-title" id="heroTitle">みんなのデッキ</div>
-      <div class="home-hero-sub"   id="heroSub">公開された単語帳と解説ブログを学習しよう</div>
-    </div>
-    <div class="home-hero-count" id="heroNum">00</div>
-  </div>
-  <div class="tag-bar" id="tagBar">
-    <button class="tag-chip on" data-tag="" onclick="setTagFilter('')">ALL</button>
-    <button class="tag-chip" data-tag="代数"     onclick="setTagFilter('代数')">代数</button>
-    <button class="tag-chip" data-tag="幾何"     onclick="setTagFilter('幾何')">幾何</button>
-    <button class="tag-chip" data-tag="甲"       onclick="setTagFilter('甲')">甲</button>
-    <button class="tag-chip" data-tag="乙"       onclick="setTagFilter('乙')">乙</button>
-    <button class="tag-chip" data-tag="漢文"     onclick="setTagFilter('漢文')">漢文</button>
-    <button class="tag-chip" data-tag="歴史"     onclick="setTagFilter('歴史')">歴史</button>
-    <button class="tag-chip" data-tag="地理"     onclick="setTagFilter('地理')">地理</button>
-    <button class="tag-chip" data-tag="物理"     onclick="setTagFilter('物理')">物理</button>
-    <button class="tag-chip" data-tag="生物"     onclick="setTagFilter('生物')">生物</button>
-    <button class="tag-chip" data-tag="英語A"    onclick="setTagFilter('英語A')">英語A</button>
-    <button class="tag-chip" data-tag="英語B"    onclick="setTagFilter('英語B')">英語B</button>
-    <button class="tag-chip" data-tag="ロシア語" onclick="setTagFilter('ロシア語')">ロシア語</button>
-    <button class="tag-chip" data-tag="Python"   onclick="setTagFilter('Python')">Python</button>
-    <button class="tag-chip" data-tag="C"        onclick="setTagFilter('C')">C</button>
-    <button class="tag-chip" data-tag="その他"   onclick="setTagFilter('その他')">その他</button>
-  </div>
-  <div class="sort-bar">
-    <span class="sort-lbl">並び順：</span>
-    <button class="sort-btn on" id="sortBtnPopular" onclick="setSort('popular')">🔥 人気順</button>
-    <button class="sort-btn" id="sortBtnNew" onclick="setSort('new')">🆕 新着順</button>
-  </div>
-  <div id="spinner" class="spinner-wrap">
-    <div class="spinner"></div><div class="spinner-txt">読み込み中...</div>
-  </div>
-  <div class="load-err" id="loadErr">
-    <div class="load-err-icon">😵</div>
-    <div class="load-err-msg">読み込みに失敗しました</div>
-    <div class="load-err-sub">ネットワークを確認してください</div>
-    <button class="btn btn-primary" onclick="retryLoad()" style="margin-top:8px">↺ 再読み込み</button>
-  </div>
-  <div id="deckSection" style="display:none">
-    <div class="section-hdr">
-      <div class="section-hdr-left">
-        <div class="section-hdr-icon section-hdr-icon-deck">📚</div>
-        <div class="section-hdr-title">単語帳</div>
-        <div class="section-hdr-cnt" id="deckCountLbl">0</div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openCreateModal()">＋ 作る</button>
-    </div>
-    <div id="emptyDecks" class="empty-state" style="display:none">
-      <div class="empty-emoji">📚</div>
-      <div class="empty-title" id="emptyDecksTitle">単語帳がありません</div>
-      <div class="empty-sub" id="emptyDecksSub">最初のデッキを作りましょう</div>
-    </div>
-    <div id="deckGrid" class="deck-grid" style="display:none"></div>
-  </div>
-  <div class="section-divider" id="dividerDB" style="display:none"></div>
-  <div id="blogSection" style="display:none">
-    <div class="section-hdr">
-      <div class="section-hdr-left">
-        <div class="section-hdr-icon section-hdr-icon-blog">✏</div>
-        <div class="section-hdr-title">解説ブログ</div>
-        <div class="section-hdr-cnt" id="blogCountLbl">0</div>
-      </div>
-      <button class="btn btn-blog btn-sm" onclick="openCreateBlogModal()">＋ 書く</button>
-    </div>
-    <div id="emptyBlogs" class="empty-state" style="display:none">
-      <div class="empty-emoji">✏</div>
-      <div class="empty-title" id="emptyBlogsTitle">解説ブログがありません</div>
-      <div class="empty-sub" id="emptyBlogsSub">最初のブログを書きましょう</div>
-    </div>
-    <div id="blogGrid" class="blog-grid" style="display:none"></div>
-  </div>
-</div>
-
-<!-- AUTH -->
-<div id="view-auth" class="view">
-  <div class="auth-wrap">
-    <div class="auth-box">
-      <div class="auth-hero">
-        <div class="auth-hero-icon">✦</div>
-        <div class="auth-hero-t">HGStudy</div>
-        <div class="auth-hero-s">アカウントにログイン / 新規登録</div>
-      </div>
-      <div class="auth-body">
-        <div class="auth-tabs">
-          <button class="auth-tab on" id="authTabLogin" onclick="switchAuthTab('login')">ログイン</button>
-          <button class="auth-tab"   id="authTabReg"   onclick="switchAuthTab('reg')">新規登録</button>
+        <div class="form-group">
+          <label class="form-label" for="authPassword">パスワード</label>
+          <input class="form-input" id="authPassword" type="password" autocomplete="current-password"
+                 placeholder="••••••••" required>
         </div>
-        <div class="auth-err" id="authErr"></div>
-        <div class="fld"><label>ユーザー名</label><input type="text" id="authUser" placeholder="例: taro123" autocomplete="username" maxlength="20"></div>
-        <div class="fld"><label>パスワード（6文字以上）</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password"></div>
-        <div class="fld" id="authConfirmWrap" style="display:none"><label>パスワード（確認）</label><input type="password" id="authPassConfirm" placeholder="••••••" autocomplete="new-password"></div>
-        <div class="fld" id="authGenWrap" style="display:none">
-          <label>期 *</label>
-          <select id="authGen" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);background:var(--surface2);cursor:pointer;">
-            <option value="">選択してください</option>
-            <option value="66">66期</option>
-            <option value="67">67期</option>
-            <option value="68">68期</option>
-            <option value="69">69期</option>
-            <option value="70">70期</option>
-          </select>
-        </div>
-      </div>
-      <div class="auth-foot">
-        <button class="btn btn-primary" id="authBtn" onclick="authSubmit()" style="width:100%;justify-content:center">ログイン</button>
-        <button class="btn btn-ghost btn-sm" onclick="goHome()" style="width:100%;justify-content:center">ゲストとして続ける</button>
-      </div>
+        <div class="form-error" id="authError"></div>
+        <button class="btn btn-primary" id="authSubmitBtn" type="submit">[ ログイン ]</button>
+        <p class="auth-switch" id="authSwitchText">
+          アカウントをお持ちでない方は<a onclick="switchAuthMode()">こちら</a>
+        </p>
+      </form>
     </div>
   </div>
-</div>
 
-<!-- PROFILE VIEW -->
-<div id="view-profile" class="view">
-  <div class="study-bar">
-    <button class="btn btn-ghost btn-sm" id="profileBackBtn" onclick="goHome()">← 戻る</button>
-    <div class="prog-track"></div>
-    <div class="study-lbl" id="profileViewLabel">プロフィール</div>
-  </div>
-  <div class="profile-hero">
-    <div class="profile-hero-banner"></div>
-    <div class="profile-hero-body">
-      <div class="profile-avatar-wrap">
-        <canvas class="avatar avatar-xl" id="profileBigAvatar" width="96" height="96"></canvas>
-        <button class="profile-avatar-edit-btn" id="profileAvatarEditBtn" style="display:none" onclick="document.getElementById('avatarFileInput').click()" title="画像を変更">✎</button>
-        <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)" style="display:none">
-      </div>
-      <div class="profile-displayname" id="profileDisplayName">—</div>
-      <div class="profile-username" id="profileUsernameLabel">@—</div>
-      <div class="profile-bio" id="profileBio"></div>
-      <div class="profile-stats-row">
-        <div class="profile-stat"><div class="profile-stat-val" id="profileDeckCount">0</div><div class="profile-stat-lbl">デッキ</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profileBlogCount">0</div><div class="profile-stat-lbl">ブログ</div></div>
-        <div class="profile-stat" style="cursor:pointer" onclick="openFollowList('followers')"><div class="profile-stat-val" id="profileFollowerCount">0</div><div class="profile-stat-lbl">フォロワー</div></div>
-        <div class="profile-stat" style="cursor:pointer" onclick="openFollowList('following')"><div class="profile-stat-val" id="profileFollowingCount">0</div><div class="profile-stat-lbl">フォロー中</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profileTotalFavs">0</div><div class="profile-stat-lbl">★ 合計</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profileStreakStat" style="color:#FF6B35">0🔥</div><div class="profile-stat-lbl">連続学習</div></div>
-      </div>
-      <div class="profile-actions" id="profileActions"></div>
-    </div>
-  </div>
-  <div class="profile-body">
-    <div id="profileStreakArea"></div>
-    <div class="profile-section-title">📚 単語帳</div>
-    <div id="profileDeckGrid" class="deck-grid" style="padding:0;margin-bottom:28px;"></div>
-    <div id="profileDeckEmpty" class="profile-no-content" style="display:none;margin-bottom:28px;">まだデッキがありません</div>
-    <div class="profile-section-title">✏ ブログ</div>
-    <div id="profileBlogGrid" class="blog-grid" style="padding:0;"></div>
-    <div id="profileBlogEmpty" class="profile-no-content" style="display:none;">まだブログがありません</div>
-  </div>
-</div>
+  <!-- ── Main App ── -->
+  <div class="app-container">
 
-<!-- EDIT DECK -->
-<div id="view-edit" class="view">
-  <div class="edit-bar">
-    <div class="edit-field">
-      <div class="edit-field-lbl">Deck Name</div>
-      <input class="edit-field-inp" id="editName" type="text" placeholder="デッキ名を入力">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)">タグ</div>
-      <select class="edit-tag-sel" id="editTagSel">
-        <option value="">なし</option>
-        <option>代数</option><option>幾何</option><option>甲</option><option>乙</option>
-        <option>漢文</option><option>歴史</option><option>地理</option><option>物理</option>
-        <option>生物</option><option>英語A</option><option>英語B</option>
-        <option>ロシア語</option><option>Python</option><option>C</option><option>その他</option>
-      </select>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0">
-      <button class="btn btn-ghost btn-sm" onclick="openCollabModal('deck')" title="共同編集者を管理" style="font-size:15px;padding:7px 10px">👥</button>
-      <button class="btn btn-ghost btn-sm" onclick="goHome()">キャンセル</button>
-      <button class="btn btn-primary btn-sm" onclick="saveDeck()">保存する</button>
-    </div>
-  </div>
-  <div class="edit-body">
-    <div class="edit-card-lbl">カード — <span id="editCntLbl">0</span> / 150</div>
-    <div class="edit-warn" id="editWarn">⚠ カードの上限は150枚です</div>
-    <div class="col-hdr">
-      <div class="col-hdr-c" style="display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.4">⠿</div>
-      <div class="col-hdr-c">#</div>
-      <div class="col-hdr-c">表面 Front</div>
-      <div class="col-hdr-c img-col" title="表面に画像を追加">🖼</div>
-      <div class="col-hdr-c bk">裏面 Back</div>
-      <div class="col-hdr-c img-col bk" title="裏面に画像を追加" style="background:var(--primary);opacity:.7">🖼</div>
-      <div class="col-hdr-c"></div>
-    </div>
-    <div id="editList"></div>
-    <button class="add-row" onclick="addRow()">＋ カードを追加</button>
-  </div>
-</div>
-
-<!-- EDIT BLOG -->
-<div id="view-blog-edit" class="view">
-  <div class="blog-edit-bar">
-    <div class="edit-field" style="flex:2">
-      <div class="edit-field-lbl">タイトル</div>
-      <input class="blog-edit-inp" id="blogEditTitle" type="text" placeholder="ブログのタイトル" style="border:none;border-bottom:2px solid var(--border);border-radius:0;padding:2px 0;font-family:var(--Fd);font-size:20px;background:transparent;">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)">タグ</div>
-      <select class="edit-tag-sel" id="blogEditTag">
-        <option value="">なし</option>
-        <option>代数</option><option>幾何</option><option>甲</option><option>乙</option>
-        <option>漢文</option><option>歴史</option><option>地理</option><option>物理</option>
-        <option>生物</option><option>英語A</option><option>英語B</option>
-        <option>ロシア語</option><option>Python</option><option>C</option><option>その他</option>
-      </select>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0">
-      <button class="btn btn-ghost btn-sm" onclick="goHome()">キャンセル</button>
-      <button class="btn btn-blog btn-sm" onclick="saveBlog()">公開する</button>
-    </div>
-  </div>
-  <div class="blog-edit-body">
-    <div class="blog-preview-toggle">
-      <button class="blog-preview-btn on" id="blogTabWrite" onclick="switchBlogEditTab('write')">✏ 編集</button>
-      <button class="blog-preview-btn" id="blogTabPreview" onclick="switchBlogEditTab('preview')">👁 プレビュー</button>
-    </div>
-    <div id="blogWritePane">
-      <div class="blog-edit-row">
-        <div class="blog-edit-lbl">本文（Discord書式対応）</div>
-        <textarea class="blog-edit-textarea" id="blogEditContent" placeholder="# 見出し&#10;## 小見出し&#10;**太字** *斜体*&#10;&#10;```python&#10;print('Hello')&#10;```&#10;&#10;> 引用&#10;&#10;- リスト&#10;1. 番号リスト&#10;&#10;||ネタバレ||" oninput="livePreview()"></textarea>
-        <div class="blog-edit-hint">
-          # 見出し1 &nbsp;｜&nbsp; ## 見出し2 &nbsp;｜&nbsp; **太字** &nbsp;｜&nbsp; *斜体* &nbsp;｜&nbsp; `コード` &nbsp;｜&nbsp; ```コードブロック``` &nbsp;｜&nbsp; > 引用 &nbsp;｜&nbsp; - リスト &nbsp;｜&nbsp; ||ネタバレ||
-        </div>
+    <!-- Welcome Screen (logged out) -->
+    <div id="welcomeScreen" class="welcome-screen">
+      <div class="welcome-badge">
+        <span class="badge-dot"></span>
+        スマート学習ツール
+      </div>
+      <h1 class="welcome-title">
+        HG<span class="grad-text">STUDY</span>
+      </h1>
+      <p class="welcome-sub">
+        フラッシュカードで効率よく学習。<br>
+        間隔反復アルゴリズムで記憶を強化。
+      </p>
+      <div class="welcome-actions">
+        <button class="action-btn primary" onclick="openAuthModal('login')">ログインして始める</button>
+        <button class="action-btn outline" onclick="openAuthModal('register')">新規登録</button>
       </div>
     </div>
-    <div id="blogPreviewPane" style="display:none">
-      <div class="blog-edit-lbl" style="margin-bottom:14px">プレビュー</div>
-      <div class="md-body" id="livePreviewBody"></div>
-    </div>
-  </div>
-</div>
 
-<!-- BLOG POST VIEW -->
-<div id="view-blog-post" class="view">
-  <div class="blog-post-bar">
-    <button class="btn btn-ghost btn-sm" onclick="goHome()">← 戻る</button>
-    <div style="flex:1"></div>
-    <div id="blogPostOwnerActions" style="display:none;gap:6px;">
-      <button class="btn btn-ghost btn-sm" id="blogEditBtn" onclick="openBlogEdit()">✎ 編集</button>
-      <button class="btn btn-danger btn-sm" id="blogDeleteBtn" onclick="deleteBlogPost()">🗑 削除</button>
-    </div>
-  </div>
-  <div class="blog-post-body">
-    <div class="blog-post-header">
-      <div class="blog-post-tag" id="blogPostTag"></div>
-      <div class="blog-post-title" id="blogPostTitle"></div>
-      <div class="blog-post-meta">
-        <span id="blogPostAuthorLink" style="cursor:pointer;color:var(--primary);font-weight:600;" onclick="openProfileByUsername(_currentBlogAuthorUid)"></span>
-        <span id="blogPostDate"></span>
+    <!-- Study Area (logged in) -->
+    <div id="studyArea" class="study-area">
+
+      <!-- Toolbar -->
+      <div class="study-toolbar">
+        <span class="toolbar-label">デッキ:</span>
+        <select class="deck-select" id="deckSelect" onchange="onDeckChange(this.value)"></select>
+        <button class="tool-btn" onclick="promptNewDeck()">+ 新規</button>
+        <button class="tool-btn danger" onclick="confirmDeleteDeck()">削除</button>
+        <span class="toolbar-spacer"></span>
+        <div class="toolbar-stats" id="toolbarStats"></div>
+        <button class="tool-btn" id="editToggleBtn" onclick="toggleEditMode()">カード編集</button>
       </div>
-    </div>
-    <div class="blog-post-divider"></div>
-    <div class="md-body" id="blogPostBody"></div>
-  </div>
-  <div class="comments-wrap">
-    <div class="comments-divider"></div>
-    <div class="comments-title">💬 コメント <span class="comments-title-cnt" id="commentCount">0</span></div>
-    <div id="commentFormArea"></div>
-    <div class="comment-list" id="commentList"></div>
-  </div>
-</div>
 
-<!-- MODE SELECT -->
-<div id="view-mode" class="view">
-  <div class="study-bar">
-    <button class="btn btn-ghost btn-sm" onclick="goHome()">← 戻る</button>
-    <div class="prog-track"></div>
-    <div class="study-lbl" id="modeDeckName">—</div>
-  </div>
-  <div class="mode-body">
-    <div class="mode-title">モードを選択</div>
-    <div class="mode-sub">どの形式で学習しますか？</div>
-    <div class="mode-grid">
-      <button class="mode-card" onclick="startMode('ordered')">
-        <div class="mode-card-icon">▤</div>
-        <div style="display:flex;flex-direction:column;gap:4px;text-align:left;">
-          <div class="mode-card-name">単語帳</div>
-          <div class="mode-card-desc">順番通りにカードをめくる</div>
-        </div>
-      </button>
-      <button class="mode-card" onclick="startMode('random')">
-        <div class="mode-card-icon">⇄</div>
-        <div style="display:flex;flex-direction:column;gap:4px;text-align:left;">
-          <div class="mode-card-name">ランダム</div>
-          <div class="mode-card-desc">シャッフルしてカードをめくる</div>
-        </div>
-      </button>
-      <button class="mode-card mode-card-quiz" onclick="startMode('quiz')">
-        <div class="mode-card-icon">？</div>
-        <div style="display:flex;flex-direction:column;gap:4px;text-align:left;">
-          <div class="mode-card-name" style="color:#fff">4択問題</div>
-          <div class="mode-card-desc">選択肢から正解を選ぶ</div>
-        </div>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- STUDY -->
-<div id="view-study" class="view">
-  <div class="study-bar">
-    <button class="btn btn-ghost btn-sm" onclick="showView('mode')">← モード選択</button>
-    <div class="prog-track"><div class="prog-fill" id="studyProg" style="width:0"></div></div>
-    <div class="study-lbl" id="studyLbl">— / —</div>
-  </div>
-  <div class="study-body">
-    <div class="scene" id="studyScene">
-      <div class="swipe-hint swipe-hint-know" id="hintKnow">✓</div>
-      <div class="swipe-hint swipe-hint-again" id="hintAgain">↺</div>
-      <div class="card3d" id="card3d">
-        <div class="face face-fr">
-          <div class="face-tag">Front</div>
-          <div class="face-txt" id="fFront">—</div>
-          <img id="fFrontImg" class="face-img" src="" alt="" style="display:none">
-          <div class="face-hint">タップして裏返す</div>
-        </div>
-        <div class="face face-bk">
-          <div class="face-tag" style="color:rgba(255,255,255,.35)">Back</div>
-          <div class="face-txt" id="fBack">—</div>
-          <img id="fBackImg" class="face-img" src="" alt="" style="display:none">
-          <div class="face-hint">Space でも操作可</div>
-        </div>
-      </div>
-    </div>
-    <div class="swipe-guide">← 前へ &nbsp;｜&nbsp; 上スワイプ: 覚えた ✓ &nbsp;｜&nbsp; 次へ →</div>
-    <div class="study-nav">
-      <button class="btn-again" onclick="mark(false)">✗ もう一度</button>
-      <button class="nav-arr"   onclick="prevCard()">←</button>
-      <button class="nav-arr"   onclick="nextCard()">→</button>
-      <button class="btn-know"  onclick="mark(true)">✓ 覚えた</button>
-    </div>
-    <div class="study-done" id="studyDone">
-      <div class="study-done-hd">🎉 全カードを確認しました！</div>
-      <div class="study-done-acts">
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff" onclick="startQuiz()">クイズで確認 →</button>
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)" onclick="restartStudy()">もう一度</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- QUIZ -->
-<div id="view-quiz" class="view">
-  <div class="quiz-bar">
-    <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff" onclick="showView('mode')">← モード選択</button>
-    <div class="qprog-t"><div class="qprog-f" id="quizProg" style="width:0"></div></div>
-    <div class="study-lbl" id="quizLbl" style="color:rgba(255,255,255,.45)">— / —</div>
-  </div>
-  <div class="quiz-body" id="quizBody"></div>
-</div>
-
-<!-- HISTORY -->
-<div id="view-history" class="view">
-  <div class="study-bar">
-    <button class="btn btn-ghost btn-sm" onclick="goHome()">← ホーム</button>
-    <div class="prog-track"></div>
-    <div class="study-lbl">学習履歴</div>
-  </div>
-  <div class="hist-body">
-    <div class="hist-title">学習履歴 📊</div>
-    <div class="hist-sub">過去14日間の学習記録</div>
-    <div class="hist-stats">
-      <div class="stat-card"><div class="stat-label">総セッション</div><div class="stat-val" id="statTotal">0</div><div class="stat-unit">回</div></div>
-      <div class="stat-card"><div class="stat-label">連続学習</div><div class="stat-val" id="statStreak">0</div><div class="stat-unit">日</div></div>
-      <div class="stat-card"><div class="stat-label">平均スコア</div><div class="stat-val" id="statAvg">—</div><div class="stat-unit">%（クイズ）</div></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-hdr">
-        <div class="chart-title">14日間の活動</div>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot legend-study"></div>単語帳</div>
-          <div class="legend-item"><div class="legend-dot legend-quiz"></div>クイズ</div>
-        </div>
-      </div>
-      <canvas id="histChart"></canvas>
-      <div class="chart-empty" id="chartEmpty" style="display:none"><div class="chart-empty-icon">📭</div><div>まだ学習記録がありません</div></div>
-    </div>
-    <div class="hist-list-title">最近のセッション</div>
-    <div class="hist-list" id="histList"><div style="color:var(--text3);font-size:13px;padding:12px 0;">読み込み中...</div></div>
-    <div class="hist-no-login" id="histNoLogin" style="display:none">
-      <div style="font-size:22px;margin-bottom:8px">🔐</div>
-      <div style="font-weight:700;color:var(--text);margin-bottom:4px">ログインすると記録が保存されます</div>
-      <div style="margin-bottom:14px">ゲストの場合はこの端末のみに保存されます</div>
-      <button class="btn btn-primary btn-sm" onclick="showAuth('login')">ログインする</button>
-    </div>
-  </div>
-</div>
-
-
-
-<!-- MODALS -->
-
-
-<!-- Follow List -->
-<div class="ov" id="followListOv">
-  <div class="mbox" style="max-width:400px">
-    <div class="mhd"><div class="mhd-t" id="followListTitle">フォロワー</div><button class="mcl" onclick="closeFollowList()">✕</button></div>
-    <div class="mbody" style="max-height:60vh;overflow-y:auto;padding:0"><div id="followListContent" style="padding:8px 0"></div></div>
-  </div>
-</div>
-
-<!-- Collab -->
-<div class="ov" id="collabOv">
-  <div class="mbox" style="max-width:460px">
-    <div class="mhd"><div class="mhd-t">👥 共同編集者を管理</div><button class="mcl" onclick="closeCollabModal()">✕</button></div>
-    <div class="mbody">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">共同編集者はコンテンツの編集・カード追加ができます。削除は作成者のみ可能です。</div>
-      <div class="fld"><label>ユーザー名で追加</label>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="collabInput" placeholder="例: taro_123" class="fld-input" style="flex:1" onkeydown="if(event.key==='Enter')addCollab()">
-          <button class="btn btn-primary btn-sm" onclick="addCollab()">追加</button>
-        </div>
-      </div>
-      <div class="collab-list" id="collabList"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Create Deck -->
-<div class="ov" id="createOv">
-  <div class="mbox">
-    <div class="mhd"><div class="mhd-t">新しいデッキを作成</div><button class="mcl" onclick="closeCreateModal()">✕</button></div>
-    <div class="mbody">
-      <div class="fld"><label>デッキ名 *</label><input type="text" id="newName" placeholder="例: 英単語 TOEIC"></div>
-      <div class="fld"><label>説明（任意）</label><input type="text" id="newDesc" placeholder="例: 600点を目指す英単語集"></div>
-      <div class="fld"><label>タグ（任意）</label>
-        <div class="tag-sel-grid" id="deckTagGrid">
-          <button class="tag-opt" data-tag="代数" onclick="selectTag('代数','deck')">代数</button>
-          <button class="tag-opt" data-tag="幾何" onclick="selectTag('幾何','deck')">幾何</button>
-          <button class="tag-opt" data-tag="甲" onclick="selectTag('甲','deck')">甲</button>
-          <button class="tag-opt" data-tag="乙" onclick="selectTag('乙','deck')">乙</button>
-          <button class="tag-opt" data-tag="漢文" onclick="selectTag('漢文','deck')">漢文</button>
-          <button class="tag-opt" data-tag="歴史" onclick="selectTag('歴史','deck')">歴史</button>
-          <button class="tag-opt" data-tag="地理" onclick="selectTag('地理','deck')">地理</button>
-          <button class="tag-opt" data-tag="物理" onclick="selectTag('物理','deck')">物理</button>
-          <button class="tag-opt" data-tag="生物" onclick="selectTag('生物','deck')">生物</button>
-          <button class="tag-opt" data-tag="英語A" onclick="selectTag('英語A','deck')">英語A</button>
-          <button class="tag-opt" data-tag="英語B" onclick="selectTag('英語B','deck')">英語B</button>
-          <button class="tag-opt" data-tag="ロシア語" onclick="selectTag('ロシア語','deck')">ロシア語</button>
-          <button class="tag-opt" data-tag="Python" onclick="selectTag('Python','deck')">Python</button>
-          <button class="tag-opt" data-tag="C" onclick="selectTag('C','deck')">C</button>
-          <button class="tag-opt" data-tag="その他" onclick="selectTag('その他','deck')">その他</button>
-        </div>
-      </div>
-    </div>
-    <div class="mfoot"><button class="btn btn-ghost btn-sm" onclick="closeCreateModal()">キャンセル</button><button class="btn btn-primary btn-sm" onclick="createDeck()">作成して編集 →</button></div>
-  </div>
-</div>
-
-<!-- Create Blog -->
-<div class="ov" id="createBlogOv">
-  <div class="mbox">
-    <div class="mhd mhd-blog"><div class="mhd-t">新しいブログ記事を作成</div><button class="mcl" onclick="closeCreateBlogModal()">✕</button></div>
-    <div class="mbody">
-      <div class="fld"><label>タイトル *</label><input type="text" id="newBlogTitle" placeholder="例: 二次方程式の解き方まとめ"></div>
-      <div class="fld"><label>タグ（任意）</label>
-        <div class="tag-sel-grid" id="blogTagGrid">
-          <button class="tag-opt" data-tag="代数" onclick="selectTag('代数','blog')">代数</button>
-          <button class="tag-opt" data-tag="幾何" onclick="selectTag('幾何','blog')">幾何</button>
-          <button class="tag-opt" data-tag="甲" onclick="selectTag('甲','blog')">甲</button>
-          <button class="tag-opt" data-tag="乙" onclick="selectTag('乙','blog')">乙</button>
-          <button class="tag-opt" data-tag="漢文" onclick="selectTag('漢文','blog')">漢文</button>
-          <button class="tag-opt" data-tag="歴史" onclick="selectTag('歴史','blog')">歴史</button>
-          <button class="tag-opt" data-tag="地理" onclick="selectTag('地理','blog')">地理</button>
-          <button class="tag-opt" data-tag="物理" onclick="selectTag('物理','blog')">物理</button>
-          <button class="tag-opt" data-tag="生物" onclick="selectTag('生物','blog')">生物</button>
-          <button class="tag-opt" data-tag="英語A" onclick="selectTag('英語A','blog')">英語A</button>
-          <button class="tag-opt" data-tag="英語B" onclick="selectTag('英語B','blog')">英語B</button>
-          <button class="tag-opt" data-tag="ロシア語" onclick="selectTag('ロシア語','blog')">ロシア語</button>
-          <button class="tag-opt" data-tag="Python" onclick="selectTag('Python','blog')">Python</button>
-          <button class="tag-opt" data-tag="C" onclick="selectTag('C','blog')">C</button>
-          <button class="tag-opt" data-tag="その他" onclick="selectTag('その他','blog')">その他</button>
-        </div>
-      </div>
-    </div>
-    <div class="mfoot"><button class="btn btn-ghost btn-sm" onclick="closeCreateBlogModal()">キャンセル</button><button class="btn btn-blog btn-sm" onclick="createBlog()">作成して編集 →</button></div>
-  </div>
-</div>
-
-<!-- Profile Edit -->
-<div class="ov" id="profileEditOv">
-  <div class="mbox">
-    <div class="mhd"><div class="mhd-t">プロフィールを編集</div><button class="mcl" onclick="closeProfileEdit()">✕</button></div>
-    <div class="mbody">
-      <div class="profile-edit-grid">
-        <div class="avatar-upload-area">
-          <canvas id="profileEditAvatarPreview" width="72" height="72" style="border-radius:50%;flex-shrink:0;"></canvas>
-          <div style="flex:1;">
-            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">プロフィール画像</div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">JPG・PNG・GIF（最大2MB）</div>
-            <button class="avatar-upload-btn" onclick="document.getElementById('profileEditFileInput').click()">📁 画像を選択</button>
-            <input type="file" id="profileEditFileInput" accept="image/*" onchange="handleProfileEditAvatar(event)" style="display:none">
+      <!-- Flashcard View -->
+      <div id="cardArea" class="card-area">
+        <div>
+          <div class="flashcard" id="flashcard" onclick="flipCard()">
+            <div class="card-side-label">表面</div>
+            <div class="card-content" id="cardFront">カードを読み込み中...</div>
+            <div id="cardBackArea" style="display:none;">
+              <div class="card-side-label" style="margin-top:28px;">裏面</div>
+              <div class="card-content" id="cardBack"></div>
+            </div>
+            <span class="card-flip-hint">クリックでめくる</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progressBar" style="width:0%"></div>
+          </div>
+          <p class="card-progress" id="cardProgress">0 / 0</p>
+          <div class="card-controls">
+            <button class="ctrl-btn again" onclick="rateCard(1)" disabled>もう一度</button>
+            <button class="ctrl-btn good"  onclick="rateCard(2)" disabled>Good</button>
+            <button class="ctrl-btn easy"  onclick="rateCard(3)" disabled>Easy</button>
           </div>
         </div>
-        <div class="fld" style="margin-bottom:0">
-          <label>表示名</label>
-          <input type="text" id="profileEditDisplayName" placeholder="表示名（20文字まで）" maxlength="20" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);background:var(--surface2);">
-        </div>
-        <div class="fld" style="margin-bottom:0">
-          <label>自己紹介</label>
-          <textarea id="profileEditBio" placeholder="自己紹介を書いてみよう（140文字まで）" maxlength="140" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);background:var(--surface2);min-height:80px;resize:vertical;font-family:var(--Fb);line-height:1.5;"></textarea>
-        </div>
       </div>
-    </div>
-    <div class="mfoot"><button class="btn btn-ghost btn-sm" onclick="closeProfileEdit()">キャンセル</button><button class="btn btn-primary btn-sm" onclick="saveProfile()">保存する</button></div>
-  </div>
-</div>
 
-<!-- Settings -->
-<div class="ov" id="settingsOv">
-  <div class="mbox">
-    <div class="mhd"><div class="mhd-t">設定</div><button class="mcl" onclick="closeSettings()">✕</button></div>
-    <div class="mbody">
-      <div class="settings-section">テーマ</div>
-      <div class="theme-row">
-        <button class="theme-btn" id="themeBtnLight" onclick="setTheme('light')"><span class="theme-btn-icon">☀</span><span>ライト</span></button>
-        <button class="theme-btn on" id="themeBtnDark" onclick="setTheme('dark')"><span class="theme-btn-icon">☾</span><span>ダーク</span></button>
+      <!-- Cards List (Edit Mode) -->
+      <div id="cardsListView" class="cards-list-view">
+        <form class="add-card-form" onsubmit="handleAddCard(event)">
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--yellow);text-transform:uppercase;">新しいカードを追加</p>
+          <div class="form-row">
+            <div>
+              <label>表面（問題）</label>
+              <textarea id="addFront" placeholder="例: こんにちは" required></textarea>
+            </div>
+            <div>
+              <label>裏面（答え）</label>
+              <textarea id="addBack" placeholder="例: Hello" required></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" type="submit" style="max-width:200px;">+ カードを追加</button>
+        </form>
+        <div id="cardsList"></div>
       </div>
-      <div class="settings-section">フォント</div>
-      <div class="font-grid" id="fontGrid">
-        <button class="font-opt on" data-font="jakarta" onclick="setFont('jakarta')"><span class="font-opt-preview" style="font-family:'Plus Jakarta Sans',sans-serif">Aa</span><span class="font-opt-name">Jakarta</span></button>
-        <button class="font-opt" data-font="noto-sans" onclick="setFont('noto-sans')"><span class="font-opt-preview" style="font-family:'Noto Sans JP',sans-serif">Aa</span><span class="font-opt-name">Noto Sans</span></button>
-        <button class="font-opt" data-font="noto-serif" onclick="setFont('noto-serif')"><span class="font-opt-preview" style="font-family:'Noto Serif JP',serif">Aa</span><span class="font-opt-name">Noto Serif</span></button>
-        <button class="font-opt" data-font="mplus" onclick="setFont('mplus')"><span class="font-opt-preview" style="font-family:'M PLUS Rounded 1c',sans-serif">Aa</span><span class="font-opt-name">M PLUS R</span></button>
+
+      <!-- Session Complete -->
+      <div id="sessionComplete" class="session-complete">
+        <div class="complete-icon">🎉</div>
+        <h2 class="complete-title">SESSION COMPLETE</h2>
+        <p class="complete-stats"></p>
+        <button class="action-btn primary" onclick="restartSession()">もう一度学習する</button>
       </div>
-      <div class="font-preview-box" id="fontPreviewBox">AaBbCc 単語帳フラッシュカード</div>
-    </div>
-    <div class="mfoot"><button class="btn btn-ghost btn-sm" onclick="closeSettings()">閉じる</button></div>
-  </div>
-</div>
 
-<div id="toast"></div>
+    </div><!-- /studyArea -->
+  </div><!-- /app-container -->
 
-<!-- PWA Install Banner -->
-<div id="studyInstallBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1a1040;color:#fff;padding:14px 16px;flex-direction:row;align-items:center;gap:12px;border-top:3px solid var(--primary);">
-  <span style="font-size:1.5rem;flex-shrink:0">📲</span>
-  <div style="flex:1;font-size:.85rem;line-height:1.4"><strong style="color:var(--primary-light);display:block">ホーム画面に追加</strong>HGStudy をアプリとしてインストール</div>
-  <button onclick="installStudyPWA()" style="font-family:inherit;font-weight:700;font-size:.8rem;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;background:var(--primary);color:#fff;white-space:nowrap;flex-shrink:0">インストール</button>
-  <button onclick="dismissStudyInstall()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:1.1rem;padding:4px;flex-shrink:0">✕</button>
-</div>
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 
-<!-- Push Notification Prompt -->
-<div id="notifPromptBar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:799;background:#120e30;color:#fff;padding:12px 16px;flex-direction:row;align-items:center;gap:12px;border-top:2px solid rgba(91,80,248,.4);">
-  <span style="font-size:1.3rem;flex-shrink:0">🔔</span>
-  <div style="flex:1;font-size:.83rem;line-height:1.4"><strong style="color:var(--primary-light)">フォロー通知を有効にする</strong><br>フォロー中のユーザーが新しい単語帳を作ったときに通知</div>
-  <button onclick="requestPushPermission()" style="font-family:inherit;font-weight:700;font-size:.78rem;padding:7px 12px;border-radius:8px;border:none;cursor:pointer;background:var(--primary);color:#fff;white-space:nowrap;flex-shrink:0">許可する</button>
-  <button onclick="dismissNotifPrompt()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:1rem;padding:4px;flex-shrink:0">✕</button>
-</div>
-
-<style>
-#studyInstallBanner.show{display:flex!important;animation:slideUpBanner .3s ease}
-#notifPromptBar.show{display:flex!important;animation:slideUpBanner .3s ease}
-@keyframes slideUpBanner{from{transform:translateY(100%)}to{transform:none}}
-</style>
-
-<script src="study.js"></script>
+  <script src="study.js"></script>
 </body>
 </html>
