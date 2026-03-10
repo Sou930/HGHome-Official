@@ -465,15 +465,24 @@ async function openProfileModal(targetUsername){
 
   try{
     // follows/{user} = そのユーザーがフォローしているユーザーの map {targetUser: true}
-    const [pSnap, fSnap, dSnap, allFollowsSnap] = await Promise.all([
+    const [pSnap, fSnap, dSnap, allFollowsSnap, allCardsSnap] = await Promise.all([
       db.ref(`users/${targetUsername}`).once('value'),
-      db.ref(`follows/${targetUsername}`).once('value'),        // targetが誰をフォローしてるか
-      db.ref('decks').orderByChild('owner').equalTo(targetUsername).once('value'),
-      db.ref('follows').once('value'),                          // 全フォローデータ（フォロワー計算用）
+      db.ref(`follows/${targetUsername}`).once('value'),
+      db.ref('decks').once('value'),
+      db.ref('follows').once('value'),
+      db.ref('cards').once('value'),
     ]);
     profileData = pSnap.val() || {};
     const followingMap = fSnap.val() || {};   // targetUsername がフォローしている人
-    deckSnap = dSnap.val() || {};
+    const allDecksRaw = dSnap.val() || {};
+    deckSnap = Object.fromEntries(Object.entries(allDecksRaw).filter(([,d])=>d.owner===targetUsername));
+    // カード数をデッキに付与
+    const allCardsRaw = allCardsSnap.val() || {};
+    for(const [,card] of Object.entries(allCardsRaw)){
+      if(card.deckId && deckSnap[card.deckId]){
+        deckSnap[card.deckId]._cardCount = (deckSnap[card.deckId]._cardCount||0)+1;
+      }
+    }
     allFollows = allFollowsSnap.val() || {};
 
     // フォロワー: follows/{otherUser}/{targetUsername} === true な人を数える
@@ -498,7 +507,7 @@ async function openProfileModal(targetUsername){
   const decksHTML = deckList.length === 0
     ? `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">デッキがありません</div>`
     : deckList.map(([id,dk])=>{
-        const cardCount = dk.cardCount || 0;  // cards/ は別ノード、概算表示
+        const cardCount = dk._cardCount || 0;
         return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
           <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px">${esc(dk.name||'無題')}</div>
           <div style="font-size:11px;color:var(--text3)">${cardCount} カード</div>
@@ -629,7 +638,7 @@ async function handleAuthSubmit(e){
         errEl.classList.add('visible');
         return;
       }
-      const isAdmin = !!userData.isAdmin || userData.role === 'admin';
+      const isAdmin = !!userData.isAdmin || !!userData.isadmin || userData.role === 'admin';
       currentSession = { uid: username, username, isAdmin };
       saveSession(currentSession);
       closeAuthModal();
@@ -718,28 +727,34 @@ window.handleLogout = function(){
 async function loadDecks(){
   if(!currentSession) return;
   try{
-    // decks/{id} フラット構造、owner フィールドで絞り込み
-    const snap=await db.ref('decks').orderByChild('owner').equalTo(currentSession.username).once('value');
-    const raw=snap.val()||{};
-    // 各デッキのカードを cards/ から別途取得
-    decks={};
-    for(const [deckId, deck] of Object.entries(raw)){
-      decks[deckId]={...deck, cards:{}};
-    }
-    // カードを一括取得してデッキに紐付け
-    if(Object.keys(decks).length>0){
-      const cSnap=await db.ref('cards').orderByChild('owner').equalTo(currentSession.username).once('value');
-      const allCards=cSnap.val()||{};
-      for(const [cardId,card] of Object.entries(allCards)){
-        if(card.deckId && decks[card.deckId]){
-          decks[card.deckId].cards[cardId]=card;
-        }
+    const me = currentSession.username;
+
+    // decks/ 全件取得 → JS側でownerフィルタ
+    const [dSnap, cSnap] = await Promise.all([
+      db.ref('decks').once('value'),
+      db.ref('cards').once('value'),
+    ]);
+
+    const allDecks = dSnap.val() || {};
+    const allCards = cSnap.val() || {};
+
+    decks = {};
+    for(const [deckId, deck] of Object.entries(allDecks)){
+      if(deck.owner === me){
+        decks[deckId] = {...deck, cards:{}};
       }
     }
+    // カードをデッキに紐付け（deckIdで紐付け、ownerで確認）
+    for(const [cardId, card] of Object.entries(allCards)){
+      if(card.deckId && decks[card.deckId]){
+        decks[card.deckId].cards[cardId] = card;
+      }
+    }
+
     refreshDeckSelect();
-    if(Object.keys(decks).length===0) await createDeck('デフォルトデッキ');
-    else{ currentDeckId=Object.keys(decks)[0]; showStudyView(); }
-  }catch(e){ showToast('デッキ読み込みエラー: '+e.message,'error'); }
+    if(Object.keys(decks).length === 0) await createDeck('デフォルトデッキ');
+    else{ currentDeckId = Object.keys(decks)[0]; showStudyView(); }
+  }catch(e){ showToast('デッキ読み込みエラー: '+e.message, 'error'); }
 }
 async function createDeck(name){
   if(!currentSession) return;
@@ -843,7 +858,8 @@ window.toggleEditMode = function(){ isEditMode?showStudyView():showEditView(); }
 
 // ── Flashcard ─────────────────────────────────────────
 function buildStudyQueue(){
-  const d=decks[currentDeckId]; if(!d||!d.cards){studyQueue=[];return;}
+  const d=decks[currentDeckId];
+  if(!d||!d.cards||Object.keys(d.cards).length===0){studyQueue=[];return;}
   const now=Date.now();
   studyQueue=Object.entries(d.cards).filter(([_,c])=>c.due<=now+300000).sort((a,b)=>a[1].due-b[1].due).map(([id])=>id);
   if(studyQueue.length===0) studyQueue=Object.keys(d.cards);
@@ -852,7 +868,12 @@ function buildStudyQueue(){
 }
 function renderFlashcard(){
   const d=decks[currentDeckId];
-  if(!d||!d.cards||studyQueue.length===0){ge('studyArea').classList.remove('active');return;}
+  if(!d){ ge('studyArea').classList.remove('active'); return; }
+  if(!d.cards || Object.keys(d.cards).length===0){
+    // カードがないデッキ → 編集モードを表示してカード追加を促す
+    showEditView(); return;
+  }
+  if(studyQueue.length===0){ showSessionComplete(); return; }
   if(currentCardIdx>=studyQueue.length){showSessionComplete();return;}
   const cardId=studyQueue[currentCardIdx], card=d.cards[cardId];
   if(!card){currentCardIdx++;renderFlashcard();return;}
@@ -922,6 +943,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   const sess = loadSession();
   if(sess && sess.uid){
     currentSession = sess;
-    onLogin();
+    // DBから最新のisadmin状態を取得してセッションに反映
+    db.ref(`users/${sess.username}`).once('value').then(snap=>{
+      const d = snap.val()||{};
+      const isAdm = !!d.isAdmin || !!d.isadmin || d.role==='admin';
+      if(isAdm !== currentSession.isAdmin){
+        currentSession = {...currentSession, isAdmin: isAdm};
+        saveSession(currentSession);
+      }
+      onLogin();
+    }).catch(()=>{ onLogin(); });
   }
 });
