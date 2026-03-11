@@ -1,0 +1,361 @@
+/* ═══════════════════════════════════════════════════════
+   HGStudy  —  Mobile UI Additions  v4.2
+   study.css の末尾に追記してください
+═══════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════
+   Share Button (deck card)
+══════════════════════════════════════════════════════ */
+.share-btn-new {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-xs); color: var(--text3);
+  font-size: 14px; cursor: pointer;
+  transition: all .15s; flex-shrink: 0;
+}
+.share-btn-new:hover {
+  background: var(--primary-l); color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Share toast special style */
+#toast.share { background: var(--blog); color: #fff; }
+
+/* ══════════════════════════════════════════════════════
+   Mobile Bottom Navigation
+══════════════════════════════════════════════════════ */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+  height: 60px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  grid-template-columns: repeat(4, 1fr);
+  box-shadow: 0 -4px 24px rgba(0,0,0,.12);
+}
+.mbn-item {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px;
+  font-size: 10px; font-weight: 700; letter-spacing: .2px;
+  color: var(--text3); cursor: pointer;
+  border: none; background: none;
+  padding: 6px 4px; transition: color .12s;
+  font-family: var(--Fb);
+  position: relative;
+}
+.mbn-item .mbn-icon { font-size: 20px; line-height: 1; }
+.mbn-item.on { color: var(--primary); }
+.mbn-item.on::before {
+  content: '';
+  position: absolute; top: 0; left: 20%; right: 20%;
+  height: 2px; border-radius: 0 0 2px 2px;
+  background: var(--primary);
+}
+.mbn-item:active { transform: scale(.92); }
+
+/* ══════════════════════════════════════════════════════
+   Mobile Global Overrides (≤640px)
+══════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+
+  /* ── Body offset for bottom nav ── */
+  body {
+    padding-bottom: 60px;
+  }
+
+  /* ── Show mobile bottom nav ── */
+  .mobile-bottom-nav {
+    display: grid;
+  }
+
+  /* ── Hide desktop nav tabs ── */
+  #navTabsWrap {
+    display: none !important;
+  }
+
+  /* ── Nav compact ── */
+  nav {
+    padding: 0 12px;
+    height: 50px;
+  }
+  .nav-logo {
+    font-size: 13px;
+  }
+  .nav-actions {
+    gap: 4px;
+  }
+  .nav-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+  .nav-user-btn {
+    max-width: 130px;
+    padding: 4px 8px 4px 4px;
+  }
+
+  /* ── Touch targets — minimum 44px ── */
+  .ctrl-btn {
+    min-height: 44px;
+    font-size: 12px;
+    padding: 12px 8px;
+  }
+  .back-list-btn,
+  .back-btn,
+  .edit-deck-btn {
+    min-height: 40px;
+    padding: 8px 14px;
+  }
+  .study-start-btn-new {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .fav-btn-new {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+  .share-btn-new {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  .nav-tab {
+    min-height: 44px;
+  }
+
+  /* ── Modal: sheet style (slide up) ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    animation: slideUp .22s cubic-bezier(.4,0,.2,1) both;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* ── Study mode modal: sheet ── */
+  .mode-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .mode-modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp .22s cubic-bezier(.4,0,.2,1) both;
+  }
+
+  /* ── Deck create modal: sheet ── */
+  .dm-overlay {
+    align-items: flex-end;
+    padding: 0;
+    overflow: hidden;
+  }
+  .dm-box {
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 100%;
+    margin: 0;
+    animation: slideUp .22s cubic-bezier(.4,0,.2,1) both;
+  }
+
+  /* ── Deck grid: full-width single column ── */
+  .deck-posts-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+  .deck-grid-wrap { padding: 0; }
+
+  /* ── Deck card mobile improvements ── */
+  .dc-actions-new {
+    gap: 6px;
+  }
+  .dc-meta-new {
+    font-size: 10px;
+    gap: 6px;
+  }
+
+  /* ── Session bar: compact ── */
+  .sess-bar {
+    padding: 8px 12px;
+    top: 50px; /* account for shorter nav */
+  }
+  .sess-deckname {
+    font-size: 13px;
+  }
+
+  /* ── Flashcard: better mobile proportions ── */
+  .flashcard {
+    padding: 28px 20px 24px;
+    min-height: 200px;
+    border-radius: var(--r-sm);
+  }
+  .card-content {
+    font-size: clamp(20px, 5.5vw, 28px);
+  }
+  #cardBackArea .card-content {
+    font-size: clamp(17px, 4.5vw, 22px);
+  }
+  .card-controls {
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .ctrl-btn {
+    border-radius: var(--r-xs);
+    flex: 1;
+  }
+  .ctrl-btn.again { font-size: 11px; }
+  .ctrl-btn.good  { font-size: 11px; }
+  .ctrl-btn.easy  { font-size: 11px; }
+
+  /* ── Quiz: better mobile ── */
+  .quiz-card-wrap { padding: 12px; }
+  .quiz-question-card {
+    padding: 24px 18px 20px;
+    border-radius: var(--r-sm);
+  }
+  .quiz-question-text {
+    font-size: clamp(16px, 4.5vw, 24px);
+  }
+  .quiz-choices {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .quiz-choice {
+    min-height: 52px;
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+  .quiz-next-btn {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  /* ── App container ── */
+  .app-container {
+    padding: 12px 10px 40px;
+  }
+
+  /* ── Blog mobile ── */
+  .blog-posts-grid {
+    grid-template-columns: 1fr;
+    padding: 10px;
+    gap: 10px;
+  }
+  .blog-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  /* ── Blog edit ── */
+  .blog-edit-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .blog-edit-textarea {
+    min-height: 280px;
+    font-size: 14px;
+  }
+
+  /* ── Profile: stack layout ── */
+  .profile-hero-inner {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .follow-btn {
+    align-self: flex-start;
+    padding: 8px 18px;
+    font-size: 12px;
+  }
+  .profile-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .profile-stats .profile-stat:nth-child(2) { border-right: none; }
+
+  /* ── History page ── */
+  .history-page-body { padding: 12px 10px 48px; }
+  .hp-page-stat-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── Ranking page ── */
+  .ranking-body { padding: 12px 10px 48px; }
+  .ranking-item { padding: 10px 12px; }
+  .ranking-value { font-size: 16px; min-width: 50px; }
+
+  /* ── Edit page ── */
+  .edit-page-body { padding: 12px 10px 48px; }
+  .ep-add-row { flex-direction: column; }
+  .ep-add-input { min-width: unset; }
+
+  /* ── Deck hero ── */
+  .deck-hero { padding: 20px 16px 16px; }
+  .deck-hero-count { display: none; }
+  .deck-hero-title { font-size: clamp(20px, 5vw, 28px); }
+
+  /* ── Blog hero ── */
+  .blog-hero { padding: 20px 16px 16px; }
+  .blog-hero-count { display: none; }
+
+  /* ── Session complete ── */
+  .session-complete { padding: 28px 20px; border-radius: var(--r-sm); }
+  .complete-title { font-size: 22px; }
+  .complete-icon  { font-size: 40px; }
+
+  /* ── Acct dropdown: full-width on mobile ── */
+  .acct-menu {
+    right: -12px;
+    min-width: 200px;
+  }
+
+  /* ── Form row: single column ── */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* ── Calendar: smaller cells ── */
+  .cal-wrap { padding: 10px; }
+  .cal-cell { width: 10px; height: 10px; }
+  .cal-week-labels span { height: 10px; line-height: 10px; }
+  .cal-grid { gap: 1.5px; }
+  .cal-inner { gap: 3px; }
+}
+
+/* ══════════════════════════════════════════════════════
+   Tablet (641px ~ 900px) — minor tweaks
+══════════════════════════════════════════════════════ */
+@media (min-width: 641px) and (max-width: 900px) {
+  .deck-posts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .blog-posts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .quiz-choices {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   Safe-area support (notch / home indicator)
+══════════════════════════════════════════════════════ */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(60px + env(safe-area-inset-bottom));
+  }
+  @media (max-width: 640px) {
+    body {
+      padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    }
+  }
+}
