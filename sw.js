@@ -1,9 +1,10 @@
 // HGHome Service Worker
-const CACHE_NAME = 'hghome-v1';
+const CACHE_NAME = 'hghome-v2';
+const BASE = '/HGHome-Official';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap'
 ];
 
@@ -30,11 +31,8 @@ self.addEventListener('activate', event => {
 // ── Fetch: network-first for HTML, cache-first for assets ──
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-
-  // Skip non-GET and cross-origin Firebase requests
   if (event.request.method !== 'GET') return;
   if (url.hostname.includes('firebase') || url.hostname.includes('googleapis.com')) return;
-
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -57,15 +55,14 @@ self.addEventListener('push', event => {
   } catch (e) {
     if (event.data) data.body = event.data.text();
   }
-
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
       tag: data.tag || 'news',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      icon: BASE + '/icons/icon-192.png',
+      badge: BASE + '/icons/icon-192.png',
       vibrate: [200, 100, 200],
-      data: { url: data.url || '/' },
+      data: { url: data.url || (BASE + '/') },
       actions: [
         { action: 'open', title: '開く' },
         { action: 'close', title: '閉じる' }
@@ -78,8 +75,7 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   if (event.action === 'close') return;
-
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+  const targetUrl = (event.notification.data && event.notification.data.url) || (BASE + '/');
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
@@ -93,7 +89,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// ── Background sync: check for new news ──
+// ── Message ──
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
