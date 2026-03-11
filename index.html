@@ -175,6 +175,53 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   .notif-top-actions{width:100%;justify-content:flex-end}
 }
 
+/* ── 通知拒否済み フローティングボタン ── */
+.notif-denied-fab{
+  display:none;
+  position:fixed;bottom:28px;left:20px;z-index:900;
+  flex-direction:row;align-items:center;gap:0;
+  border-radius:999px;
+  box-shadow:0 4px 20px rgba(13,27,42,.28);
+  overflow:hidden;
+  animation:fab-in .35s cubic-bezier(.16,1,.3,1);
+}
+.notif-denied-fab.show{display:flex}
+@keyframes fab-in{from{opacity:0;transform:translateY(16px) scale(.92)}to{opacity:1;transform:none}}
+.notif-denied-fab-main{
+  display:flex;align-items:center;gap:8px;
+  background:var(--navy);color:#fff;
+  font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:600;
+  padding:10px 16px 10px 14px;cursor:pointer;border:none;
+  transition:background .15s;
+  white-space:nowrap;
+}
+.notif-denied-fab-main:hover{background:var(--navy2)}
+.notif-denied-fab-icon{font-size:1rem;line-height:1;}
+.notif-denied-fab-close{
+  background:#1E2C3E;color:rgba(255,255,255,.55);
+  border:none;cursor:pointer;padding:10px 12px;
+  font-size:.85rem;line-height:1;
+  transition:background .15s,color .15s;
+  border-left:1px solid rgba(255,255,255,.1);
+}
+.notif-denied-fab-close:hover{background:var(--red);color:#fff;}
+/* 通知設定ガイドモーダル */
+.notif-guide-modal{max-width:420px}
+.notif-guide-step{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--paper3);
+}
+.notif-guide-step:last-child{border-bottom:none}
+.notif-guide-num{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--navy);color:#fff;
+  font-size:.75rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.notif-guide-text{font-size:.875rem;color:var(--text2);line-height:1.55}
+.notif-guide-text strong{color:var(--text)}
+
 /* ── LAYOUT ── */
 .page-body{max-width:1100px;margin:0 auto;padding:48px 24px 80px;display:grid;grid-template-columns:1fr 300px;gap:48px;}
 @media(max-width:860px){.page-body{grid-template-columns:1fr;}}
@@ -636,6 +683,40 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   </div>
 </div>
 
+<!-- 🔔 通知拒否済みフローティングボタン -->
+<div class="notif-denied-fab" id="notifDeniedFab">
+  <button class="notif-denied-fab-main" onclick="openNotifGuide()" title="通知の許可方法を見る">
+    <span class="notif-denied-fab-icon">🔕</span>
+    通知をオンにする
+  </button>
+  <button class="notif-denied-fab-close" onclick="hideDeniedFab()" title="閉じる">✕</button>
+</div>
+
+<!-- 通知設定ガイドモーダル -->
+<div class="overlay" id="notifGuideOverlay" onclick="if(event.target===this)closeNotifGuide()">
+  <div class="modal notif-guide-modal">
+    <div class="modal-head">
+      <h3 class="modal-title">🔔 通知を有効にする方法</h3>
+      <button class="modal-close" onclick="closeNotifGuide()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.875rem;color:var(--text2);margin-bottom:16px;line-height:1.6">
+        通知が<strong style="color:var(--red)">ブロック</strong>されています。ブラウザの設定から手動で許可してください。
+      </p>
+      <div id="notifGuideSteps"></div>
+      <div style="margin-top:16px;padding:12px 14px;background:var(--gold-l);border-radius:var(--r);border-left:3px solid var(--gold);">
+        <p style="font-size:.82rem;color:#7a5c00;line-height:1.55">
+          💡 設定変更後にこのページを<strong>再読み込み</strong>すると通知が有効になります。
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeNotifGuide()">閉じる</button>
+      <button class="btn btn-primary" onclick="location.reload()">ページを再読み込み</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -1040,15 +1121,20 @@ async function submitNews(){
 
 function goHome(){window.scrollTo({top:0,behavior:'smooth'});}
 
-// ── 🔔 通知許可バナー ──
-// ページ読み込み時・ログイン後に呼び出し
-// 「通知を許可する」 または 「今はしない（今日限り）」 を提示
+// ── 🔔 通知許可バナー / 拒否済みFAB ──
 function initNotifBanner(){
   if(!('Notification' in window))return;
-  // すでに許可 or 拒否済みなら何もしない
   if(Notification.permission==='granted'){subscribePush();return;}
-  if(Notification.permission==='denied')return;
-  // ユーザーが「今日は表示しない」を選んでいれば非表示
+
+  // 拒否済み → 画面端にフローティングボタンを表示
+  if(Notification.permission==='denied'){
+    if(!localStorage.getItem('notif_fab_hidden')){
+      document.getElementById('notifDeniedFab').classList.add('show');
+    }
+    return;
+  }
+
+  // default（未決定）→ バナーを表示
   const dismissed=localStorage.getItem('notif_dismissed_until');
   if(dismissed&&Date.now()<parseInt(dismissed,10))return;
   document.getElementById('notifTopBanner').classList.add('show');
@@ -1060,9 +1146,14 @@ async function requestNotifPermission(){
   const result=await Notification.requestPermission();
   if(result==='granted'){
     showToast('🔔 通知を許可しました');
+    document.getElementById('notifDeniedFab').classList.remove('show');
     await subscribePush();
   } else if(result==='denied'){
-    showToast('通知がブロックされました（ブラウザ設定から変更できます）');
+    showToast('通知がブロックされました');
+    // 拒否になったのでFABに切り替え
+    if(!localStorage.getItem('notif_fab_hidden')){
+      document.getElementById('notifDeniedFab').classList.add('show');
+    }
   } else {
     showToast('通知の許可がキャンセルされました');
   }
@@ -1070,8 +1161,53 @@ async function requestNotifPermission(){
 
 function dismissNotifBanner(){
   document.getElementById('notifTopBanner').classList.remove('show');
-  // 24時間は再表示しない
   localStorage.setItem('notif_dismissed_until', String(Date.now()+86400000));
+}
+
+// 拒否済みFAB
+function hideDeniedFab(){
+  document.getElementById('notifDeniedFab').classList.remove('show');
+  // このセッション中は再表示しない（ページリロードで復活）
+  localStorage.setItem('notif_fab_hidden','1');
+}
+
+// 通知設定ガイドモーダル
+function openNotifGuide(){
+  // ブラウザ判定してガイド内容を切り替え
+  const ua=navigator.userAgent;
+  let steps=[];
+  if(/iPhone|iPad|iPod/i.test(ua)){
+    steps=[
+      {t:'Safari の設定を開く',d:'ホーム画面から <strong>設定</strong> アプリを起動してください'},
+      {t:'Safari を選択',d:'設定リストから <strong>Safari</strong> をタップします'},
+      {t:'通知を許可',d:'「Webサイトの通知を許可」をオンにして、このサイトの通知を <strong>許可</strong> に変更してください'},
+      {t:'ページを再読み込み',d:'設定後、このページに戻って <strong>再読み込み</strong> してください'},
+    ];
+  } else if(/Android/i.test(ua)){
+    steps=[
+      {t:'ブラウザのサイト設定を開く',d:'アドレスバー左の <strong>🔒 鍵アイコン</strong> または <strong>ℹ️ アイコン</strong> をタップします'},
+      {t:'権限を変更',d:'「権限」または「サイトの設定」→ <strong>通知</strong> を <strong>許可</strong> に変更してください'},
+      {t:'ページを再読み込み',d:'設定後、このページを <strong>再読み込み</strong> してください'},
+    ];
+  } else {
+    // デスクトップ Chrome / Edge / Firefox
+    steps=[
+      {t:'アドレスバーのアイコンをクリック',d:'URLバー左側の <strong>🔒 鍵</strong> または <strong>ℹ️ アイコン</strong> をクリックします'},
+      {t:'通知の権限を変更',d:'「通知」の項目を <strong>許可</strong> に変更してください'},
+      {t:'ページを再読み込み',d:'設定後、このページを <strong>再読み込み（F5）</strong> してください'},
+    ];
+  }
+  const stepsEl=document.getElementById('notifGuideSteps');
+  stepsEl.innerHTML=steps.map((s,i)=>`
+    <div class="notif-guide-step">
+      <div class="notif-guide-num">${i+1}</div>
+      <div class="notif-guide-text"><strong>${s.t}</strong><br>${s.d}</div>
+    </div>`).join('');
+  document.getElementById('notifGuideOverlay').classList.add('open');
+}
+
+function closeNotifGuide(){
+  document.getElementById('notifGuideOverlay').classList.remove('open');
 }
 
 // ── PWA ──
