@@ -129,16 +129,17 @@ function renderMarkdown(src){
 //  PAGE NAVIGATION
 // ══════════════════════════════════════════════════════
 
-const ALL_PAGES=['pageStudy','pageBlog','pageHistory','pageProfile','pageDeckEdit'];
+const ALL_PAGES=['pageStudy','pageBlog','pageHistory','pageRanking','pageProfile','pageDeckEdit'];
 
 function showMainPage(pageId){
   ALL_PAGES.forEach(id=>{const el=ge(id);if(el)el.classList.toggle('active',id===pageId);});
-  const isMain=['pageStudy','pageBlog','pageHistory'].includes(pageId);
+  const isMain=['pageStudy','pageBlog','pageHistory','pageRanking'].includes(pageId);
   const navTabsEl=ge('navTabsWrap');
   if(navTabsEl)navTabsEl.style.display=isMain?'':'none';
   ge('tabStudy').classList.toggle('on',pageId==='pageStudy');
   ge('tabBlog').classList.toggle('on',pageId==='pageBlog');
   ge('tabHistory').classList.toggle('on',pageId==='pageHistory');
+  ge('tabRanking').classList.toggle('on',pageId==='pageRanking');
 }
 
 window.switchTab=function(tab){
@@ -155,6 +156,10 @@ window.switchTab=function(tab){
     navReturn.page='pageHistory';
     showMainPage('pageHistory');
     loadHistoryPage();
+  }else if(tab==='ranking'){
+    navReturn.page='pageRanking';
+    showMainPage('pageRanking');
+    loadRankingPage();
   }
 };
 
@@ -480,7 +485,7 @@ async function checkStreakOnLogin(){
 }
 
 // ══════════════════════════════════════════════════════
-//  HISTORY PAGE (独立タブ)
+//  HISTORY PAGE + CALENDAR
 // ══════════════════════════════════════════════════════
 
 let _historyLogs=[];
@@ -488,139 +493,306 @@ let _historyLogs=[];
 async function loadHistoryPage(){
   const body=ge('historyPageBody');
   if(!body)return;
-
-  if(!currentSession){
-    renderHistoryPageContent([]);
-    return;
-  }
-
+  if(!currentSession){renderHistoryPageContent([]);return;}
   body.innerHTML='<div style="padding:60px;text-align:center"><div class="spinner"></div></div>';
-
   try{
     const snap=await db.ref(`logs/${currentSession.username}`)
-      .orderByChild('ts').limitToLast(100).once('value');
+      .orderByChild('ts').limitToLast(200).once('value');
     _historyLogs=Object.values(snap.val()||{}).sort((a,b)=>b.ts-a.ts);
     renderHistoryPageContent(_historyLogs);
-  }catch(e){
-    renderHistoryPageContent([]);
+  }catch(e){renderHistoryPageContent([]);}
+}
+
+// GitHub風カレンダーを生成
+function buildCalendarHTML(logs){
+  // 日付→セッション数マップ
+  const dateMap={};
+  logs.forEach(l=>{dateMap[l.date]=(dateMap[l.date]||0)+1;});
+
+  // 今日から52週前まで
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const days=[];
+  for(let i=363;i>=0;i--){
+    const d=new Date(today);
+    d.setDate(d.getDate()-i);
+    const key=d.toISOString().split('T')[0];
+    days.push({key,dow:d.getDay(),count:dateMap[key]||0});
   }
+
+  // 先頭を日曜始まりに揃えるため空白を挿入
+  const firstDow=days[0].dow;
+  const blanks=Array(firstDow).fill(null);
+  const allCells=[...blanks,...days];
+
+  // 月ラベル用
+  const monthLabels=[];
+  let lastMonth=-1;
+  days.forEach((d,i)=>{
+    const m=new Date(d.key).getMonth();
+    if(m!==lastMonth){monthLabels.push({idx:i+firstDow,label:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'][m]});lastMonth=m;}
+  });
+
+  const maxCount=Math.max(1,...Object.values(dateMap));
+
+  function cellColor(count){
+    if(count===0)return 'var(--cal-empty)';
+    const ratio=count/maxCount;
+    if(ratio<0.25)return 'var(--cal-l1)';
+    if(ratio<0.5) return 'var(--cal-l2)';
+    if(ratio<0.75)return 'var(--cal-l3)';
+    return 'var(--cal-l4)';
+  }
+
+  // 週ラベル
+  const weekLabels=['日','月','火','水','木','金','土'];
+
+  const totalWeeks=Math.ceil(allCells.length/7);
+
+  let gridCells='';
+  allCells.forEach((d,i)=>{
+    if(!d){gridCells+=`<div class="cal-cell cal-blank"></div>`;return;}
+    const tip=d.count>0?`${d.key}：${d.count}セッション`:`${d.key}：なし`;
+    gridCells+=`<div class="cal-cell" style="background:${cellColor(d.count)}" data-tip="${tip}" data-count="${d.count}"></div>`;
+  });
+
+  // 月ラベル（カラム位置で計算）
+  let monthHTML='';
+  monthLabels.forEach(ml=>{
+    const col=Math.floor(ml.idx/7);
+    monthHTML+=`<span class="cal-month-lbl" style="grid-column:${col+2}">${ml.label}</span>`;
+  });
+
+  return `
+    <div class="cal-wrap">
+      <div class="cal-inner">
+        <div class="cal-week-labels">
+          ${weekLabels.map((l,i)=>i%2===1?`<span>${l}</span>`:'<span></span>').join('')}
+        </div>
+        <div class="cal-grid" style="grid-template-columns:repeat(${totalWeeks},12px)">
+          ${gridCells}
+        </div>
+      </div>
+      <div class="cal-legend">
+        <span style="color:var(--text3);font-size:10px">少ない</span>
+        <div class="cal-cell" style="background:var(--cal-empty)"></div>
+        <div class="cal-cell" style="background:var(--cal-l1)"></div>
+        <div class="cal-cell" style="background:var(--cal-l2)"></div>
+        <div class="cal-cell" style="background:var(--cal-l3)"></div>
+        <div class="cal-cell" style="background:var(--cal-l4)"></div>
+        <span style="color:var(--text3);font-size:10px">多い</span>
+      </div>
+    </div>`;
 }
 
 function hpModeIcon(m){return m==='4choice'?'🎯':m==='random'?'🔀':'📖';}
 function hpModeLabel(m){return m==='4choice'?'4択':m==='random'?'ランダム':'通常';}
 function hpFmtDate(dateStr){
-  const today=todayStr();
-  const yesterday=yesterdayStr();
-  if(dateStr===today)return '今日';
-  if(dateStr===yesterday)return '昨日';
-  const d=new Date(dateStr);
-  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  const today=todayStr();const yesterday=yesterdayStr();
+  if(dateStr===today)return '今日';if(dateStr===yesterday)return '昨日';
+  const d=new Date(dateStr);return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
 }
 function hpScoreColor(s){return s>=80?'var(--green)':s>=50?'var(--yellow)':'#E03030';}
 
 function renderHistoryPageContent(logs){
-  const body=ge('historyPageBody');
-  if(!body)return;
-
+  const body=ge('historyPageBody');if(!body)return;
   if(!currentSession){
-    body.innerHTML=`
-      <div class="hp-page-login">
-        <div class="hp-page-login-icon">📊</div>
-        <p>ログインして学習履歴を確認しよう</p>
-        <button class="hp-login-btn" onclick="openAuthModal('login')">ログイン</button>
-      </div>`;
+    body.innerHTML=`<div class="hp-page-login"><div class="hp-page-login-icon">📊</div><p>ログインして学習履歴を確認しよう</p><button class="hp-login-btn" onclick="openAuthModal('login')">ログイン</button></div>`;
     return;
   }
-
   const streak=currentSession.streak||0;
   const streakColor=streak>=7?'#F97316':streak>=3?'#EAB308':'var(--primary)';
-
-  // 統計計算
   const totalSessions=logs.length;
   const totalCards=logs.reduce((s,l)=>s+l.total,0);
   const avgScore=totalSessions>0?Math.round(logs.reduce((s,l)=>s+l.score,0)/totalSessions):0;
-  const bestStreak=streak;
-
-  // 日付でグループ化
   const grouped={};
   logs.forEach(l=>{(grouped[l.date]=grouped[l.date]||[]).push(l);});
 
   let html=`
-    <!-- ストリーク & 統計 -->
+    <!-- カレンダー -->
+    <div class="hp-section-title">📅 学習カレンダー</div>
+    ${buildCalendarHTML(logs)}
+
+    <!-- ストリーク + 統計 -->
     <div class="hp-page-stats">
       <div class="hp-page-streak" style="border-color:${streakColor}40;background:${streakColor}10">
         <div class="hp-page-streak-fire">🔥</div>
         <div class="hp-page-streak-num" style="color:${streakColor}">${streak}</div>
         <div class="hp-page-streak-lbl">日連続学習</div>
-        ${streak===0?`<div class="hp-page-streak-note">今日学習してストリークを開始！</div>`:`<div class="hp-page-streak-note">継続中！この調子で頑張ろう</div>`}
+        <div class="hp-page-streak-note">${streak===0?'今日学習してストリークを開始！':'継続中！この調子で頑張ろう'}</div>
       </div>
       <div class="hp-page-stat-grid">
-        <div class="hp-page-stat">
-          <div class="hp-page-stat-n" style="color:var(--primary)">${totalSessions}</div>
-          <div class="hp-page-stat-l">総セッション</div>
-        </div>
-        <div class="hp-page-stat">
-          <div class="hp-page-stat-n" style="color:var(--blog)">${totalCards}</div>
-          <div class="hp-page-stat-l">総問題数</div>
-        </div>
-        <div class="hp-page-stat">
-          <div class="hp-page-stat-n" style="color:var(--green)">${avgScore}%</div>
-          <div class="hp-page-stat-l">平均正答率</div>
-        </div>
-        <div class="hp-page-stat">
-          <div class="hp-page-stat-n" style="color:#F97316">${Object.keys(grouped).length}</div>
-          <div class="hp-page-stat-l">学習日数</div>
-        </div>
+        <div class="hp-page-stat"><div class="hp-page-stat-n" style="color:var(--primary)">${totalSessions}</div><div class="hp-page-stat-l">総セッション</div></div>
+        <div class="hp-page-stat"><div class="hp-page-stat-n" style="color:var(--blog)">${totalCards}</div><div class="hp-page-stat-l">総問題数</div></div>
+        <div class="hp-page-stat"><div class="hp-page-stat-n" style="color:var(--green)">${avgScore}%</div><div class="hp-page-stat-l">平均正答率</div></div>
+        <div class="hp-page-stat"><div class="hp-page-stat-n" style="color:#F97316">${Object.keys(grouped).length}</div><div class="hp-page-stat-l">学習日数</div></div>
       </div>
     </div>`;
 
   if(logs.length===0){
-    html+=`<div class="hp-page-empty">
-      <div style="font-size:48px;margin-bottom:12px">📭</div>
-      <p>まだ学習履歴がありません</p>
-      <p style="font-size:12px;margin-top:6px">セッションを完了すると記録が残ります</p>
-      <button class="hp-login-btn" style="margin-top:16px" onclick="switchTab('study')">学習を始める →</button>
-    </div>`;
+    html+=`<div class="hp-page-empty"><div style="font-size:48px;margin-bottom:12px">📭</div><p>まだ学習履歴がありません</p><p style="font-size:12px;margin-top:6px">セッションを完了すると記録が残ります</p><button class="hp-login-btn" style="margin-top:16px" onclick="switchTab('study')">学習を始める →</button></div>`;
     body.innerHTML=html;
     return;
   }
 
-  // 履歴リスト
-  html+=`<div class="hp-page-list">`;
+  html+=`<div class="hp-section-title">📋 学習ログ</div><div class="hp-page-list">`;
   Object.entries(grouped).forEach(([date,dayLogs])=>{
     const dayTotal=dayLogs.length;
     const dayAvg=Math.round(dayLogs.reduce((s,l)=>s+l.score,0)/dayTotal);
-    html+=`
-      <div class="hp-page-date-section">
-        <div class="hp-page-date-header">
-          <span class="hp-page-date-label">${hpFmtDate(date)}</span>
-          <span class="hp-page-date-meta">${dayTotal}セッション &nbsp;·&nbsp; 平均 ${dayAvg}%</span>
-        </div>
-        <div class="hp-page-log-list">`;
+    html+=`<div class="hp-page-date-section">
+      <div class="hp-page-date-header">
+        <span class="hp-page-date-label">${hpFmtDate(date)}</span>
+        <span class="hp-page-date-meta">${dayTotal}セッション &nbsp;·&nbsp; 平均 ${dayAvg}%</span>
+      </div>
+      <div class="hp-page-log-list">`;
     dayLogs.forEach(l=>{
-      const sc=hpScoreColor(l.score);
-      const pct=Math.min(100,l.score);
-      html+=`
-        <div class="hp-page-log-item">
-          <div class="hp-page-log-icon">${hpModeIcon(l.mode)}</div>
-          <div class="hp-page-log-body">
-            <div class="hp-page-log-deck">${esc(l.deckName)}</div>
-            <div class="hp-page-log-detail">
-              <span class="hp-page-log-tag">${hpModeLabel(l.mode)}</span>
-              <span class="hp-page-log-qa">${l.correct}/${l.total}問正解</span>
-            </div>
-            <div class="hp-page-score-bar-wrap">
-              <div class="hp-page-score-bar" style="width:${pct}%;background:${sc}"></div>
-            </div>
+      const sc=hpScoreColor(l.score);const pct=Math.min(100,l.score);
+      html+=`<div class="hp-page-log-item">
+        <div class="hp-page-log-icon">${hpModeIcon(l.mode)}</div>
+        <div class="hp-page-log-body">
+          <div class="hp-page-log-deck">${esc(l.deckName)}</div>
+          <div class="hp-page-log-detail">
+            <span class="hp-page-log-tag">${hpModeLabel(l.mode)}</span>
+            <span class="hp-page-log-qa">${l.correct}/${l.total}問正解</span>
           </div>
-          <div class="hp-page-log-score" style="color:${sc}">${l.score}<span style="font-size:10px;opacity:.7">%</span></div>
-        </div>`;
+          <div class="hp-page-score-bar-wrap"><div class="hp-page-score-bar" style="width:${pct}%;background:${sc}"></div></div>
+        </div>
+        <div class="hp-page-log-score" style="color:${sc}">${l.score}<span style="font-size:10px;opacity:.7">%</span></div>
+      </div>`;
     });
     html+=`</div></div>`;
   });
   html+=`</div>`;
-
   body.innerHTML=html;
+
+  // カレンダーのツールチップ
+  body.querySelectorAll('.cal-cell[data-tip]').forEach(cell=>{
+    cell.addEventListener('mouseenter',e=>{
+      const tip=document.createElement('div');
+      tip.className='cal-tooltip';tip.textContent=cell.dataset.tip;
+      document.body.appendChild(tip);
+      const r=cell.getBoundingClientRect();
+      tip.style.left=(r.left+r.width/2-tip.offsetWidth/2)+'px';
+      tip.style.top=(r.top-tip.offsetHeight-6+window.scrollY)+'px';
+      cell._tip=tip;
+    });
+    cell.addEventListener('mouseleave',()=>{cell._tip?.remove();cell._tip=null;});
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  RANKING PAGE
+// ══════════════════════════════════════════════════════
+
+let _rankingTab='cards';
+let _rankingData=null;
+
+window.switchRankingTab=function(tab){
+  _rankingTab=tab;
+  ['cards','score','streak'].forEach(t=>{
+    ge(`rtab${t.charAt(0).toUpperCase()+t.slice(1)}`)?.classList.toggle('on',t===tab);
+  });
+  renderRankingList();
+};
+
+async function loadRankingPage(){
+  const body=ge('rankingBody');if(!body)return;
+  body.innerHTML='<div style="padding:60px;text-align:center"><div class="spinner"></div></div>';
+  try{
+    // ユーザー一覧を取得（streak, displayName, avatar）
+    const [usersSnap, logsSnap]=await Promise.all([
+      db.ref('users').once('value'),
+      db.ref('logs').once('value')
+    ]);
+    const users=usersSnap.val()||{};
+    const allLogs=logsSnap.val()||{};
+
+    // 各ユーザーの統計を計算
+    _rankingData=Object.entries(users).map(([username,ud])=>{
+      const userLogs=Object.values(allLogs[username]||{});
+      const totalCards=userLogs.reduce((s,l)=>s+(l.total||0),0);
+      const sessions=userLogs.length;
+      const avgScore=sessions>0?Math.round(userLogs.reduce((s,l)=>s+(l.score||0),0)/sessions):0;
+      const streak=ud.streak||0;
+      const displayName=ud.displayName||username;
+      const avatar=ud.avatar||localStorage.getItem('fm_avatar_'+username)||null;
+      return {username,displayName,avatar,totalCards,sessions,avgScore,streak};
+    }).filter(u=>u.sessions>0||u.streak>0);
+
+    renderRankingList();
+  }catch(e){
+    body.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text3)">読み込みエラー: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderRankingList(){
+  const body=ge('rankingBody');if(!body||!_rankingData)return;
+
+  let sorted=[..._rankingData];
+  let valueKey,valueFmt,valueLabel,valueColor;
+
+  if(_rankingTab==='cards'){
+    sorted.sort((a,b)=>b.totalCards-a.totalCards);
+    valueKey='totalCards';valueFmt=v=>`${v}問`;valueLabel='総カード数';valueColor='var(--primary)';
+  }else if(_rankingTab==='score'){
+    sorted=sorted.filter(u=>u.sessions>=3);// 3セッション以上のみ
+    sorted.sort((a,b)=>b.avgScore-a.avgScore);
+    valueKey='avgScore';valueFmt=v=>`${v}%`;valueLabel='平均正答率（3セッション以上）';valueColor='var(--green)';
+  }else{
+    sorted.sort((a,b)=>b.streak-a.streak);
+    valueKey='streak';valueFmt=v=>`${v}日`;valueLabel='連続学習日数';valueColor='#F97316';
+  }
+
+  sorted=sorted.filter(u=>u[valueKey]>0).slice(0,50);
+
+  if(sorted.length===0){
+    body.innerHTML=`<div class="ranking-empty"><div style="font-size:48px;margin-bottom:12px">📭</div><p>まだデータがありません</p></div>`;
+    return;
+  }
+
+  const maxVal=sorted[0][valueKey]||1;
+  const medals=['🥇','🥈','🥉'];
+
+  let html=`<div class="ranking-list-wrap">
+    <div class="ranking-list-label">${valueLabel}</div>
+    <div class="ranking-list">`;
+
+  sorted.forEach((u,i)=>{
+    const rank=i+1;
+    const isMe=currentSession&&u.username===currentSession.username;
+    const pct=Math.round((u[valueKey]/maxVal)*100);
+    const medal=rank<=3?medals[rank-1]:`${rank}`;
+    const av=u.avatar||localStorage.getItem('fm_avatar_'+u.username)||null;
+
+    html+=`
+      <div class="ranking-item${isMe?' ranking-item-me':''}" id="ri_${u.username}">
+        <div class="ranking-rank${rank<=3?' ranking-rank-medal':''}">${medal}</div>
+        <canvas class="ranking-avatar" id="rav_${u.username}" width="36" height="36"></canvas>
+        <div class="ranking-info">
+          <div class="ranking-name">
+            <span class="ranking-dispname" onclick="openUserProfile('${esc(u.username)}')">${esc(u.displayName)}</span>
+            <span class="ranking-username">@${esc(u.username)}</span>
+            ${isMe?'<span class="ranking-me-badge">YOU</span>':''}
+          </div>
+          <div class="ranking-bar-wrap">
+            <div class="ranking-bar" style="width:${pct}%;background:${valueColor}"></div>
+          </div>
+        </div>
+        <div class="ranking-value" style="color:${valueColor}">${valueFmt(u[valueKey])}</div>
+      </div>`;
+  });
+
+  html+=`</div></div>`;
+  body.innerHTML=html;
+
+  // アバター描画（非同期で）
+  sorted.forEach(u=>{
+    const canvas=ge(`rav_${u.username}`);
+    if(canvas){
+      const av=u.avatar||localStorage.getItem('fm_avatar_'+u.username)||null;
+      drawAvatar(canvas,u.username,av,36);
+    }
+  });
 }
 
 // ══════════════════════════════════════════════════════
