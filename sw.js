@@ -1,6 +1,6 @@
 // HGHome Service Worker
 const CACHE_NAME = 'hghome-v2';
-const BASE = '/HGHome-Official';
+const BASE = '';
 const STATIC_ASSETS = [
   BASE + '/',
   BASE + '/index.html',
