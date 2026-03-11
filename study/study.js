@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   HGStudy  —  study.js  v4
+   HGStudy  —  study.js  v4.1
    フラッシュカード + 解説ブログ + 学習履歴 (Firebase Realtime DB)
 ═══════════════════════════════════════════════════════ */
 
@@ -129,25 +129,32 @@ function renderMarkdown(src){
 //  PAGE NAVIGATION
 // ══════════════════════════════════════════════════════
 
-const ALL_PAGES=['pageStudy','pageBlog','pageProfile','pageDeckEdit'];
+const ALL_PAGES=['pageStudy','pageBlog','pageHistory','pageProfile','pageDeckEdit'];
 
 function showMainPage(pageId){
   ALL_PAGES.forEach(id=>{const el=ge(id);if(el)el.classList.toggle('active',id===pageId);});
-  const isMain=pageId==='pageStudy'||pageId==='pageBlog';
+  const isMain=['pageStudy','pageBlog','pageHistory'].includes(pageId);
   const navTabsEl=ge('navTabsWrap');
   if(navTabsEl)navTabsEl.style.display=isMain?'':'none';
   ge('tabStudy').classList.toggle('on',pageId==='pageStudy');
   ge('tabBlog').classList.toggle('on',pageId==='pageBlog');
+  ge('tabHistory').classList.toggle('on',pageId==='pageHistory');
 }
 
 window.switchTab=function(tab){
-  const pageId=tab==='study'?'pageStudy':'pageBlog';
-  navReturn.page=pageId;
-  showMainPage(pageId);
-  if(tab==='blog'){loadBlogPosts();loadMyHistory();}
   if(tab==='study'){
+    navReturn.page='pageStudy';
+    showMainPage('pageStudy');
     ge('deckBrowser').style.display='';
     ge('studySession').style.display='none';
+  }else if(tab==='blog'){
+    navReturn.page='pageBlog';
+    showMainPage('pageBlog');
+    loadBlogPosts();
+  }else if(tab==='history'){
+    navReturn.page='pageHistory';
+    showMainPage('pageHistory');
+    loadHistoryPage();
   }
 };
 
@@ -390,16 +397,14 @@ async function onLogin(){
   // 連続学習チェック（ログイン時）
   await checkStreakOnLogin();
 
-  // 履歴パネルを更新
-  loadMyHistory();
-
   showToast(`ようこそ、${currentSession.username}さん！`);
   if(ge('pageBlog').classList.contains('active'))loadBlogPosts();
+  if(ge('pageHistory').classList.contains('active'))loadHistoryPage();
 }
 function onLogout(){
   updateNavUI();ge('deckBrowser').style.display='none';ge('studySession').style.display='none';ge('welcomeScreen').style.display='flex';
   allPublicDecks={};decks={};currentDeckId=null;allFavs={};displayedCount=PAGE_SIZE;
-  renderHistoryPanel([]);
+  renderHistoryPageContent([]);
 }
 window.handleLogout=function(){currentSession=null;clearSession();onLogout();showToast('ログアウトしました');};
 
@@ -407,9 +412,6 @@ window.handleLogout=function(){currentSession=null;clearSession();onLogout();sho
 //  LEARNING LOGS & STREAK
 // ══════════════════════════════════════════════════════
 
-/**
- * セッション完了時に学習ログを保存する
- */
 async function saveStudyLog(){
   if(!currentSession||!currentDeckId)return;
   const dk=allPublicDecks[currentDeckId]||decks[currentDeckId];
@@ -439,15 +441,10 @@ async function saveStudyLog(){
   try{
     await db.ref(`logs/${currentSession.username}`).push(log);
     await updateStreak();
-    // ブログページが表示中なら履歴を更新
-    if(ge('pageBlog').classList.contains('active'))loadMyHistory();
+    if(ge('pageHistory').classList.contains('active'))loadHistoryPage();
   }catch(e){console.error('log save error',e);}
 }
 
-/**
- * 今日初めて学習したときにストリークを更新する
- * ストリーク継続条件：昨日か今日に streak_date が設定されていること
- */
 async function updateStreak(){
   if(!currentSession)return;
   const today=todayStr();
@@ -456,19 +453,10 @@ async function updateStreak(){
     const snap=await db.ref(`users/${currentSession.username}`).once('value');
     const ud=snap.val()||{};
     const lastDate=ud.streak_date||'';
-
-    // 今日すでに更新済みなら何もしない
     if(lastDate===today)return;
-
     let newStreak;
-    if(lastDate===yesterday){
-      // 昨日学習した→連続継続
-      newStreak=(ud.streak||0)+1;
-    }else{
-      // 1日以上空いた→リセット
-      newStreak=1;
-    }
-
+    if(lastDate===yesterday){newStreak=(ud.streak||0)+1;}
+    else{newStreak=1;}
     await db.ref(`users/${currentSession.username}`).update({streak:newStreak,streak_date:today});
     currentSession.streak=newStreak;
     saveSession(currentSession);
@@ -476,9 +464,6 @@ async function updateStreak(){
   }catch(e){}
 }
 
-/**
- * ログイン時にストリークが切れていないか確認し、切れていたら0にリセット
- */
 async function checkStreakOnLogin(){
   if(!currentSession)return;
   const today=todayStr();
@@ -486,28 +471,39 @@ async function checkStreakOnLogin(){
   try{
     const snap=await db.ref(`users/${currentSession.username}/streak_date`).once('value');
     const lastDate=snap.val();
-    if(!lastDate)return; // まだストリーク未設定
-    if(lastDate===today||lastDate===yesterday)return; // 継続中
-
-    // 1日以上空いた→ストリーク切れ
+    if(!lastDate)return;
+    if(lastDate===today||lastDate===yesterday)return;
     await db.ref(`users/${currentSession.username}`).update({streak:0});
     currentSession.streak=0;
     saveSession(currentSession);
   }catch(e){}
 }
 
-// ── 履歴パネル ──────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  HISTORY PAGE (独立タブ)
+// ══════════════════════════════════════════════════════
 
 let _historyLogs=[];
 
-async function loadMyHistory(){
-  if(!currentSession){renderHistoryPanel([]);return;}
+async function loadHistoryPage(){
+  const body=ge('historyPageBody');
+  if(!body)return;
+
+  if(!currentSession){
+    renderHistoryPageContent([]);
+    return;
+  }
+
+  body.innerHTML='<div style="padding:60px;text-align:center"><div class="spinner"></div></div>';
+
   try{
     const snap=await db.ref(`logs/${currentSession.username}`)
-      .orderByChild('ts').limitToLast(50).once('value');
+      .orderByChild('ts').limitToLast(100).once('value');
     _historyLogs=Object.values(snap.val()||{}).sort((a,b)=>b.ts-a.ts);
-    renderHistoryPanel(_historyLogs);
-  }catch(e){renderHistoryPanel([]);}
+    renderHistoryPageContent(_historyLogs);
+  }catch(e){
+    renderHistoryPageContent([]);
+  }
 }
 
 function hpModeIcon(m){return m==='4choice'?'🎯':m==='random'?'🔀':'📖';}
@@ -518,18 +514,18 @@ function hpFmtDate(dateStr){
   if(dateStr===today)return '今日';
   if(dateStr===yesterday)return '昨日';
   const d=new Date(dateStr);
-  return `${d.getMonth()+1}/${d.getDate()}`;
+  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
 }
 function hpScoreColor(s){return s>=80?'var(--green)':s>=50?'var(--yellow)':'#E03030';}
 
-function renderHistoryPanel(logs){
-  const panel=ge('historyPanel');
-  if(!panel)return;
+function renderHistoryPageContent(logs){
+  const body=ge('historyPageBody');
+  if(!body)return;
 
   if(!currentSession){
-    panel.innerHTML=`
-      <div class="hp-head">📊 学習履歴</div>
-      <div class="hp-login-prompt">
+    body.innerHTML=`
+      <div class="hp-page-login">
+        <div class="hp-page-login-icon">📊</div>
         <p>ログインして学習履歴を確認しよう</p>
         <button class="hp-login-btn" onclick="openAuthModal('login')">ログイン</button>
       </div>`;
@@ -539,73 +535,92 @@ function renderHistoryPanel(logs){
   const streak=currentSession.streak||0;
   const streakColor=streak>=7?'#F97316':streak>=3?'#EAB308':'var(--primary)';
 
-  // ストリークバー
-  let html=`
-    <div class="hp-head">📊 学習履歴</div>
-    <div class="hp-streak" style="border-color:${streakColor}30;background:${streakColor}10">
-      <span class="hp-streak-fire">🔥</span>
-      <div class="hp-streak-body">
-        <span class="hp-streak-num" style="color:${streakColor}">${streak}</span>
-        <span class="hp-streak-lbl">日連続学習</span>
-      </div>
-      ${streak===0?`<span class="hp-streak-note">今日から再スタート！</span>`:''}
-    </div>`;
-
-  if(logs.length===0){
-    html+=`<div class="hp-empty">まだ学習履歴がありません<br><small>セッションを完了すると<br>ここに記録されます</small></div>`;
-    panel.innerHTML=html;
-    return;
-  }
+  // 統計計算
+  const totalSessions=logs.length;
+  const totalCards=logs.reduce((s,l)=>s+l.total,0);
+  const avgScore=totalSessions>0?Math.round(logs.reduce((s,l)=>s+l.score,0)/totalSessions):0;
+  const bestStreak=streak;
 
   // 日付でグループ化
   const grouped={};
   logs.forEach(l=>{(grouped[l.date]=grouped[l.date]||[]).push(l);});
 
-  html+=`<div class="hp-list">`;
-  Object.entries(grouped).slice(0,10).forEach(([date,dayLogs])=>{
-    const totalSessions=dayLogs.length;
-    const avgScore=Math.round(dayLogs.reduce((s,l)=>s+l.score,0)/totalSessions);
+  let html=`
+    <!-- ストリーク & 統計 -->
+    <div class="hp-page-stats">
+      <div class="hp-page-streak" style="border-color:${streakColor}40;background:${streakColor}10">
+        <div class="hp-page-streak-fire">🔥</div>
+        <div class="hp-page-streak-num" style="color:${streakColor}">${streak}</div>
+        <div class="hp-page-streak-lbl">日連続学習</div>
+        ${streak===0?`<div class="hp-page-streak-note">今日学習してストリークを開始！</div>`:`<div class="hp-page-streak-note">継続中！この調子で頑張ろう</div>`}
+      </div>
+      <div class="hp-page-stat-grid">
+        <div class="hp-page-stat">
+          <div class="hp-page-stat-n" style="color:var(--primary)">${totalSessions}</div>
+          <div class="hp-page-stat-l">総セッション</div>
+        </div>
+        <div class="hp-page-stat">
+          <div class="hp-page-stat-n" style="color:var(--blog)">${totalCards}</div>
+          <div class="hp-page-stat-l">総問題数</div>
+        </div>
+        <div class="hp-page-stat">
+          <div class="hp-page-stat-n" style="color:var(--green)">${avgScore}%</div>
+          <div class="hp-page-stat-l">平均正答率</div>
+        </div>
+        <div class="hp-page-stat">
+          <div class="hp-page-stat-n" style="color:#F97316">${Object.keys(grouped).length}</div>
+          <div class="hp-page-stat-l">学習日数</div>
+        </div>
+      </div>
+    </div>`;
+
+  if(logs.length===0){
+    html+=`<div class="hp-page-empty">
+      <div style="font-size:48px;margin-bottom:12px">📭</div>
+      <p>まだ学習履歴がありません</p>
+      <p style="font-size:12px;margin-top:6px">セッションを完了すると記録が残ります</p>
+      <button class="hp-login-btn" style="margin-top:16px" onclick="switchTab('study')">学習を始める →</button>
+    </div>`;
+    body.innerHTML=html;
+    return;
+  }
+
+  // 履歴リスト
+  html+=`<div class="hp-page-list">`;
+  Object.entries(grouped).forEach(([date,dayLogs])=>{
+    const dayTotal=dayLogs.length;
+    const dayAvg=Math.round(dayLogs.reduce((s,l)=>s+l.score,0)/dayTotal);
     html+=`
-      <div class="hp-date-group">
-        <div class="hp-date-label">
-          <span>${hpFmtDate(date)}</span>
-          <span class="hp-date-meta">${totalSessions}セッション · 平均 ${avgScore}%</span>
-        </div>`;
+      <div class="hp-page-date-section">
+        <div class="hp-page-date-header">
+          <span class="hp-page-date-label">${hpFmtDate(date)}</span>
+          <span class="hp-page-date-meta">${dayTotal}セッション &nbsp;·&nbsp; 平均 ${dayAvg}%</span>
+        </div>
+        <div class="hp-page-log-list">`;
     dayLogs.forEach(l=>{
       const sc=hpScoreColor(l.score);
       const pct=Math.min(100,l.score);
       html+=`
-        <div class="hp-log-item">
-          <span class="hp-log-mode">${hpModeIcon(l.mode)}</span>
-          <div class="hp-log-body">
-            <div class="hp-log-deck">${esc(l.deckName)}</div>
-            <div class="hp-log-detail">
-              <span class="hp-log-tag">${hpModeLabel(l.mode)}</span>
-              <span class="hp-log-qa">${l.correct}/${l.total}問</span>
+        <div class="hp-page-log-item">
+          <div class="hp-page-log-icon">${hpModeIcon(l.mode)}</div>
+          <div class="hp-page-log-body">
+            <div class="hp-page-log-deck">${esc(l.deckName)}</div>
+            <div class="hp-page-log-detail">
+              <span class="hp-page-log-tag">${hpModeLabel(l.mode)}</span>
+              <span class="hp-page-log-qa">${l.correct}/${l.total}問正解</span>
             </div>
-            <div class="hp-score-bar-wrap">
-              <div class="hp-score-bar" style="width:${pct}%;background:${sc}"></div>
+            <div class="hp-page-score-bar-wrap">
+              <div class="hp-page-score-bar" style="width:${pct}%;background:${sc}"></div>
             </div>
           </div>
-          <div class="hp-log-score" style="color:${sc}">${l.score}<span style="font-size:9px">%</span></div>
+          <div class="hp-page-log-score" style="color:${sc}">${l.score}<span style="font-size:10px;opacity:.7">%</span></div>
         </div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   });
   html+=`</div>`;
 
-  // 全体統計（下部）
-  const totalSessions=logs.length;
-  const totalCards=logs.reduce((s,l)=>s+l.total,0);
-  const avgScore=totalSessions>0?Math.round(logs.reduce((s,l)=>s+l.score,0)/totalSessions):0;
-  html+=`
-    <div class="hp-footer-stats">
-      <div class="hp-fstat"><div class="hp-fstat-n">${totalSessions}</div><div class="hp-fstat-l">セッション</div></div>
-      <div class="hp-fstat"><div class="hp-fstat-n">${totalCards}</div><div class="hp-fstat-l">総問題数</div></div>
-      <div class="hp-fstat"><div class="hp-fstat-n">${avgScore}%</div><div class="hp-fstat-l">平均正答率</div></div>
-    </div>`;
-
-  panel.innerHTML=html;
+  body.innerHTML=html;
 }
 
 // ══════════════════════════════════════════════════════
@@ -664,8 +679,18 @@ async function loadAllDecks(){
 function renderDeckGrid(){
   let list=Object.entries(allPublicDecks);
   if(deckCat!=='ALL')list=list.filter(([,d])=>d.cat===deckCat);
-  if(deckSort==='pop')list.sort((a,b)=>(b[1].favCount||0)-(a[1].favCount||0));
-  else list.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+
+  // 人気順: お気に入り数 × 2 + 閲覧数 の合計スコアで降順
+  if(deckSort==='pop'){
+    list.sort((a,b)=>{
+      const scoreA=(a[1].favCount||0)*2+(a[1].viewCount||0);
+      const scoreB=(b[1].favCount||0)*2+(b[1].viewCount||0);
+      return scoreB-scoreA;
+    });
+  }else{
+    list.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  }
+
   filteredSortedDecks=list;
   const total=list.length;
   if(ge('deckCountBadge'))ge('deckCountBadge').textContent=total;
@@ -684,7 +709,7 @@ function renderDeckGrid(){
 function deckCardHTML(id,dk){
   const isMine=currentSession&&dk.owner===currentSession.username;
   const isFav=!!allFavs[id];
-  const cnt=dk.cardCount||0,favCnt=dk.favCount||0;
+  const cnt=dk.cardCount||0,favCnt=dk.favCount||0,viewCnt=dk.viewCount||0;
   const tagHtml=dk.cat?`<span class="dc-tag" style="${catBg(dk.cat)}">${esc(dk.cat)}</span>`:'<span></span>';
   return `<div class="deck-card-new" id="dcard_${id}">
     <div class="dc-card-top">${tagHtml}
@@ -697,7 +722,7 @@ function deckCardHTML(id,dk){
     ${dk.desc?`<div class="dc-desc-new">${esc(dk.desc)}</div>`:''}
     <div class="dc-meta-new">
       <span class="dc-author-new" onclick="openUserProfile('${esc(dk.owner||'')}')">@${esc(dk.owner||'')}</span>
-      <span>📇 ${cnt}枚</span><span>⭐ ${favCnt}</span>
+      <span>📇 ${cnt}枚</span><span>⭐ ${favCnt}</span><span>👁 ${viewCnt}</span>
       <span>${fmtDate(dk.createdAt)}</span>
     </div>
     <div class="dc-actions-new">
@@ -802,20 +827,34 @@ function _launchStudy(deckId){
   db.ref(`decks/${deckId}/vc`).transaction(v=>(v||0)+1).catch(()=>{});
   ge('deckBrowser').style.display='none';ge('studySession').style.display='';
   ge('sessDeckName').textContent=dk.name||'無題';
-  ge('cardsListView').classList.remove('active');ge('sessionComplete').classList.remove('active');
+
+  // まずセッション内のすべての子要素を非表示/非アクティブにリセット
+  ge('cardsListView').classList.remove('active');
+  ge('sessionComplete').classList.remove('active');
+
   const editBtn=ge('editDeckBtn');
   if(editBtn)editBtn.style.display=(currentSession&&dk.owner===currentSession.username)?'':'none';
   if(!decks[deckId])decks[deckId]=dk;
 
-  const flashArea=ge('flashcardArea'),quizArea=ge('quizArea');
+  // studyArea を常にアクティブにする（重要: quiz/flashcard の親）
+  const studyArea=ge('studyArea');
+  if(studyArea)studyArea.classList.add('active');
+
+  const flashArea=ge('flashcardArea');
+  const quizArea=ge('quizArea');
+
   if(studyMode==='4choice'){
+    // 4択: flashcard を隠し quiz を表示
     if(flashArea)flashArea.style.display='none';
     if(quizArea)quizArea.style.display='';
-    buildQuizQueue();renderQuizCard();
+    buildQuizQueue();
+    renderQuizCard();
   }else{
+    // 通常/ランダム: quiz を隠し flashcard を表示
     if(flashArea)flashArea.style.display='';
     if(quizArea)quizArea.style.display='none';
-    buildStudyQueue();renderFlashcard();
+    buildStudyQueue();
+    renderFlashcard();
   }
 }
 
@@ -859,11 +898,13 @@ function renderFlashcard(){
 function showEditViewInSession(){ge('cardsListView').classList.add('active');ge('sessionComplete').classList.remove('active');renderCardsList();}
 
 function showSessionComplete(){
-  // 学習ログを保存（非同期・エラーは無視）
+  // 学習ログを保存
   saveStudyLog();
 
   if(studyMode==='4choice'){
     ge('sessionComplete').classList.add('active');ge('cardsListView').classList.remove('active');
+    // quizArea を隠してセッション完了を表示
+    const quizArea=ge('quizArea');if(quizArea)quizArea.style.display='none';
     ge('sessionComplete').querySelector('.complete-stats').innerHTML=
       `正解: <strong>${quizStats.correct}</strong> &nbsp;|&nbsp; 不正解: <strong>${quizStats.wrong}</strong> &nbsp;|&nbsp; 正答率: <strong>${Math.round(quizStats.correct/Math.max(1,quizStats.total)*100)}%</strong>`;
   }else{
@@ -882,9 +923,18 @@ window.rateCard=async function(rating){
   currentCardIdx++;renderFlashcard();
 };
 window.restartSession=function(){
-  if(studyMode==='4choice'){buildQuizQueue();renderQuizCard();}
-  else{buildStudyQueue();renderFlashcard();}
+  const flashArea=ge('flashcardArea');
+  const quizArea=ge('quizArea');
   ge('sessionComplete').classList.remove('active');
+  if(studyMode==='4choice'){
+    if(flashArea)flashArea.style.display='none';
+    if(quizArea)quizArea.style.display='';
+    buildQuizQueue();renderQuizCard();
+  }else{
+    if(flashArea)flashArea.style.display='';
+    if(quizArea)quizArea.style.display='none';
+    buildStudyQueue();renderFlashcard();
+  }
 };
 
 async function updateCardSRS(cardId,rating){
@@ -951,39 +1001,70 @@ function renderQuizCard(){
   const d=decks[currentDeckId];
   if(!d)return;
   if(quizIdx>=quizQueue.length){showSessionComplete();return;}
-  const cardId=quizQueue[quizIdx],card=d.cards[cardId];
+
+  const cardId=quizQueue[quizIdx];
+  const card=d.cards[cardId];
   if(!card){quizIdx++;renderQuizCard();return;}
+
   quizAnswered=false;
 
-  const allCardValues=Object.values(d.cards);
-  const wrongCards=allCardValues.filter(c=>c!==card).sort(()=>Math.random()-.5).slice(0,3);
+  // 選択肢を作る: 正解 + ランダムな不正解3つ
+  const allCards=Object.values(d.cards);
+  const wrongCards=allCards.filter(c=>c!==card).sort(()=>Math.random()-.5).slice(0,3);
   const choices=[card,...wrongCards].sort(()=>Math.random()-.5);
   currentQuizChoices=choices;
   quizCorrectIdx=choices.indexOf(card);
 
-  ge('quizProgress').textContent=`${quizIdx+1} / ${quizQueue.length}`;
-  ge('quizProgressBar').style.width=`${(quizIdx/quizQueue.length)*100}%`;
-  ge('quizQuestion').textContent=card.front;
-  ge('quizResult').textContent='';ge('quizResult').className='quiz-result';
-  ge('quizNextBtn').style.display='none';
+  // プログレス
+  const progressBar=ge('quizProgressBar');
+  const progressText=ge('quizProgress');
+  if(progressBar)progressBar.style.width=`${(quizIdx/quizQueue.length)*100}%`;
+  if(progressText)progressText.textContent=`${quizIdx+1} / ${quizQueue.length}`;
 
-  ge('quizChoices').innerHTML=choices.map((c,i)=>
+  // 問題文
+  const questionEl=ge('quizQuestion');
+  if(questionEl)questionEl.textContent=card.front;
+
+  // 結果・次へボタンをリセット
+  const resultEl=ge('quizResult');
+  const nextBtn=ge('quizNextBtn');
+  if(resultEl){resultEl.textContent='';resultEl.className='quiz-result';}
+  if(nextBtn)nextBtn.style.display='none';
+
+  // 選択肢を描画
+  const choicesEl=ge('quizChoices');
+  if(!choicesEl)return;
+  choicesEl.innerHTML=choices.map((c,i)=>
     `<button class="quiz-choice" onclick="selectQuizAnswer(${i})">${esc(c.back)}</button>`
   ).join('');
 }
 
 window.selectQuizAnswer=function(choiceIdx){
-  if(quizAnswered)return;quizAnswered=true;
+  if(quizAnswered)return;
+  quizAnswered=true;
   const isCorrect=choiceIdx===quizCorrectIdx;
+
   document.querySelectorAll('.quiz-choice').forEach((btn,i)=>{
     btn.disabled=true;
     if(i===quizCorrectIdx)btn.classList.add('correct');
     if(i===choiceIdx&&!isCorrect)btn.classList.add('wrong');
   });
+
   const result=ge('quizResult');
-  if(isCorrect){quizStats.correct++;result.textContent='✓ 正解！';result.className='quiz-result correct-msg';}
-  else{quizStats.wrong++;result.textContent=`✗ 不正解　正解: ${currentQuizChoices[quizCorrectIdx]?.back||''}`;result.className='quiz-result wrong-msg';}
-  ge('quizNextBtn').style.display='';
+  if(result){
+    if(isCorrect){
+      quizStats.correct++;
+      result.textContent='✓ 正解！';
+      result.className='quiz-result correct-msg';
+    }else{
+      quizStats.wrong++;
+      result.textContent=`✗ 不正解　正解: ${currentQuizChoices[quizCorrectIdx]?.back||''}`;
+      result.className='quiz-result wrong-msg';
+    }
+  }
+
+  const nextBtn=ge('quizNextBtn');
+  if(nextBtn)nextBtn.style.display='';
 };
 
 window.nextQuizCard=function(){quizIdx++;renderQuizCard();};
@@ -1227,7 +1308,6 @@ window.toggleProfileFollow=async function(targetUsername){
   showToast(am?`@${targetUsername} のフォローを解除しました`:`@${targetUsername} をフォローしました`);
 };
 
-// ── プロフィール編集モーダル ──────────────────────────
 window.openProfileEditModal=function(){
   const ex=ge('profileEditModal');if(ex)ex.remove();
   const ud=currentSession;
@@ -1339,9 +1419,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   ge('studySession').style.display='none';
   initCatFilter();initDmCats();
 
-  // 未ログイン状態でも履歴パネルを初期化
-  renderHistoryPanel([]);
-
   const sess=loadSession();
   if(sess&&sess.uid){
     currentSession=sess;
@@ -1355,6 +1432,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   }else{
     ge('welcomeScreen').style.display='flex';
     loadAllDecks();
-    renderHistoryPanel([]);
   }
 });
