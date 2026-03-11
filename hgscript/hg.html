@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HGScript v0.1 — Discord Bot DSL | HGHome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Fira+Code:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="hg.css">
+</head>
+<body>
+
+<div class="bg-texture"></div>
+
+<!-- ══ HEADER ══════════════════════════════ -->
+<header>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <!-- Back to HGHome -->
+    <a href="../index.html" class="back-link" title="HGHome に戻る">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+      </svg>
+      HGHome
+    </a>
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-mark">HG</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div class="logo-name"><em>HG</em>Script</div>
+        <div class="logo-tag">v0.1 beta</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <span class="pill pill-indigo">Discord DSL</span>
+    <span class="pill pill-sage">→ Python</span>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+    <!-- Docs button -->
+    <button class="book-btn" id="book-btn" onclick="toggleDocs()">
+      📖
+      <span class="book-tooltip">リファレンス</span>
+    </button>
+  </div>
+</header>
+
+<!-- ══ APP SHELL ══════════════════════════ -->
+<div class="app-shell">
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <span class="toolbar-label">サンプル</span>
+    <button class="sample-btn active" onclick="loadSample('basic',this)">Hello</button>
+    <button class="sample-btn" onclick="loadSample('calc',this)">Calculator</button>
+    <button class="sample-btn" onclick="loadSample('economy',this)">Economy</button>
+    <button class="sample-btn" onclick="loadSample('embed',this)">Embed + Button</button>
+    <button class="sample-btn" onclick="loadSample('event',this)">Events</button>
+    <div class="toolbar-sep"></div>
+    <button class="clear-btn" onclick="clearEditor()">✕ クリア</button>
+    <div style="flex:1"></div>
+    <button class="clear-btn" style="border-color:var(--indigo-m);color:var(--indigo);background:var(--indigo-l);" onclick="formatCode()">⌥ Format</button>
+  </div>
+
+  <!-- EDITOR AREA -->
+  <div class="editor-area">
+
+    <!-- LEFT: HGScript Input -->
+    <div class="pane pane-left">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span class="pane-chip pane-chip-hg">HGScript</span>
+          <span class="pane-chip">bot.hgs</span>
+        </div>
+        <div class="pane-actions">
+          <button class="action-btn" onclick="formatCode()">⌥ Format</button>
+        </div>
+      </div>
+      <div class="editor-wrap">
+        <div class="line-numbers" id="line-numbers"></div>
+        <div class="editor-inner">
+          <div class="highlight-layer" id="highlight-layer" aria-hidden="true"></div>
+          <textarea id="hg-input" spellcheck="false" autocomplete="off"
+            placeholder="# HGScript コードを入力…"></textarea>
+        </div>
+      </div>
+      <div class="error-panel" id="error-panel"></div>
+      <div class="status-bar">
+        <div class="status-left">
+          <span class="stat">行 <span id="stat-lines">0</span></span>
+          <span class="stat">文字 <span id="stat-chars">0</span></span>
+          <span id="stat-status" class="stat">―</span>
+        </div>
+        <span class="stat">HGScript v0.1</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: Python Output -->
+    <div class="pane">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span class="pane-chip pane-chip-py">Python</span>
+          <span class="pane-chip">bot.py</span>
+        </div>
+        <div class="pane-actions">
+          <button class="action-btn" id="copy-btn" onclick="copyOutput()">⎘ コピー</button>
+        </div>
+      </div>
+      <div class="output-wrap"><pre id="py-output"></pre></div>
+      <div class="status-bar">
+        <div class="status-left">
+          <span class="stat">行 <span id="out-lines">0</span></span>
+          <span id="out-status" class="stat">Ready</span>
+        </div>
+        <span class="stat">discord.py 2.x</span>
+      </div>
+    </div>
+
+  </div><!-- /editor-area -->
+</div><!-- /app-shell -->
+
+<!-- ══ DOCS OVERLAY & PANEL ══════════════ -->
+<div class="docs-overlay" id="docs-overlay" onclick="toggleDocs()"></div>
+
+<div class="docs-panel" id="docs-panel">
+  <div class="docs-head">
+    <div class="docs-head-left">
+      <div class="docs-head-icon">📖</div>
+      <div>
+        <div class="docs-head-title">HGScript リファレンス</div>
+        <div class="docs-head-sub">Discord Bot DSL v0.1 — 全構文解説</div>
+      </div>
+    </div>
+    <button class="docs-close" onclick="toggleDocs()">✕</button>
+  </div>
+
+  <div class="docs-tabs">
+    <button class="docs-tab active" onclick="showTab('overview',this)">概要</button>
+    <button class="docs-tab" onclick="showTab('types',this)">型・変数</button>
+    <button class="docs-tab" onclick="showTab('command',this)">コマンド</button>
+    <button class="docs-tab" onclick="showTab('control',this)">制御構文</button>
+    <button class="docs-tab" onclick="showTab('discord',this)">Discord</button>
+    <button class="docs-tab" onclick="showTab('storage',this)">Storage</button>
+  </div>
+
+  <div class="docs-body">
+
+    <!-- TAB: 概要 -->
+    <div class="docs-section active" id="tab-overview">
+      <div class="docs-tip">💡 HGScript は Discord Bot を直感的に記述するための DSL です。入力したコードはリアルタイムで <strong>discord.py 2.x</strong> へ変換されます。</div>
+      <div class="docs-h1">基本ルール</div>
+      <div class="docs-p">ブロックは <span class="ic">{ }</span> で囲みます。文は改行で区切ります。コメントは <span class="ic">#</span> から始まります。</div>
+      <div class="docs-code-block"><span class="c"># コメント</span>
+<span class="k">command</span>(hello) {
+    <span class="k">reply</span> <span class="s">"Hello!"</span>
+}</div>
+      <div class="docs-h1">サポート機能一覧</div>
+      <table class="docs-table">
+        <tr><th>機能</th><th>説明</th></tr>
+        <tr><td>command</td><td>スラッシュコマンドの定義</td></tr>
+        <tr><td>event</td><td>join / leave / message イベント</td></tr>
+        <tr><td>reply</td><td>メッセージ返信（ephemeral 対応）</td></tr>
+        <tr><td>embed</td><td>リッチな埋め込みメッセージ</td></tr>
+        <tr><td>button</td><td>クリック可能なボタン UI</td></tr>
+        <tr><td>select</td><td>ドロップダウン選択メニュー</td></tr>
+        <tr><td>store / load</td><td>Key-Value ストレージ</td></tr>
+        <tr><td>permission</td><td>権限チェック（admin / moderator）</td></tr>
+        <tr><td>cooldown</td><td>コマンドのクールダウン（秒）</td></tr>
+        <tr><td>await fetch</td><td>外部 API への非同期 HTTP GET</td></tr>
+      </table>
+    </div>
+
+    <!-- TAB: 型・変数 -->
+    <div class="docs-section" id="tab-types">
+      <div class="docs-h1">データ型</div>
+      <table class="docs-table">
+        <tr><th>HGScript</th><th>Python 変換</th><th>説明</th></tr>
+        <tr><td>int</td><td>int</td><td>整数</td></tr>
+        <tr><td>float</td><td>float</td><td>浮動小数点</td></tr>
+        <tr><td>string</td><td>str</td><td>文字列</td></tr>
+        <tr><td>bool</td><td>bool</td><td>真偽値（true / false）</td></tr>
+        <tr><td>user</td><td>discord.Member</td><td>Discord メンバー</td></tr>
+        <tr><td>role</td><td>discord.Role</td><td>Discord ロール</td></tr>
+        <tr><td>channel</td><td>discord.TextChannel</td><td>テキストチャンネル</td></tr>
+      </table>
+      <div class="docs-h1">変数の宣言</div>
+      <div class="docs-p"><span class="ic">型名 変数名 = 値</span> の順で宣言します。</div>
+      <div class="docs-code-block"><span class="t">int</span> score = <span class="n">100</span>
+<span class="t">float</span> rate = <span class="n">0.5</span>
+<span class="t">string</span> name = <span class="s">"sosuke"</span>
+<span class="t">bool</span> admin = <span class="k">true</span></div>
+      <div class="docs-h1">let キーワード</div>
+      <div class="docs-p">型を省略した代入・ストレージ読込・await の結果受け取りに使います。</div>
+      <div class="docs-code-block"><span class="k">let</span> result = score + <span class="n">50</span>
+<span class="k">let</span> coins = <span class="k">load</span> coins
+<span class="k">let</span> data = <span class="k">await fetch</span> <span class="s">"https://api.example.com"</span></div>
+    </div>
+
+    <!-- TAB: コマンド -->
+    <div class="docs-section" id="tab-command">
+      <div class="docs-h1">コマンドの定義</div>
+      <div class="docs-p">スラッシュコマンドは <span class="ic">command(名前: 引数)</span> で定義します。</div>
+      <div class="docs-code-block"><span class="k">command</span>(greet: <span class="t">string</span> name) {
+    <span class="k">reply</span> <span class="s">"Hi, "</span> + name
+}</div>
+      <div class="docs-h1">引数の種類</div>
+      <table class="docs-table">
+        <tr><th>構文</th><th>説明</th><th>Python 変換</th></tr>
+        <tr><td>type name</td><td>必須引数</td><td>name: int</td></tr>
+        <tr><td>type? name</td><td>省略可能（None 許容）</td><td>name: int = None</td></tr>
+      </table>
+      <div class="docs-code-block"><span class="c"># 複数引数</span>
+<span class="k">command</span>(add: <span class="t">int</span> a <span class="t">int</span> b) {
+    <span class="t">int</span> result = a + b
+    <span class="k">reply</span> result
+}
+<span class="c"># 省略可能引数</span>
+<span class="k">command</span>(hello: <span class="t">string?</span> name) {
+    <span class="k">if</span> name == <span class="s">""</span> {
+        <span class="k">reply</span> <span class="s">"Hello!"</span>
+    }
+    <span class="k">else</span> {
+        <span class="k">reply</span> <span class="s">"Hello, "</span> + name
+    }
+}</div>
+      <div class="docs-h1">permission — 権限チェック</div>
+      <div class="docs-code-block"><span class="k">command</span>(ban: <span class="t">user</span> target) {
+    <span class="k">permission</span> admin
+    <span class="k">reply</span> <span class="s">"Banned!"</span>
+}</div>
+      <table class="docs-table">
+        <tr><th>HGScript</th><th>Discord 権限</th></tr>
+        <tr><td>permission admin</td><td>administrator</td></tr>
+        <tr><td>permission moderator</td><td>manage_messages</td></tr>
+      </table>
+      <div class="docs-h1">cooldown — クールダウン</div>
+      <div class="docs-code-block"><span class="k">command</span>(daily) {
+    <span class="k">cooldown</span> <span class="n">86400</span>  <span class="c"># 24時間クールダウン</span>
+    <span class="k">reply</span> <span class="s">"ボーナス受取完了！"</span>
+}</div>
+    </div>
+
+    <!-- TAB: 制御構文 -->
+    <div class="docs-section" id="tab-control">
+      <div class="docs-h1">if / else</div>
+      <div class="docs-code-block"><span class="k">if</span> score >= <span class="n">100</span> {
+    <span class="k">reply</span> <span class="s">"High score!"</span>
+}
+<span class="k">else</span> {
+    <span class="k">reply</span> <span class="s">"Keep going!"</span>
+}</div>
+      <div class="docs-h1">比較演算子</div>
+      <table class="docs-table">
+        <tr><th>演算子</th><th>意味</th></tr>
+        <tr><td>==</td><td>等しい</td></tr>
+        <tr><td>!=</td><td>等しくない</td></tr>
+        <tr><td>&gt;</td><td>より大きい</td></tr>
+        <tr><td>&lt;</td><td>より小さい</td></tr>
+        <tr><td>&gt;=</td><td>以上</td></tr>
+        <tr><td>&lt;=</td><td>以下</td></tr>
+      </table>
+      <div class="docs-h1">for ループ</div>
+      <div class="docs-p"><span class="ic">start..end</span> は start から end（含む）まで繰り返します。</div>
+      <div class="docs-code-block"><span class="k">for</span> i <span class="k">in</span> <span class="n">1</span>..<span class="n">5</span> {
+    <span class="k">reply</span> i
+}</div>
+      <div class="docs-h1">算術演算子</div>
+      <table class="docs-table">
+        <tr><th>演算子</th><th>意味</th></tr>
+        <tr><td>+</td><td>加算 / 文字列結合</td></tr>
+        <tr><td>-</td><td>減算</td></tr>
+        <tr><td>*</td><td>乗算</td></tr>
+        <tr><td>/</td><td>除算</td></tr>
+        <tr><td>%</td><td>余り</td></tr>
+      </table>
+      <div class="docs-warn">⚠️ Python では文字列と数値の <strong>+</strong> 結合時に <code style="font-family:'Fira Code',monospace">str()</code> が必要なことがあります。変換後のコードを確認してください。</div>
+    </div>
+
+    <!-- TAB: Discord -->
+    <div class="docs-section" id="tab-discord">
+      <div class="docs-h1">reply — 返信</div>
+      <div class="docs-code-block"><span class="c"># シンプル返信</span>
+<span class="k">reply</span> <span class="s">"Hello!"</span>
+<span class="c"># ブロック形式（ephemeral = 自分だけ見える）</span>
+<span class="k">reply</span> {
+    <span class="k">content</span> <span class="s">"秘密のメッセージ"</span>
+    <span class="k">ephemeral</span> true
+}</div>
+      <div class="docs-h1">embed — 埋め込みメッセージ</div>
+      <div class="docs-code-block"><span class="k">embed</span> {
+    <span class="k">title</span> <span class="s">"サーバー情報"</span>
+    <span class="k">description</span> <span class="s">"HGScript Bot"</span>
+    <span class="k">color</span> <span class="n">0x6c63ff</span>
+}</div>
+      <div class="docs-tip">💡 color は 16進数カラーコードで指定します（例: <span class="ic">0xff5733</span>）</div>
+      <div class="docs-h1">button — ボタン</div>
+      <div class="docs-code-block"><span class="k">button</span> <span class="s">"Click Me"</span> {
+    <span class="k">reply</span> {
+        <span class="k">content</span> <span class="s">"押されました！"</span>
+        <span class="k">ephemeral</span> true
+    }
+}</div>
+      <div class="docs-h1">select — 選択メニュー</div>
+      <div class="docs-code-block"><span class="k">select</span> difficulty {
+    <span class="k">option</span> <span class="s">"Easy"</span>
+    <span class="k">option</span> <span class="s">"Normal"</span>
+    <span class="k">option</span> <span class="s">"Hard"</span>
+}</div>
+      <div class="docs-h1">event — イベント</div>
+      <table class="docs-table">
+        <tr><th>HGScript</th><th>discord.py</th><th>トリガー</th></tr>
+        <tr><td>event join</td><td>on_member_join</td><td>メンバー参加時</td></tr>
+        <tr><td>event leave</td><td>on_member_remove</td><td>メンバー退出時</td></tr>
+        <tr><td>event message</td><td>on_message</td><td>メッセージ受信時</td></tr>
+      </table>
+    </div>
+
+    <!-- TAB: Storage -->
+    <div class="docs-section" id="tab-storage">
+      <div class="docs-h1">store / load</div>
+      <div class="docs-p">Key-Value 形式でデータを保存・読み込みます。現在の実装はメモリ上の <span class="ic">dict</span> です。本番環境では SQLite や Redis などへの置き換えを推奨します。</div>
+      <div class="docs-code-block"><span class="c"># 保存</span>
+<span class="k">store</span> coins = <span class="n">500</span>
+<span class="c"># 読み込み（存在しない場合は 0 が返る）</span>
+<span class="k">let</span> coins = <span class="k">load</span> coins
+<span class="c"># 加算して更新</span>
+<span class="t">int</span> newCoins = coins + <span class="n">100</span>
+<span class="k">store</span> coins = newCoins</div>
+      <div class="docs-h1">await fetch — 外部 API</div>
+      <div class="docs-code-block"><span class="c"># 結果を変数に受け取る</span>
+<span class="k">let</span> data = <span class="k">await fetch</span> <span class="s">"https://api.example.com/data"</span>
+<span class="c"># 結果を使わずリクエストだけ送る</span>
+<span class="k">await fetch</span> <span class="s">"https://api.example.com/ping"</span></div>
+      <div class="docs-tip">💡 <span class="ic">await fetch</span> は内部で <span class="ic">aiohttp</span> に変換されます。<br><span class="ic">import aiohttp</span> が自動的に出力コードへ追加されます。</div>
+      <div class="docs-h1">Economy コマンド例</div>
+      <div class="docs-code-block"><span class="k">command</span>(earn) {
+    <span class="k">cooldown</span> <span class="n">3600</span>
+    <span class="k">let</span> bal = <span class="k">load</span> coins
+    <span class="t">int</span> reward = <span class="n">100</span>
+    <span class="t">int</span> total = bal + reward
+    <span class="k">store</span> coins = total
+    <span class="k">reply</span> <span class="s">"💰 "</span> + reward + <span class="s">" coins 獲得！"</span>
+}</div>
+    </div>
+
+  </div><!-- /docs-body -->
+</div><!-- /docs-panel -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="hg.js"></script>
+</body>
+</html>
