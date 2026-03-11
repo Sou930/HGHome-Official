@@ -1122,14 +1122,20 @@ async function submitNews(){
 function goHome(){window.scrollTo({top:0,behavior:'smooth'});}
 
 // ── 🔔 通知許可バナー / 拒否済みFAB ──
+// PWA（ホーム画面追加）として起動しているか判定
+function isRunningAsPWA(){
+  return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+}
+
 function initNotifBanner(){
-  // Notification API 非対応ブラウザ（旧iOS Safariなど）は何もしない
+  // Notification API 非対応（iOS Safari ブラウザなど）は何もしない
   if(!('Notification' in window))return;
 
   // 許可済み
   if(Notification.permission==='granted'){subscribePush();return;}
 
-  // 拒否済み → FABを表示（sessionStorage で「このタブだけ非表示」を管理）
+  // 拒否済み → FABを表示
   if(Notification.permission==='denied'){
     if(!sessionStorage.getItem('notif_fab_hidden')){
       document.getElementById('notifDeniedFab').classList.add('show');
@@ -1137,8 +1143,20 @@ function initNotifBanner(){
     return;
   }
 
-  // default（未決定）→ バナーを表示
-  // 「今はしない」を押してから6時間以内は非表示
+  // === default（未決定）===
+
+  // PWAとして起動中 → 自動でダイアログを表示（設定アプリに登録させるため）
+  // iOSはPWA起動時に requestPermission() が呼べる
+  if(isRunningAsPWA()){
+    // 一度も聞いたことがなければ即リクエスト
+    if(!localStorage.getItem('notif_asked_pwa')){
+      localStorage.setItem('notif_asked_pwa','1');
+      requestNotifPermission();
+      return;
+    }
+  }
+
+  // 通常ブラウザ → 「今はしない」を押してから6時間以内は非表示
   const dismissed=localStorage.getItem('notif_dismissed_until');
   if(dismissed&&Date.now()<parseInt(dismissed,10))return;
 
