@@ -161,6 +161,8 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 .news-item-stripe.info{background:var(--blue);}
 .news-item-stripe.study{background:var(--green);}
 .news-item-stripe.homebot{background:var(--purple);}
+.news-item-stripe.sns{background:#0891b2;}
+.news-item-stripe.hgscript{background:var(--indigo);}
 .news-item-inner{padding:20px 24px 18px;}
 .news-item-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
 .news-date{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text3);white-space:nowrap;flex-shrink:0;background:var(--paper2);border:1px solid var(--border);padding:3px 9px;border-radius:99px;margin-top:1px;}
@@ -168,6 +170,8 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 .news-badge.info{background:var(--blue-l);color:var(--blue);border:1px solid #bfdbfe;}
 .news-badge.study{background:var(--green-l);color:var(--green);border:1px solid #aadfc0;}
 .news-badge.homebot{background:var(--purple-l);color:var(--purple);border:1px solid #c4b5fd;}
+.news-badge.sns{background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;}
+.news-badge.hgscript{background:var(--indigo-l);color:var(--indigo);border:1px solid var(--indigo-m);}
 .news-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.05rem;color:var(--text);line-height:1.45;flex:1;min-width:0;}
 .news-divider{height:1px;background:var(--paper3);margin:12px 0;}
 .news-body{font-size:.9rem;color:var(--text2);line-height:1.8;white-space:pre-wrap;word-break:break-word;}
@@ -509,6 +513,8 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
           <option value="info">📋 お知らせ</option>
           <option value="study">📚 HGStudy アップデート</option>
           <option value="homebot">🤖 HGHomeBot+ アップデート</option>
+          <option value="sns">💬 HGSNS アップデート</option>
+          <option value="hgscript">🔧 HGScript アップデート</option>
         </select>
       </div>
       <div class="form-group">
@@ -655,7 +661,7 @@ function handleImgSelect(e){const file=e.target.files[0];if(file)processImgFile(
 function processImgFile(file){const reader=new FileReader();reader.onload=function(ev){const img=new Image();img.onload=function(){let w=img.width,h=img.height;if(w>MAX_IMG_SIZE||h>MAX_IMG_SIZE){if(w>h){h=Math.round(h*MAX_IMG_SIZE/w);w=MAX_IMG_SIZE;}else{w=Math.round(w*MAX_IMG_SIZE/h);h=MAX_IMG_SIZE;}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);let quality=0.82;let dataUrl=canvas.toDataURL('image/jpeg',quality);while(dataUrl.length>MAX_IMG_KB*1024*4/3&&quality>0.3){quality-=0.08;dataUrl=canvas.toDataURL('image/jpeg',quality);}const kb=Math.round(dataUrl.length*3/4/1024);_newsImageBase64=dataUrl;document.getElementById('imgPreviewImg').src=dataUrl;document.getElementById('imgPreview').classList.add('show');document.getElementById('imgSizeNote').textContent=`画像サイズ: ${w}×${h}px / 約${kb}KB`;};img.src=ev.target.result;};reader.readAsDataURL(file);}
 function clearNewsImage(){_newsImageBase64=null;document.getElementById('imgPreview').classList.remove('show');document.getElementById('imgPreviewImg').src='';document.getElementById('newsImgInput').value='';document.getElementById('imgSizeNote').textContent='';}
 
-async function loadNews(){const list=document.getElementById('newsList');list.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';try{if(!db){list.innerHTML='<div class="news-empty">Firebase が初期化されていません</div>';return;}const snap=await db.ref('news').orderByChild('ts').limitToLast(50).once('value');const data=snap.val()||{};const entries=Object.entries(data).sort((a,b)=>b[1].ts-a[1].ts);document.getElementById('newsCount').textContent=entries.length?entries.length+'件':'';if(!entries.length){list.innerHTML='<div class="news-empty">現在お知らせはありません</div>';return;}list.innerHTML='';const nl=document.createElement('div');nl.className='news-list';entries.forEach(([id,n])=>{const el=document.createElement('div');el.className='news-item';const ts=n.ts?new Date(n.ts):null;const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}):'';const cat=n.cat||'info';const catLabel={info:'📋 お知らせ',study:'📚 HGStudy',homebot:'🤖 HGHomeBot+'}[cat]||'📋 お知らせ';const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';el.innerHTML=`
+async function loadNews(){const list=document.getElementById('newsList');list.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';try{if(!db){list.innerHTML='<div class="news-empty">Firebase が初期化されていません</div>';return;}const snap=await db.ref('news').orderByChild('ts').limitToLast(50).once('value');const data=snap.val()||{};const entries=Object.entries(data).sort((a,b)=>b[1].ts-a[1].ts);document.getElementById('newsCount').textContent=entries.length?entries.length+'件':'';if(!entries.length){list.innerHTML='<div class="news-empty">現在お知らせはありません</div>';return;}list.innerHTML='';const nl=document.createElement('div');nl.className='news-list';entries.forEach(([id,n])=>{const el=document.createElement('div');el.className='news-item';const ts=n.ts?new Date(n.ts):null;const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}):'';const cat=n.cat||'info';const catLabel={info:'📋 お知らせ',study:'📚 HGStudy',homebot:'🤖 HGHomeBot+',sns:'💬 HGSNS',hgscript:'🔧 HGScript'}[cat]||'📋 お知らせ';const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';el.innerHTML=`
   <div class="news-item-stripe ${esc(cat)}"></div>
   <div class="news-item-inner">
     <div class="news-item-top">
