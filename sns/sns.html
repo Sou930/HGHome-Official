@@ -17,34 +17,34 @@
   <aside class="sns-sidebar">
     <div class="sns-sidebar-inner">
 
-      <!-- Logo -->
       <a href="../index.html" class="sidebar-logo">
         <span class="sidebar-logo-icon">🏠</span>
         <span class="sidebar-name" style="font-size:.95rem;color:var(--white2)">HGHome</span>
       </a>
 
-      <!-- Nav -->
       <nav class="sidebar-nav">
         <button class="sidebar-nav-item active" data-view="home" onclick="setView('home');loadFeed()">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
           <span class="sidebar-label">ホーム</span>
         </button>
-        <button class="sidebar-nav-item" data-view="search" onclick="setView('search');document.getElementById('searchInput').focus()">
+        <button class="sidebar-nav-item" data-view="search" onclick="setView('search');document.getElementById('searchInput')?.focus()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span class="sidebar-label">検索</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="trend" onclick="setView('trend')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <span class="sidebar-label">トレンド</span>
         </button>
         <button class="sidebar-nav-item" data-view="profile" onclick="if(session)openProfile(session.username);else openAuthModal('login')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span class="sidebar-label">プロフィール</span>
         </button>
-        <!-- HGStudy Link -->
         <a class="sidebar-nav-item" href="../study/study.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
           <span class="sidebar-label">HGStudy</span>
         </a>
       </nav>
 
-      <!-- Post Button -->
       <button class="sidebar-post-btn" onclick="if(session)document.getElementById('composerText').focus();else openAuthModal('login')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span class="btn-label">投稿する</span>
@@ -52,13 +52,11 @@
 
       <div class="sidebar-sep"></div>
 
-      <!-- Guest state -->
       <div id="sidebarGuest" style="display:none;flex-direction:column;gap:6px;padding:4px 0;">
         <button class="btn btn-primary" style="width:100%;border-radius:var(--r-xl)" onclick="openAuthModal('login')">ログイン</button>
         <button class="btn btn-ghost" style="width:100%;border-radius:var(--r-xl)" onclick="openAuthModal('reg')">アカウント作成</button>
       </div>
 
-      <!-- Auth state -->
       <div id="sidebarAuth" style="display:none">
         <button class="sidebar-profile" onclick="openProfile(session.username)">
           <canvas id="sidebarAvatarCanvas" class="sidebar-avatar" width="40" height="40"></canvas>
@@ -79,17 +77,21 @@
 
   <!-- ── FEED ── -->
   <main class="sns-feed">
-    <!-- Feed Header -->
     <div class="feed-header">
       <div class="feed-tabs">
-        <button class="feed-tab active" id="feedHeaderTitle" onclick="setView('home');loadFeed()">ホーム</button>
+        <button class="feed-tab active" id="feedHeaderTitle" onclick="onFeedTabClick()">ホーム</button>
       </div>
     </div>
 
-    <!-- Composer -->
+    <!-- Desktop Composer -->
     <div class="feed-composer" id="feedComposer" style="display:none">
       <canvas id="composerAvatarCanvas" class="composer-avatar" width="44" height="44" onclick="if(session)openProfile(session.username)"></canvas>
       <div class="composer-body">
+        <div class="composer-reply-to" id="composerReplyBanner" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span id="composerReplyText">返信先: <span class="reply-to-name" id="composerReplyName"></span></span>
+          <button class="composer-reply-to-close" onclick="clearReplyContext()">✕</button>
+        </div>
         <textarea
           class="composer-textarea"
           id="composerText"
@@ -98,9 +100,8 @@
           oninput="updateComposerCount()"
           onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitPost()"
         ></textarea>
-        <!-- Image preview -->
         <div class="composer-img-preview" id="composerImgPreview">
-          <img id="composerImgPreviewImg" src="" alt="プレビュー">
+          <img id="composerImgPreviewImg" src="" alt="">
           <button class="composer-img-del" onclick="clearPostImage()">✕</button>
         </div>
         <div class="composer-toolbar">
@@ -118,7 +119,6 @@
       </div>
     </div>
 
-    <!-- Views -->
     <!-- Home feed -->
     <div id="homeView">
       <div id="feedPosts"></div>
@@ -131,34 +131,58 @@
 
     <!-- Search -->
     <div id="searchViewWrap" style="display:none">
+      <!-- Mobile search bar -->
+      <div style="padding:12px 16px;border-bottom:1px solid var(--line);">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="ユーザーまたは#タグを検索"
+            onkeydown="if(event.key==='Enter')doSearch()" oninput="onSearchInput(event)">
+        </div>
+      </div>
       <div id="searchView">
         <div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>
       </div>
+    </div>
+
+    <!-- Trend -->
+    <div id="trendViewWrap" style="display:none">
+      <div id="trendView"></div>
+    </div>
+
+    <!-- Hashtag posts -->
+    <div id="hashtagViewWrap" style="display:none">
+      <div id="hashtagView"></div>
+    </div>
+
+    <!-- Thread/Post detail -->
+    <div id="threadViewWrap" style="display:none">
+      <div id="threadView"></div>
     </div>
 
   </main>
 
   <!-- ── RIGHT PANEL ── -->
   <aside class="sns-right">
-    <!-- Search Bar -->
     <div class="right-search">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input
-          type="text"
-          class="search-input"
-          id="searchInput"
-          placeholder="ユーザーを検索"
-          onkeydown="if(event.key==='Enter')doSearch()"
-        >
+        <input type="text" class="search-input" id="rightSearchInput" placeholder="ユーザーまたは#タグを検索"
+          onkeydown="if(event.key==='Enter'){copySearchAndGo(this.value);}">
       </div>
+    </div>
+
+    <!-- トレンド -->
+    <div class="right-card">
+      <div class="right-card-head">🔥 トレンド</div>
+      <div id="rightTrends"></div>
+      <div class="right-card-foot" onclick="setView('trend')">すべて見る →</div>
     </div>
 
     <!-- おすすめユーザー -->
     <div class="right-card">
       <div class="right-card-head">おすすめユーザー</div>
       <div id="suggestUsers"></div>
-      <div class="right-card-foot" onclick="setView('search');document.getElementById('searchInput').focus()">もっと見る →</div>
+      <div class="right-card-foot" onclick="setView('search')">もっと見る →</div>
     </div>
 
     <!-- HGHome リンク -->
@@ -185,8 +209,153 @@
 
 </div><!-- /sns-wrap -->
 
+<!-- Mobile FAB -->
+<button class="mobile-fab" id="mobileFab" onclick="openMobileCompose()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
 <!-- TOAST -->
 <div class="toast" id="snsToast"></div>
+
+<!-- ── MOBILE COMPOSE BOTTOM SHEET ── -->
+<div class="mobile-compose-overlay" id="mobileComposeOverlay" onclick="if(event.target===this)closeMobileCompose()">
+  <div class="mobile-compose-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title" id="sheetTitle">新しい投稿</span>
+      <button class="sheet-close" onclick="closeMobileCompose()">✕</button>
+    </div>
+    <!-- Reply context for sheet -->
+    <div class="sheet-reply-to" id="sheetReplyBanner" style="display:none">
+      返信先: <span class="reply-name" id="sheetReplyName"></span>
+    </div>
+    <div class="sheet-compose-row">
+      <canvas id="sheetAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+      <div style="flex:1">
+        <textarea class="sheet-textarea" id="sheetTextarea" placeholder="いまどうしてる？" maxlength="280" oninput="updateSheetCount()"></textarea>
+        <!-- Quote preview -->
+        <div id="sheetQuotePreview" style="display:none"></div>
+        <!-- Image preview -->
+        <div class="composer-img-preview" id="sheetImgPreview">
+          <img id="sheetImgPreviewImg" src="" alt="">
+          <button class="composer-img-del" onclick="clearSheetImage()">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-toolbar">
+      <div class="sheet-tools">
+        <button class="composer-tool-btn" onclick="document.getElementById('sheetImgInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <input type="file" id="sheetImgInput" class="img-input" accept="image/*" onchange="handleSheetImgSelect(event)">
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="composer-count" id="sheetCount">280</span>
+        <button class="composer-submit" id="sheetSubmitBtn" onclick="submitSheetPost()" disabled>投稿</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPLY MODAL (desktop) ── -->
+<div class="overlay" id="replyOverlay" onclick="if(event.target===this)closeReplyModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 class="modal-title">返信</h3>
+      <button class="modal-close" onclick="closeReplyModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Original post context -->
+      <div class="reply-modal-context" id="replyModalContext"></div>
+      <!-- Reply compose -->
+      <div class="reply-modal-compose">
+        <canvas id="replyAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+        <div class="reply-compose-body">
+          <textarea class="reply-compose-textarea" id="replyTextarea"
+            placeholder="返信を入力..."
+            maxlength="280"
+            oninput="updateReplyCount()"
+            onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitReply()">
+          </textarea>
+          <div class="reply-compose-toolbar">
+            <div style="display:flex;gap:4px;">
+              <button class="composer-tool-btn" onclick="document.getElementById('replyImgInput').click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </button>
+              <input type="file" id="replyImgInput" class="img-input" accept="image/*" onchange="handleReplyImgSelect(event)">
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="composer-count" id="replyCount">280</span>
+              <button class="composer-submit" id="replySubmitBtn" onclick="submitReply()" disabled>返信</button>
+            </div>
+          </div>
+          <div class="composer-img-preview" id="replyImgPreview">
+            <img id="replyImgPreviewImg" src="" alt="">
+            <button class="composer-img-del" onclick="clearReplyImage()">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPOST OPTIONS MODAL ── -->
+<div class="overlay" id="repostOverlay" onclick="if(event.target===this)closeRepostModal()">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-head">
+      <h3 class="modal-title">リポスト</h3>
+      <button class="modal-close" onclick="closeRepostModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:8px 12px;">
+      <div class="repost-options">
+        <button class="repost-option" onclick="doRepost()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+          リポスト
+        </button>
+        <button class="repost-option" onclick="openQuoteRepost()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          引用リポスト
+        </button>
+        <button class="repost-option" id="undoRepostBtn" style="display:none" onclick="doUndoRepost()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--like)" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+          <span style="color:var(--like)">リポストを取り消す</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUOTE REPOST MODAL ── -->
+<div class="overlay" id="quoteOverlay" onclick="if(event.target===this)closeQuoteModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 class="modal-title">引用リポスト</h3>
+      <button class="modal-close" onclick="closeQuoteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="reply-modal-compose" style="margin-bottom:12px;">
+        <canvas id="quoteAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+        <div class="reply-compose-body">
+          <textarea class="reply-compose-textarea" id="quoteTextarea"
+            placeholder="コメントを追加..."
+            maxlength="280"
+            oninput="updateQuoteCount()"
+            onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitQuoteRepost()">
+          </textarea>
+          <div class="reply-compose-toolbar">
+            <div></div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="composer-count" id="quoteCount">280</span>
+              <button class="composer-submit" id="quoteSubmitBtn" onclick="submitQuoteRepost()">引用する</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Quote preview -->
+      <div class="post-quote-embed" id="quotePreviewEmbed"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ── AUTH MODAL ── -->
 <div class="overlay" id="authOverlay" onclick="if(event.target===this&&session)closeAuthModal()">
@@ -258,7 +427,6 @@
   </div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script src="sns.js"></script>
