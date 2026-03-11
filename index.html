@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HGHome</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D1B2A">
+<meta name="theme-color" content="#1a1714">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,387 +13,388 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700;900&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0D1B2A;--navy2:#162032;--navy3:#1E2C3E;
-  --ink:#1a1a2e;--ink2:#2e2e4a;
-  --gold:#C9A84C;--gold2:#E8C46A;--gold-l:#fdf6e3;
-  --red:#C0392B;--red-l:#fdecea;
-  --green:#1A7A4A;--green-l:#e8f5ee;
-  --blue:#2563EB;--blue-l:#eff6ff;
-  --purple:#7B6CF6;--purple-l:#f3f0ff;
-  --indigo:#6c63ff;--indigo-l:#ede9ff;--indigo-m:#b8b0ff;
-  --paper:#FAFAF7;--paper2:#F3F2EC;--paper3:#EAE8DE;
-  --text:#1a1a2e;--text2:#4a4a6a;--text3:#8a8aaa;
-  --border:#D8D6CC;--border2:#c8c6bc;
-  --r:6px;--r-lg:12px;
-  --shadow:0 2px 12px rgba(13,27,42,0.10);
-  --shadow-lg:0 8px 32px rgba(13,27,42,0.15);
+  --ink:    #1a1714;
+  --ink2:   #2e2a26;
+  --ink3:   #4a453f;
+  --ink4:   #7a736a;
+  --ink5:   #a09890;
+  --warm0:  #faf8f4;
+  --warm1:  #f5f2ec;
+  --warm2:  #ede9e0;
+  --warm3:  #e0dbd0;
+  --warm4:  #ccc6b8;
+  --gold:   #b08d4a;
+  --gold2:  #c9a85c;
+  --gold3:  #e8cfa0;
+  --gold-bg:#fdf8ec;
+  --red:    #8b2e2e;
+  --red-l:  #fdf0f0;
+  --c-info:     #2c5f8a;
+  --c-study:    #2a6b45;
+  --c-homebot:  #5b3d8a;
+  --c-sns:      #1a6b6b;
+  --c-hgscript: #4a3d7a;
+  --c-info-bg:    #eef4fa;
+  --c-study-bg:   #edf7f1;
+  --c-homebot-bg: #f3eef9;
+  --c-sns-bg:     #edf7f7;
+  --c-hgscript-bg:#eeedf7;
+  --border:  #d8d2c4;
+  --border2: #c8c2b4;
+  --r:    5px;
+  --r-lg: 10px;
+  --r-xl: 16px;
+  --shadow-xs: 0 1px 3px rgba(26,23,20,.06);
+  --shadow-sm: 0 2px 8px rgba(26,23,20,.08);
+  --shadow-md: 0 4px 20px rgba(26,23,20,.10);
+  --shadow-lg: 0 8px 40px rgba(26,23,20,.14);
 }
 html{font-size:16px;scroll-behavior:smooth}
-body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);min-height:100vh;line-height:1.6}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:var(--ink);min-height:100vh;line-height:1.7;}
 
-/* ── HEADER ── */
-.site-header{
-  background:var(--navy);
-  color:#fff;
-  position:sticky;top:0;z-index:100;
-  border-bottom:3px solid var(--gold);
-}
-.header-inner{
-  max-width:1100px;margin:0 auto;
-  display:flex;align-items:center;gap:16px;
-  padding:0 24px;height:56px;
-}
-.site-logo{
-  font-family:'Noto Serif JP',serif;
-  font-weight:900;font-size:1.35rem;
-  color:#fff;letter-spacing:.04em;
-  text-decoration:none;display:flex;align-items:center;gap:8px;
-  flex-shrink:0;
-}
-.site-logo span{color:var(--gold);}
+/* HEADER */
+.site-header{background:var(--ink);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.06);}
+.header-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:0 28px;height:52px;}
+.site-logo{font-family:'Noto Serif JP',serif;font-weight:900;font-size:1.2rem;color:#fff;letter-spacing:.08em;text-decoration:none;display:flex;align-items:center;flex-shrink:0;}
+.site-logo .logo-accent{color:var(--gold2);font-weight:300;margin-left:1px;}
+.logo-dot{width:5px;height:5px;border-radius:50%;background:var(--gold2);margin:0 10px;flex-shrink:0;opacity:.6;}
 .header-sep{flex:1}
-.header-nav{display:flex;align-items:center;gap:8px;}
-.nav-link{
-  font-size:.85rem;color:rgba(255,255,255,.75);
-  text-decoration:none;padding:6px 12px;border-radius:var(--r);
-  transition:color .18s,background .18s;font-weight:500;
-}
-.nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
-
-.btn-hdr{
-  font-family:'Outfit',sans-serif;font-weight:600;font-size:.82rem;
-  padding:6px 16px;border-radius:var(--r);border:none;cursor:pointer;
-  transition:all .18s;
-}
-.btn-login{background:transparent;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.3);}
-.btn-login:hover{background:rgba(255,255,255,.1);color:#fff}
-.btn-reg{background:var(--gold);color:var(--navy);margin-left:4px;}
-.btn-reg:hover{background:var(--gold2)}
-
-/* user menu */
+.header-nav{display:flex;align-items:center;gap:4px;}
+.nav-link{font-family:'Zen Kaku Gothic New',sans-serif;font-size:.8rem;font-weight:500;color:rgba(255,255,255,.5);text-decoration:none;padding:5px 10px;border-radius:var(--r);transition:color .15s,background .15s;letter-spacing:.03em;}
+.nav-link:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.07)}
+.nav-divider{width:1px;height:16px;background:rgba(255,255,255,.1);margin:0 4px}
+.btn-hdr{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.78rem;padding:5px 14px;border-radius:var(--r);border:none;cursor:pointer;transition:all .15s;letter-spacing:.03em;}
+.btn-login{background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.18);}
+.btn-login:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.btn-reg{background:var(--gold2);color:var(--ink);margin-left:4px;}
+.btn-reg:hover{background:var(--gold3)}
 .hdr-user{display:none;align-items:center;gap:8px;cursor:pointer;position:relative;padding:4px 8px;border-radius:var(--r);}
-.hdr-user:hover{background:rgba(255,255,255,.1)}
-.hdr-avatar{width:28px;height:28px;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;}
-.hdr-username{font-size:.85rem;font-weight:600;color:#fff;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.acct-menu{
-  display:none;position:absolute;top:calc(100% + 8px);right:0;
-  background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);
-  box-shadow:var(--shadow-lg);min-width:180px;overflow:hidden;z-index:200;
-}
+.hdr-user:hover{background:rgba(255,255,255,.07)}
+.hdr-avatar{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--gold2);flex-shrink:0;}
+.hdr-username{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.85);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.02em;}
+.hdr-chevron{width:10px;height:10px;opacity:.35;flex-shrink:0;border-right:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(45deg) translateY(-2px);}
+.acct-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);min-width:190px;overflow:hidden;z-index:200;animation:menuIn .14s ease;}
+@keyframes menuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .acct-menu.open{display:block}
-.acct-menu-item{
-  display:block;width:100%;text-align:left;padding:11px 16px;
-  font-size:.875rem;background:none;border:none;cursor:pointer;
-  color:var(--text);font-family:'Outfit',sans-serif;font-weight:500;
-  transition:background .15s;
-}
-.acct-menu-item:hover{background:var(--paper2)}
+.acct-menu-profile{padding:14px 16px 10px;border-bottom:1px solid var(--warm2);background:var(--warm0);}
+.acct-disp{font-weight:700;font-size:.88rem;color:var(--ink);line-height:1.3}
+.acct-handle{font-size:.73rem;color:var(--ink5);margin-top:2px;font-family:'DM Mono',monospace;}
+.acct-menu-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:10px 16px;font-size:.84rem;background:none;border:none;cursor:pointer;color:var(--ink2);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:500;transition:background .12s;}
+.acct-menu-item:hover{background:var(--warm1)}
+.acct-menu-item .mi-icon{font-size:.85rem;width:16px;text-align:center;flex-shrink:0;opacity:.6}
 .acct-menu-item.danger{color:var(--red)}
-.acct-menu-div{height:1px;background:var(--border);margin:4px 0}
+.acct-menu-item.danger:hover{background:var(--red-l)}
+.acct-menu-div{height:1px;background:var(--warm2);margin:3px 0}
 
-/* ── HERO ── */
-.hero{
-  background:var(--navy);color:#fff;
-  padding:64px 24px 72px;position:relative;overflow:hidden;
-}
-.hero::before{
-  content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.03) 40px),
-             repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.03) 40px);
-}
-.hero::after{
-  content:'';position:absolute;top:-80px;right:-80px;
-  width:420px;height:420px;border-radius:50%;
-  background:radial-gradient(circle,rgba(201,168,76,.18) 0%,transparent 70%);
-  pointer-events:none;
-}
-.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;}
-.hero-eyebrow{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px;}
-.hero-title{font-family:'Noto Serif JP',serif;font-weight:900;font-size:clamp(2rem,5vw,3.5rem);line-height:1.15;margin-bottom:16px;}
-.hero-title em{color:var(--gold);font-style:normal}
-.hero-sub{font-size:1.05rem;color:rgba(255,255,255,.7);max-width:560px;margin-bottom:36px;font-weight:300;}
-.hero-cta{
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--gold);color:var(--navy);
-  font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;
-  padding:14px 28px;border-radius:var(--r-lg);text-decoration:none;
-  transition:all .2s;border:none;cursor:pointer;
-}
-.hero-cta:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,.3)}
-.hero-cta svg{width:18px;height:18px}
-
-/* ── NOTIF PERMISSION BANNER ── */
-.notif-top-banner{
-  display:none;background:linear-gradient(135deg,#1E2C3E,#162032);
-  border-bottom:2px solid var(--gold);padding:14px 24px;
-  flex-direction:row;align-items:center;gap:14px;
-}
+/* NOTIF BANNER */
+.notif-top-banner{display:none;background:var(--ink2);border-bottom:1px solid rgba(201,168,76,.2);padding:10px 28px;flex-direction:row;align-items:center;gap:12px;}
 .notif-top-banner.show{display:flex}
-.notif-top-icon{font-size:1.6rem;flex-shrink:0;animation:bell-shake 1.8s ease infinite;}
-@keyframes bell-shake{0%,100%{transform:rotate(0)}10%,30%,50%{transform:rotate(-14deg)}20%,40%{transform:rotate(14deg)}60%{transform:rotate(0)}}
-.notif-top-text{flex:1;color:#fff;font-size:.9rem;line-height:1.4}
-.notif-top-text strong{color:var(--gold);display:block;font-size:1rem;margin-bottom:2px}
-.notif-top-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.notif-allow-btn{font-family:'Outfit',sans-serif;font-weight:700;font-size:.85rem;padding:9px 18px;border-radius:var(--r);border:none;cursor:pointer;background:var(--gold);color:var(--navy);white-space:nowrap;transition:background .15s;}
-.notif-allow-btn:hover{background:var(--gold2)}
-.notif-dismiss-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:500;padding:9px 14px;border-radius:var(--r);cursor:pointer;white-space:nowrap;transition:all .15s;}
-.notif-dismiss-btn:hover{background:rgba(255,255,255,.15);color:#fff}
-@media(max-width:600px){.notif-top-banner{flex-wrap:wrap}.notif-top-actions{width:100%;justify-content:flex-end}}
+.notif-top-icon{font-size:1rem;flex-shrink:0;}
+.notif-top-text{flex:1;color:rgba(255,255,255,.65);font-size:.82rem;line-height:1.4}
+.notif-top-text strong{color:var(--gold2);}
+.notif-top-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.notif-allow-btn{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.76rem;padding:5px 13px;border-radius:var(--r);border:none;cursor:pointer;background:var(--gold2);color:var(--ink);white-space:nowrap;transition:background .13s;}
+.notif-allow-btn:hover{background:var(--gold3)}
+.notif-dismiss-btn{background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.74rem;font-weight:500;padding:5px 11px;border-radius:var(--r);cursor:pointer;white-space:nowrap;transition:all .13s;}
+.notif-dismiss-btn:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.7)}
+@media(max-width:600px){.notif-top-banner{flex-wrap:wrap;padding:10px 16px;}.notif-top-actions{width:100%;justify-content:flex-end}}
 
-/* ── LAYOUT ── */
-.page-body{max-width:1100px;margin:0 auto;padding:48px 24px 80px;display:grid;grid-template-columns:1fr 300px;gap:48px;}
-@media(max-width:860px){.page-body{grid-template-columns:1fr;}}
+/* HERO */
+.hero{background:var(--ink);color:#fff;padding:72px 28px 80px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.01) 60px);pointer-events:none;}
+.hero::after{content:'';position:absolute;bottom:-120px;right:-60px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(176,141,74,.11) 0%,transparent 65%);pointer-events:none;}
+.hero-inner{max-width:1080px;margin:0 auto;position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;align-items:end;gap:40px;}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:.67rem;color:var(--gold2);letter-spacing:.22em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.hero-kicker::before{content:'';display:block;width:20px;height:1px;background:var(--gold);}
+.hero-title{font-family:'Noto Serif JP',serif;font-weight:900;font-size:clamp(2.2rem,5vw,3.8rem);line-height:1.1;margin-bottom:18px;letter-spacing:-.01em;}
+.hero-title em{color:var(--gold2);font-style:normal;font-weight:300;}
+.hero-sub{font-size:.93rem;color:rgba(255,255,255,.45);max-width:440px;margin-bottom:36px;line-height:1.9;font-weight:300;}
+.hero-cta-group{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.hero-cta{display:inline-flex;align-items:center;gap:9px;background:var(--gold2);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.9rem;padding:11px 22px;border-radius:var(--r-lg);text-decoration:none;border:none;cursor:pointer;transition:all .2s;letter-spacing:.03em;}
+.hero-cta:hover{background:var(--gold3);transform:translateY(-2px);box-shadow:0 8px 28px rgba(176,141,74,.25);}
+.hero-cta svg{width:14px;height:14px;flex-shrink:0}
+.hero-cta-sub{font-size:.8rem;color:rgba(255,255,255,.3);text-decoration:none;padding:11px 15px;border-radius:var(--r-lg);border:1px solid rgba(255,255,255,.1);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:500;transition:all .15s;white-space:nowrap;}
+.hero-cta-sub:hover{color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.2)}
+.hero-emblem{display:flex;flex-direction:column;align-items:flex-end;gap:4px;opacity:.18;flex-shrink:0;}
+.hero-emblem-line{font-family:'Noto Serif JP',serif;font-weight:900;font-size:clamp(3rem,6vw,5.5rem);color:#fff;line-height:1;letter-spacing:-.02em;}
+.hero-emblem-line.thin{font-weight:300;font-size:clamp(1.5rem,3vw,2.8rem);}
+@media(max-width:680px){.hero-inner{grid-template-columns:1fr;}.hero-emblem{display:none;}}
 
-/* ── SECTION HEADER ── */
-.sec-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--navy);padding-bottom:10px;margin-bottom:24px;}
-.sec-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:8px;}
-.sec-title::before{content:'';display:inline-block;width:4px;height:1.1em;background:var(--gold);border-radius:2px;}
+/* PAGE BODY */
+.page-body{max-width:1080px;margin:0 auto;padding:52px 28px 96px;display:grid;grid-template-columns:1fr 284px;gap:52px;align-items:start;}
+@media(max-width:860px){.page-body{grid-template-columns:1fr;gap:40px;}}
 
-/* ── NEWS LIST ── */
-.news-list{display:flex;flex-direction:column;gap:12px;}
-.news-item{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 1px 4px rgba(13,27,42,.06);transition:box-shadow .18s, transform .18s;}
-.news-item:hover{box-shadow:0 4px 20px rgba(13,27,42,.12);transform:translateY(-1px);}
-.news-item-stripe{height:3px;background:var(--navy);}
-.news-item-stripe.info{background:var(--blue);}
-.news-item-stripe.study{background:var(--green);}
-.news-item-stripe.homebot{background:var(--purple);}
-.news-item-stripe.sns{background:#0891b2;}
-.news-item-stripe.hgscript{background:var(--indigo);}
-.news-item-inner{padding:20px 24px 18px;}
-.news-item-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
-.news-date{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text3);white-space:nowrap;flex-shrink:0;background:var(--paper2);border:1px solid var(--border);padding:3px 9px;border-radius:99px;margin-top:1px;}
-.news-badge{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:700;font-family:'Outfit',sans-serif;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;margin-top:1px;}
-.news-badge.info{background:var(--blue-l);color:var(--blue);border:1px solid #bfdbfe;}
-.news-badge.study{background:var(--green-l);color:var(--green);border:1px solid #aadfc0;}
-.news-badge.homebot{background:var(--purple-l);color:var(--purple);border:1px solid #c4b5fd;}
-.news-badge.sns{background:#ecfeff;color:#0891b2;border:1px solid #a5f3fc;}
-.news-badge.hgscript{background:var(--indigo-l);color:var(--indigo);border:1px solid var(--indigo-m);}
-.news-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.05rem;color:var(--text);line-height:1.45;flex:1;min-width:0;}
-.news-divider{height:1px;background:var(--paper3);margin:12px 0;}
-.news-body{font-size:.9rem;color:var(--text2);line-height:1.8;white-space:pre-wrap;word-break:break-word;}
-.news-image{margin-top:14px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);max-width:100%;}
-.news-image img{width:100%;max-height:480px;object-fit:contain;display:block;background:var(--paper3);}
-.news-meta{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--paper3);}
-.news-author{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text3);}
-.news-author::before{content:'✍️';font-size:.75rem;}
-.news-actions{display:flex;gap:6px;}
-.news-act-btn{font-size:.75rem;font-family:'Outfit',sans-serif;font-weight:600;padding:5px 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--paper);color:var(--text2);cursor:pointer;transition:all .15s;}
-.news-act-btn:hover{border-color:var(--navy);color:var(--navy);background:var(--paper2)}
-.news-act-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
-.news-empty{background:var(--paper2);border:1px dashed var(--border2);border-radius:var(--r-lg);padding:48px 24px;text-align:center;color:var(--text3);font-size:.9rem;}
+/* SECTION HEADER */
+.sec-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px;padding-bottom:13px;border-bottom:1px solid var(--warm3);position:relative;}
+.sec-header::after{content:'';position:absolute;bottom:-1px;left:0;width:28px;height:2px;background:var(--gold);border-radius:1px;}
+.sec-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:.98rem;color:var(--ink);letter-spacing:.05em;}
+.sec-count{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--ink5);letter-spacing:.06em;}
 
-/* ── ADMIN TOOLBAR ── */
-.admin-bar{display:none;background:var(--navy3);padding:12px 20px;border-radius:var(--r-lg) var(--r-lg) 0 0;flex-direction:row;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,.1);border-bottom:none;margin-bottom:-1px;}
+/* ADMIN BAR */
+.admin-bar{display:none;background:var(--ink);padding:11px 18px;border-radius:var(--r-lg) var(--r-lg) 0 0;flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:-1px;}
 .admin-bar.show{display:flex}
-.admin-label{font-size:.8rem;font-weight:600;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:.06em;}
-.btn-post{font-family:'Outfit',sans-serif;font-weight:700;font-size:.82rem;padding:8px 18px;border-radius:var(--r);border:none;cursor:pointer;background:var(--gold);color:var(--navy);transition:all .18s;}
-.btn-post:hover{background:var(--gold2)}
+.admin-label{font-size:.7rem;font-weight:700;color:var(--gold2);font-family:'DM Mono',monospace;letter-spacing:.12em;}
+.btn-post{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.78rem;padding:7px 16px;border-radius:var(--r);border:none;cursor:pointer;background:var(--gold2);color:var(--ink);transition:all .13s;letter-spacing:.03em;}
+.btn-post:hover{background:var(--gold3)}
 
-/* ── SIDEBAR ── */
-.sidebar-card{background:var(--paper2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px;}
-.sidebar-card-head{background:var(--navy);color:#fff;padding:14px 20px;font-family:'Noto Serif JP',serif;font-weight:700;font-size:.9rem;letter-spacing:.04em;}
-.sidebar-card-body{padding:20px;}
+/* NEWS LIST */
+.news-list{display:flex;flex-direction:column;gap:9px;}
+.news-item{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-xs);transition:box-shadow .2s,transform .2s,border-color .2s;position:relative;}
+.news-item:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);border-color:var(--warm4);}
+.news-item-bar{position:absolute;left:0;top:0;bottom:0;width:3px;}
+.news-item-bar.info    {background:var(--c-info);}
+.news-item-bar.study   {background:var(--c-study);}
+.news-item-bar.homebot {background:var(--c-homebot);}
+.news-item-bar.sns     {background:var(--c-sns);}
+.news-item-bar.hgscript{background:var(--c-hgscript);}
+.news-item-inner{padding:17px 20px 15px 24px;}
+.news-item-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.news-badge{display:inline-flex;align-items:center;font-size:.63rem;font-weight:700;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0;}
+.news-badge.info    {background:var(--c-info-bg);    color:var(--c-info);    border:1px solid rgba(44,95,138,.16);}
+.news-badge.study   {background:var(--c-study-bg);   color:var(--c-study);   border:1px solid rgba(42,107,69,.16);}
+.news-badge.homebot {background:var(--c-homebot-bg); color:var(--c-homebot); border:1px solid rgba(91,61,138,.16);}
+.news-badge.sns     {background:var(--c-sns-bg);     color:var(--c-sns);     border:1px solid rgba(26,107,107,.16);}
+.news-badge.hgscript{background:var(--c-hgscript-bg);color:var(--c-hgscript);border:1px solid rgba(74,61,122,.16);}
+.news-date{font-family:'DM Mono',monospace;font-size:.67rem;color:var(--ink5);white-space:nowrap;flex-shrink:0;margin-left:auto;}
+.news-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:.98rem;color:var(--ink);line-height:1.5;margin-bottom:9px;}
+.news-body{font-size:.865rem;color:var(--ink3);line-height:1.9;white-space:pre-wrap;word-break:break-word;}
+.news-image{margin-top:13px;border-radius:var(--r);overflow:hidden;border:1px solid var(--warm3);}
+.news-image img{width:100%;max-height:480px;object-fit:contain;display:block;background:var(--warm1);}
+.news-meta{display:flex;align-items:center;justify-content:space-between;margin-top:13px;padding-top:10px;border-top:1px solid var(--warm2);}
+.news-author{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--ink5);display:flex;align-items:center;gap:5px;}
+.news-author::before{content:'–';opacity:.35}
+.news-actions{display:flex;gap:5px;}
+.news-act-btn{font-size:.71rem;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;padding:4px 10px;border-radius:var(--r);border:1px solid var(--border);background:var(--warm0);color:var(--ink4);cursor:pointer;transition:all .12s;letter-spacing:.02em;}
+.news-act-btn:hover{border-color:var(--ink3);color:var(--ink2);background:var(--warm1)}
+.news-act-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
+.news-empty{background:var(--warm1);border:1px dashed var(--warm4);border-radius:var(--r-lg);padding:56px 24px;text-align:center;color:var(--ink5);font-size:.875rem;}
+.news-empty-icon{font-size:1.8rem;margin-bottom:10px;opacity:.4;display:block;}
 
-/* ── PROJECT LIST ── */
-.projects-grid{display:flex;flex-direction:column;gap:10px;}
-.project-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r);text-decoration:none;border:1px solid var(--border);background:#fff;transition:all .18s;position:relative;overflow:hidden;}
-.project-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
-.project-item.study::before{background:var(--purple);}
-.project-item.sns::before{background:var(--navy);}
-.project-item.hgscript::before{background:var(--indigo);}
-.project-item:hover{border-color:transparent;box-shadow:0 4px 16px rgba(13,27,42,.12);transform:translateX(2px);}
-.project-icon{font-size:1.6rem;line-height:1;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);flex-shrink:0;}
-.project-item.study .project-icon{background:var(--purple-l);}
-.project-item.sns .project-icon{background:var(--paper3);}
-.project-item.hgscript .project-icon{background:var(--indigo-l);}
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:18px;}
+.sidebar-card{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:#fff;box-shadow:var(--shadow-xs);}
+.sidebar-card-head{background:var(--warm1);border-bottom:1px solid var(--border);padding:12px 17px;font-family:'Noto Serif JP',serif;font-weight:700;font-size:.8rem;color:var(--ink2);letter-spacing:.06em;}
+.sidebar-card-body{padding:14px 16px;}
+.projects-grid{display:flex;flex-direction:column;gap:5px;}
+.project-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:var(--r);text-decoration:none;border:1px solid transparent;background:var(--warm0);transition:all .15s;position:relative;overflow:hidden;}
+.project-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;}
+.project-item.study::before   {background:var(--c-study);}
+.project-item.sns::before     {background:var(--c-sns);}
+.project-item.hgscript::before{background:var(--c-hgscript);}
+.project-item:hover{background:#fff;border-color:var(--border);box-shadow:var(--shadow-sm);transform:translateX(2px);}
+.project-icon{font-size:1.2rem;line-height:1;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);flex-shrink:0;}
+.project-item.study    .project-icon{background:var(--c-study-bg);}
+.project-item.sns      .project-icon{background:var(--c-sns-bg);}
+.project-item.hgscript .project-icon{background:var(--c-hgscript-bg);}
 .project-info{flex:1;min-width:0;}
-.project-name{font-weight:700;font-size:.95rem;color:var(--text);line-height:1.2;margin-bottom:2px;}
-.project-desc{font-size:.75rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.project-arr{color:var(--text3);font-size:.9rem;flex-shrink:0;transition:transform .18s;}
-.project-item:hover .project-arr{transform:translateX(3px);color:var(--text);}
-
+.project-name{font-weight:700;font-size:.84rem;color:var(--ink);line-height:1.2;margin-bottom:1px;}
+.project-desc{font-size:.71rem;color:var(--ink5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.project-arr{color:var(--ink5);font-size:.72rem;flex-shrink:0;transition:transform .14s,color .14s;}
+.project-item:hover .project-arr{transform:translateX(3px);color:var(--ink3);}
 .info-list{display:flex;flex-direction:column;gap:8px;}
-.info-item{font-size:.85rem;color:var(--text2);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
-.info-item::before{content:'▸';color:var(--gold);flex-shrink:0;margin-top:1px}
+.info-item{font-size:.8rem;color:var(--ink3);display:flex;align-items:flex-start;gap:7px;line-height:1.65;}
+.info-item-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:7px;}
 
-/* ── IMAGE UPLOAD ── */
-.img-upload-area{border:2px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .18s;background:var(--paper2);position:relative;}
-.img-upload-area:hover,.img-upload-area.drag{border-color:var(--navy);background:var(--paper3);}
-.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.img-upload-icon{font-size:1.8rem;margin-bottom:6px;}
-.img-upload-label{font-size:.82rem;color:var(--text3);line-height:1.5}
-.img-upload-label strong{color:var(--text2);}
-.img-preview{margin-top:10px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);position:relative;display:none;}
-.img-preview.show{display:block}
-.img-preview img{width:100%;max-height:220px;object-fit:contain;display:block;background:var(--paper3);}
-.img-preview-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:var(--r);font-size:.75rem;font-weight:700;padding:4px 8px;cursor:pointer;font-family:'Outfit',sans-serif;}
-.img-preview-del:hover{background:rgba(192,57,43,.9)}
-.img-size-note{font-size:.75rem;color:var(--text3);margin-top:6px;text-align:center;}
-
-/* ── MODALS ── */
-.overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(13,27,42,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(26,23,20,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
 .overlay.open{display:flex}
-.modal{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:slideUp .22s ease;}
-@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border);}
-.modal-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.1rem;}
-.modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.3rem;line-height:1;padding:4px;border-radius:var(--r);transition:color .15s;}
-.modal-close:hover{color:var(--text)}
-.modal-body{padding:24px;}
-.form-group{margin-bottom:16px;}
-.form-label{font-size:.83rem;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;}
-.form-input,.form-select,.form-textarea{width:100%;font-family:'Outfit',sans-serif;font-size:.9rem;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r);background:#fff;color:var(--text);transition:border .15s;outline:none;}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--navy)}
-.form-textarea{min-height:120px;resize:vertical;line-height:1.6}
-.form-err{font-size:.82rem;color:var(--red);padding:10px 14px;background:var(--red-l);border-radius:var(--r);margin-bottom:12px;display:none;}
+.modal{background:#fff;border-radius:var(--r-xl);box-shadow:var(--shadow-lg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:modalIn .22s cubic-bezier(.16,1,.3,1);border:1px solid var(--warm3);}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:19px 22px 15px;border-bottom:1px solid var(--warm2);background:var(--warm0);border-radius:var(--r-xl) var(--r-xl) 0 0;}
+.modal-title{font-family:'Noto Serif JP',serif;font-weight:700;font-size:.97rem;color:var(--ink);letter-spacing:.05em;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--ink5);width:27px;height:27px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:1rem;transition:background .12s,color .12s;}
+.modal-close:hover{background:var(--warm2);color:var(--ink2)}
+.modal-body{padding:20px 22px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:.76rem;font-weight:700;color:var(--ink3);margin-bottom:6px;display:block;letter-spacing:.05em;}
+.form-input,.form-select,.form-textarea{width:100%;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.875rem;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--warm0);color:var(--ink);transition:border .12s,background .12s;outline:none;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--ink3);background:#fff;}
+.form-textarea{min-height:120px;resize:vertical;line-height:1.7}
+.form-err{font-size:.79rem;color:var(--red);padding:9px 13px;background:var(--red-l);border-radius:var(--r);border-left:2px solid var(--red);margin-bottom:12px;display:none;}
 .form-err.show{display:block}
-.modal-footer{padding:0 24px 24px;display:flex;gap:8px;justify-content:flex-end;}
-.btn{font-family:'Outfit',sans-serif;font-weight:600;font-size:.875rem;padding:10px 20px;border-radius:var(--r);border:none;cursor:pointer;transition:all .18s;}
-.btn-primary{background:var(--navy);color:#fff;}
-.btn-primary:hover{background:var(--navy2)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border);}
-.btn-ghost:hover{background:var(--paper2)}
+.modal-footer{padding:0 22px 20px;display:flex;gap:8px;justify-content:flex-end;}
+.btn{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.83rem;padding:9px 19px;border-radius:var(--r);border:none;cursor:pointer;transition:all .13s;letter-spacing:.03em;}
+.btn-primary{background:var(--ink);color:#fff;}
+.btn-primary:hover{background:var(--ink2)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--ink4);border:1.5px solid var(--border);}
+.btn-ghost:hover{background:var(--warm1);color:var(--ink3)}
+.auth-tabs{display:flex;border-bottom:1px solid var(--warm2);margin-bottom:17px;}
+.auth-tab{flex:1;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.875rem;font-weight:700;padding:11px;border:none;background:none;cursor:pointer;color:var(--ink5);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s;letter-spacing:.03em;}
+.auth-tab.on{color:var(--ink);border-bottom-color:var(--ink);}
+.auth-tab:hover:not(.on){color:var(--ink3)}
 
-/* ── AUTH TABS ── */
-.auth-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;}
-.auth-tab{flex:1;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;padding:12px;border:none;background:none;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
-.auth-tab.on{color:var(--navy);border-bottom-color:var(--navy);}
-
-/* ── SETTINGS MODAL ── */
-.settings-section{margin-bottom:24px;}
+/* SETTINGS */
+.settings-section{margin-bottom:20px;}
 .settings-section:last-child{margin-bottom:0;}
-.settings-section-title{font-size:.75rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--paper3);}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--paper3);}
+.settings-section-title{font-size:.66rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--ink5);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--warm2);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm1);}
 .settings-row:last-child{border-bottom:none;}
-.settings-row-info{flex:1;min-width:0;margin-right:16px;}
-.settings-row-label{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:2px;}
-.settings-row-desc{font-size:.78rem;color:var(--text3);line-height:1.4;}
-.notif-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:700;font-family:'Outfit',sans-serif;padding:3px 10px;border-radius:99px;white-space:nowrap;}
-.notif-status-badge.granted{background:var(--green-l);color:var(--green);border:1px solid #aadfc0;}
-.notif-status-badge.denied{background:var(--red-l);color:var(--red);border:1px solid #f5c0bc;}
-.notif-status-badge.default{background:var(--paper2);color:var(--text3);border:1px solid var(--border);}
-.settings-btn{font-family:'Outfit',sans-serif;font-weight:600;font-size:.8rem;padding:7px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--paper);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
-.settings-btn:hover{border-color:var(--navy);color:var(--navy);background:var(--paper2)}
-.settings-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
-.settings-btn.primary:hover{background:var(--navy2)}
-.notif-guide-inline{margin-top:12px;padding:14px;background:var(--gold-l);border-radius:var(--r);border-left:3px solid var(--gold);display:none;}
+.settings-row-info{flex:1;min-width:0;margin-right:14px;}
+.settings-row-label{font-size:.875rem;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.settings-row-desc{font-size:.73rem;color:var(--ink5);line-height:1.5;}
+.notif-status-badge{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:700;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:3px;white-space:nowrap;}
+.notif-status-badge.granted{background:var(--c-study-bg);color:var(--c-study);}
+.notif-status-badge.denied {background:var(--red-l);color:var(--red);}
+.notif-status-badge.default{background:var(--warm2);color:var(--ink5);}
+.settings-btn{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.77rem;padding:6px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--warm0);color:var(--ink3);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.settings-btn:hover{border-color:var(--ink3);color:var(--ink2);background:var(--warm1)}
+.settings-btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+.settings-btn.primary:hover{background:var(--ink2)}
+.notif-guide-inline{margin-top:9px;padding:12px 13px;background:var(--gold-bg);border-radius:var(--r);border-left:2px solid var(--gold);display:none;}
 .notif-guide-inline.show{display:block;}
-.notif-guide-inline p{font-size:.82rem;color:#7a5c00;line-height:1.55;margin-bottom:8px;}
+.notif-guide-inline p{font-size:.79rem;color:#6a4e00;line-height:1.6;margin-bottom:7px;}
 .notif-guide-inline p:last-child{margin-bottom:0;}
-.notif-guide-step-sm{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(201,168,76,.2);}
+.notif-guide-step-sm{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(176,141,74,.12);}
 .notif-guide-step-sm:last-child{border-bottom:none;}
-.notif-guide-num-sm{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-.notif-guide-text-sm{font-size:.8rem;color:#5a4200;line-height:1.5;}
-.notif-guide-text-sm strong{color:#3d2d00;}
+.notif-guide-num-sm{width:17px;height:17px;border-radius:50%;background:var(--ink);color:#fff;font-size:.63rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.notif-guide-text-sm{font-size:.77rem;color:#5a4000;line-height:1.55;}
+.notif-guide-text-sm strong{color:#3a2800;}
 
-/* ── PWA INSTALL BANNER ── */
-.pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:var(--navy);color:#fff;padding:14px 20px;flex-direction:row;align-items:center;gap:12px;border-top:3px solid var(--gold);animation:slideUpFade .35s ease;}
+/* IMAGE UPLOAD */
+.img-upload-area{border:1.5px dashed var(--warm4);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .14s;background:var(--warm0);position:relative;}
+.img-upload-area:hover,.img-upload-area.drag{border-color:var(--ink4);background:var(--warm1);}
+.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-upload-icon{font-size:1.5rem;margin-bottom:5px;opacity:.45;}
+.img-upload-label{font-size:.79rem;color:var(--ink5);line-height:1.5}
+.img-upload-label strong{color:var(--ink3);}
+.img-preview{margin-top:9px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);position:relative;display:none;}
+.img-preview.show{display:block}
+.img-preview img{width:100%;max-height:220px;object-fit:contain;display:block;background:var(--warm1);}
+.img-preview-del{position:absolute;top:6px;right:6px;background:rgba(26,23,20,.6);color:#fff;border:none;border-radius:var(--r);font-size:.7rem;font-weight:700;padding:4px 8px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:background .12s;}
+.img-preview-del:hover{background:rgba(139,46,46,.9)}
+.img-size-note{font-size:.72rem;color:var(--ink5);margin-top:5px;text-align:center;}
+
+/* PWA BANNER */
+.pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:var(--ink);color:#fff;padding:13px 20px;flex-direction:row;align-items:center;gap:12px;border-top:1px solid rgba(201,168,76,.2);animation:slideUpFade .28s ease;}
 .pwa-banner.show{display:flex}
 @keyframes slideUpFade{from{transform:translateY(100%)}to{transform:none}}
-.pwa-banner-icon{font-size:1.6rem;flex-shrink:0}
-.pwa-banner-text{flex:1;font-size:.875rem;line-height:1.4}
-.pwa-banner-text strong{display:block;font-size:.95rem;color:var(--gold)}
-.pwa-banner-btn{font-family:'Outfit',sans-serif;font-weight:700;font-size:.82rem;padding:8px 16px;border-radius:var(--r);border:none;cursor:pointer;background:var(--gold);color:var(--navy);white-space:nowrap;flex-shrink:0;transition:background .15s;}
-.pwa-banner-btn:hover{background:var(--gold2)}
-.pwa-banner-close{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:1.1rem;padding:4px;flex-shrink:0;}
-.pwa-banner-close:hover{color:#fff}
+.pwa-banner-icon{font-size:1.3rem;flex-shrink:0;opacity:.75}
+.pwa-banner-text{flex:1;font-size:.83rem;line-height:1.45}
+.pwa-banner-text strong{display:block;font-size:.88rem;color:var(--gold2);margin-bottom:1px}
+.pwa-banner-btn{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.77rem;padding:7px 14px;border-radius:var(--r);border:none;cursor:pointer;background:var(--gold2);color:var(--ink);white-space:nowrap;flex-shrink:0;transition:background .12s;}
+.pwa-banner-btn:hover{background:var(--gold3)}
+.pwa-banner-close{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);font-size:.95rem;padding:4px;flex-shrink:0;transition:color .12s;}
+.pwa-banner-close:hover{color:rgba(255,255,255,.65)}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--navy);color:#fff;font-size:.875rem;font-weight:500;padding:12px 20px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .28s cubic-bezier(.16,1,.3,1);pointer-events:none;max-width:320px;}
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--ink);color:#fff;font-size:.83rem;font-weight:500;padding:10px 17px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);transform:translateY(72px);opacity:0;transition:all .24s cubic-bezier(.16,1,.3,1);pointer-events:none;max-width:300px;line-height:1.4;border:1px solid rgba(255,255,255,.05);}
 .toast.show{transform:none;opacity:1}
 
-/* ── SPINNER ── */
-.spinner{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--text3);gap:10px;font-size:.9rem;}
-.spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
+/* SPINNER */
+.spinner{display:flex;align-items:center;justify-content:center;padding:56px;color:var(--ink5);gap:10px;font-size:.875rem;}
+.spin{width:17px;height:17px;border:1.5px solid var(--warm3);border-top-color:var(--ink3);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── FOOTER ── */
-.site-footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:28px;font-size:.8rem;font-family:'DM Mono',monospace;}
-.site-footer a{color:var(--gold);text-decoration:none;}
+/* FOOTER */
+.site-footer{background:var(--ink);border-top:1px solid rgba(255,255,255,.04);}
+.footer-inner{max-width:1080px;margin:0 auto;padding:30px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.footer-logo{font-family:'Noto Serif JP',serif;font-weight:900;font-size:.9rem;color:rgba(255,255,255,.25);letter-spacing:.08em;}
+.footer-logo span{color:var(--gold2);font-weight:300;opacity:.6}
+.footer-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.footer-links a{font-family:'DM Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.25);text-decoration:none;letter-spacing:.07em;transition:color .12s;}
+.footer-links a:hover{color:rgba(255,255,255,.6)}
+.footer-copy{font-family:'DM Mono',monospace;font-size:.66rem;color:rgba(255,255,255,.18);letter-spacing:.07em;}
+
+@media(max-width:560px){
+  .header-inner{padding:0 16px;}
+  .page-body{padding:36px 16px 72px;}
+  .hero{padding:52px 16px 60px;}
+  .footer-inner{padding:22px 16px;}
+}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="site-header">
   <div class="header-inner">
-    <a href="#" class="site-logo" onclick="goHome();return false;">HG<span>Home</span></a>
+    <a href="#" class="site-logo" onclick="goHome();return false;">HG<span class="logo-accent">Home</span></a>
+    <div class="logo-dot"></div>
     <div class="header-sep"></div>
     <nav class="header-nav">
-      <a href="study/study.html" class="nav-link">📚 HGStudy</a>
-      <a href="sns/sns.html" class="nav-link">💬 HGSNS</a>
+      <a href="study/study.html" class="nav-link">HGStudy</a>
+      <a href="sns/sns.html" class="nav-link">HGSNS</a>
+      <div class="nav-divider"></div>
       <button class="btn-hdr btn-login" id="hdrLoginBtn" onclick="openAuthModal('login')">ログイン</button>
       <button class="btn-hdr btn-reg" id="hdrRegBtn" onclick="openAuthModal('reg')">登録</button>
       <div class="hdr-user" id="hdrUser" onclick="toggleAcctMenu()">
-        <canvas class="hdr-avatar" id="hdrAvatarCanvas" width="28" height="28"></canvas>
+        <canvas class="hdr-avatar" id="hdrAvatarCanvas" width="26" height="26"></canvas>
         <span class="hdr-username" id="hdrUsername"></span>
-        <span style="color:rgba(255,255,255,.4);font-size:.8rem;">▾</span>
+        <div class="hdr-chevron"></div>
         <div class="acct-menu" id="acctMenu">
-          <div style="padding:12px 16px 8px;border-bottom:1px solid var(--border)">
-            <div id="acctDispName" style="font-weight:700;font-size:.9rem;color:var(--text)"></div>
-            <div id="acctUsername" style="font-size:.78rem;color:var(--text3)"></div>
+          <div class="acct-menu-profile">
+            <div class="acct-disp" id="acctDispName"></div>
+            <div class="acct-handle" id="acctUsername"></div>
           </div>
-          <button class="acct-menu-item" onclick="openSettingsModal();closeAcctMenu()">⚙️ 設定</button>
+          <button class="acct-menu-item" onclick="openSettingsModal();closeAcctMenu()">
+            <span class="mi-icon">⚙</span>設定
+          </button>
           <div class="acct-menu-div"></div>
-          <button class="acct-menu-item" onclick="closeAcctMenu()">✕ 閉じる</button>
+          <button class="acct-menu-item" onclick="closeAcctMenu()">
+            <span class="mi-icon">✕</span>閉じる
+          </button>
           <div class="acct-menu-div"></div>
-          <button class="acct-menu-item danger" onclick="doLogout()">ログアウト</button>
+          <button class="acct-menu-item danger" onclick="doLogout()">
+            <span class="mi-icon">↩</span>ログアウト
+          </button>
         </div>
       </div>
     </nav>
   </div>
 </header>
 
-<!-- 🔔 通知許可バナー -->
 <div class="notif-top-banner" id="notifTopBanner">
   <div class="notif-top-icon">🔔</div>
   <div class="notif-top-text">
-    <strong>プッシュ通知を有効にする</strong>
-    新しいお知らせが届いたときにすぐ通知を受け取れます
+    <strong>プッシュ通知を有効にする</strong>　新しいお知らせをリアルタイムで受け取れます
   </div>
   <div class="notif-top-actions">
-    <button class="notif-allow-btn" onclick="requestNotifPermission()">通知を許可する</button>
-    <button class="notif-dismiss-btn" onclick="dismissNotifBanner()">今はしない</button>
+    <button class="notif-allow-btn" onclick="requestNotifPermission()">許可する</button>
+    <button class="notif-dismiss-btn" onclick="dismissNotifBanner()">後で</button>
   </div>
 </div>
 
-<!-- HERO -->
 <section class="hero">
   <div class="hero-inner">
-    <p class="hero-eyebrow">Official Portal</p>
-    <h1 class="hero-title">HGHome へ<br><em>ようこそ</em></h1>
-    <p class="hero-sub">学習ツール・お知らせ・コミュニティのポータルサイトです。<br>HGStudy で単語帳・問題集を学習しましょう。</p>
-    <a href="study/study.html" class="hero-cta">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      HGStudy を開く
-    </a>
+    <div class="hero-main">
+      <p class="hero-kicker">Official Portal</p>
+      <h1 class="hero-title">HGHome へ<br><em>ようこそ</em></h1>
+      <p class="hero-sub">学習ツール・お知らせ・コミュニティの<br>ポータルサイトです。</p>
+      <div class="hero-cta-group">
+        <a href="study/study.html" class="hero-cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          HGStudy を開く
+        </a>
+        <a href="sns/sns.html" class="hero-cta-sub">HGSNS →</a>
+      </div>
+    </div>
+    <div class="hero-emblem" aria-hidden="true">
+      <div class="hero-emblem-line">HG</div>
+      <div class="hero-emblem-line thin">Home</div>
+    </div>
   </div>
 </section>
 
-<!-- PAGE BODY -->
 <div class="page-body">
-  <!-- MAIN: NEWS -->
   <main>
     <div class="sec-header">
       <h2 class="sec-title">お知らせ</h2>
-      <span id="newsCount" style="font-size:.78rem;color:var(--text3);font-family:'DM Mono',monospace"></span>
+      <span class="sec-count" id="newsCount"></span>
     </div>
     <div class="admin-bar" id="adminBar">
-      <span class="admin-label">🔑 管理者モード</span>
-      <button class="btn-post" onclick="openNewsModal()">＋ 新しいお知らせを投稿</button>
+      <span class="admin-label">ADMIN MODE</span>
+      <button class="btn-post" onclick="openNewsModal()">＋ 投稿する</button>
     </div>
     <div id="newsList"></div>
   </main>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-card">
-      <div class="sidebar-card-head">🗂️ プロジェクト一覧</div>
+      <div class="sidebar-card-head">プロジェクト</div>
       <div class="sidebar-card-body">
         <div class="projects-grid">
           <a href="study/study.html" class="project-item study">
@@ -423,40 +424,40 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
         </div>
       </div>
     </div>
-
     <div class="sidebar-card">
-      <div class="sidebar-card-head">ℹ️ サイト情報</div>
+      <div class="sidebar-card-head">サイト情報</div>
       <div class="sidebar-card-body">
         <ul class="info-list">
-          <li class="info-item">HGStudy と同じアカウントでログインできます</li>
-          <li class="info-item">お知らせは管理者のみ投稿・編集できます</li>
-          <li class="info-item">ご意見・不具合は管理者にご連絡ください</li>
+          <li class="info-item"><div class="info-item-dot"></div>HGStudy と同じアカウントでログインできます</li>
+          <li class="info-item"><div class="info-item-dot"></div>お知らせは管理者のみ投稿・編集できます</li>
+          <li class="info-item"><div class="info-item-dot"></div>ご意見・不具合は管理者にご連絡ください</li>
         </ul>
       </div>
     </div>
   </aside>
 </div>
 
-<!-- FOOTER -->
 <footer class="site-footer">
-  &copy; HGHome &nbsp;|&nbsp;
-  <a href="study/study.html">HGStudy</a> &nbsp;|&nbsp;
-  <a href="sns/sns.html">HGSNS</a> &nbsp;|&nbsp;
-  <a href="hgscript/hg.html">HGScript</a>
+  <div class="footer-inner">
+    <div class="footer-logo">HG<span>Home</span></div>
+    <div class="footer-links">
+      <a href="study/study.html">HGStudy</a>
+      <a href="sns/sns.html">HGSNS</a>
+      <a href="hgscript/hg.html">HGScript</a>
+    </div>
+    <div class="footer-copy">&copy; HGHome</div>
+  </div>
 </footer>
 
-<!-- PWA INSTALL BANNER -->
 <div class="pwa-banner" id="pwaBanner">
   <div class="pwa-banner-icon">📲</div>
   <div class="pwa-banner-text">
-    <strong>ホーム画面に追加</strong>
-    HGHome をアプリとしてインストールできます
+    <strong>ホーム画面に追加</strong>アプリとしてインストールできます
   </div>
   <button class="pwa-banner-btn" onclick="installPWA()">インストール</button>
-  <button class="pwa-banner-close" onclick="dismissPWA()" title="閉じる">✕</button>
+  <button class="pwa-banner-close" onclick="dismissPWA()">✕</button>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <!-- AUTH MODAL -->
@@ -494,9 +495,9 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   </div>
 </div>
 
-<!-- NEWS POST/EDIT MODAL -->
+<!-- NEWS MODAL -->
 <div class="overlay" id="newsOverlay" onclick="if(event.target===this)closeNewsModal()">
-  <div class="modal" style="max-width:580px">
+  <div class="modal" style="max-width:560px">
     <div class="modal-head">
       <h3 class="modal-title" id="newsModalTitle">お知らせを投稿</h3>
       <button class="modal-close" onclick="closeNewsModal()">✕</button>
@@ -543,18 +544,16 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   </div>
 </div>
 
-<!-- ⚙️ 設定モーダル -->
+<!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettingsModal()">
-  <div class="modal" style="max-width:500px">
+  <div class="modal" style="max-width:460px">
     <div class="modal-head">
-      <h3 class="modal-title">⚙️ 設定</h3>
+      <h3 class="modal-title">設定</h3>
       <button class="modal-close" onclick="closeSettingsModal()">✕</button>
     </div>
     <div class="modal-body">
-
-      <!-- 通知 -->
       <div class="settings-section">
-        <div class="settings-section-title">🔔 通知</div>
+        <div class="settings-section-title">通知</div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">プッシュ通知</div>
@@ -565,20 +564,15 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
             <button class="settings-btn primary" id="notifActionBtn" onclick="settingsNotifAction()">許可する</button>
           </div>
         </div>
-        <!-- ブロック時のガイド -->
         <div class="notif-guide-inline" id="notifGuideInline">
           <p>通知が<strong>ブロック</strong>されています。ブラウザの設定から手動で許可してください。</p>
           <div id="notifGuideInlineSteps"></div>
-          <p style="margin-top:10px;">設定変更後、ページを<strong>再読み込み</strong>してください。</p>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="settings-btn primary" onclick="location.reload()" style="font-size:.78rem;padding:6px 12px;">🔄 再読み込み</button>
-          </div>
+          <p style="margin-top:8px;">設定後、ページを<strong>再読み込み</strong>してください。</p>
+          <div style="margin-top:8px;"><button class="settings-btn primary" onclick="location.reload()" style="font-size:.74rem;padding:5px 11px;">再読み込み</button></div>
         </div>
       </div>
-
-      <!-- アプリ -->
       <div class="settings-section">
-        <div class="settings-section-title">📲 アプリ</div>
+        <div class="settings-section-title">アプリ</div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">ホーム画面に追加</div>
@@ -587,19 +581,16 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
           <button class="settings-btn" id="pwaInstallBtn" onclick="settingsPWAAction()">インストール</button>
         </div>
       </div>
-
-      <!-- アカウント -->
       <div class="settings-section">
-        <div class="settings-section-title">👤 アカウント</div>
+        <div class="settings-section-title">アカウント</div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">ログアウト</div>
             <div class="settings-row-desc">現在のセッションを終了します</div>
           </div>
-          <button class="settings-btn" style="color:var(--red);border-color:var(--red);" onclick="doLogout();closeSettingsModal()">ログアウト</button>
+          <button class="settings-btn" style="color:var(--red);border-color:rgba(139,46,46,.25);" onclick="doLogout();closeSettingsModal()">ログアウト</button>
         </div>
       </div>
-
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeSettingsModal()">閉じる</button>
@@ -607,40 +598,28 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   </div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
 <script>
-// ── Firebase config (binary encoded) ──
-const FIREBASE_CONFIG_BIN = "01111011 00100010 01100001 01110000 01101001 01001011 01100101 01111001 00100010 00111010 00100010 01000001 01001001 01111010 01100001 01010011 01111001 01000011 01100110 00111000 01010000 01001010 01011001 01111000 01000011 01001010 01000011 01000110 01000011 01000100 00110001 01110000 01101000 01000100 01011111 00101101 01011000 01010110 01010101 01011010 00111001 00110010 01000100 01010011 01010110 01110101 01010010 01100001 01110101 01010101 00100010 00101100 00100010 01100001 01110101 01110100 01101000 01000100 01101111 01101101 01100001 01101001 01101110 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100001 01110000 01110000 00101110 01100011 01101111 01101101 00100010 00101100 00100010 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 01010101 01010010 01001100 00100010 00111010 00100010 01101000 01110100 01110100 01110000 01110011 00111010 00101111 00101111 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101101 01100100 01100101 01100110 01100001 01110101 01101100 01110100 00101101 01110010 01110100 01100100 01100010 00101110 01100001 01110011 01101001 01100001 00101101 01110011 01101111 01110101 01110100 01101000 01100101 01100001 01110011 01110100 00110001 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01110000 01110010 01101111 01101010 01100101 01100011 01110100 01001001 01100100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00100010 00101100 00100010 01110011 01110100 01101111 01110010 01100001 01100111 01100101 01000010 01110101 01100011 01101011 01100101 01110100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01110011 01110100 01101111 01110010 01100001 01100111 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01101101 01100101 01110011 01110011 01100001 01100111 01101001 01101110 01100111 01010011 01100101 01101110 01100100 01100101 01110010 01001001 01100100 00100010 00111010 00100010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00100010 00101100 00100010 01100001 01110000 01110000 01001001 01100100 00100010 00111010 00100010 00110001 00111010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00111010 01110111 01100101 01100010 00111010 00110110 00110011 00110010 01100010 00110010 01100010 01100100 00110110 01100110 00110000 00110100 00110100 00110001 01100001 00111000 00110011 01100100 00110111 00110100 00111001 01100101 00110010 00100010 00101100 00100010 01101101 01100101 01100001 01110011 01110101 01110010 01100101 01101101 01100101 01101110 01110100 01001001 01100100 00100010 00111010 00100010 01000111 00101101 01011001 00110000 00110101 00110110 00110001 00110001 00110110 01010010 01010001 01001101 00100010 01111101";
-
+const FIREBASE_CONFIG_BIN="01111011 00100010 01100001 01110000 01101001 01001011 01100101 01111001 00100010 00111010 00100010 01000001 01001001 01111010 01100001 01010011 01111001 01000011 01100110 00111000 01010000 01001010 01011001 01111000 01000011 01001010 01000011 01000110 01000011 01000100 00110001 01110000 01101000 01000100 01011111 00101101 01011000 01010110 01010101 01011010 00111001 00110010 01000100 01010011 01010110 01110101 01010010 01100001 01110101 01010101 00100010 00101100 00100010 01100001 01110101 01110100 01101000 01000100 01101111 01101101 01100001 01101001 01101110 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100001 01110000 01110000 00101110 01100011 01101111 01101101 00100010 00101100 00100010 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 01010101 01010010 01001100 00100010 00111010 00100010 01101000 01110100 01110100 01110000 01110011 00111010 00101111 00101111 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101101 01100100 01100101 01100110 01100001 01110101 01101100 01110100 00101101 01110010 01110100 01100100 01100010 00101110 01100001 01110011 01101001 01100001 00101101 01110011 01101111 01110101 01110100 01101000 01100101 01100001 01110011 01110100 00110001 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01110000 01110010 01101111 01101010 01100101 01100011 01110100 01001001 01100100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00100010 00101100 00100010 01110011 01110100 01101111 01110010 01100001 01100111 01100101 01000010 01110101 01100011 01101011 01100101 01110100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01110011 01110100 01101111 01110010 01100001 01100111 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01101101 01100101 01110011 01110011 01100001 01100111 01101001 01101110 01100111 01010011 01100101 01101110 01100100 01100101 01110010 01001001 01100100 00100010 00111010 00100010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00100010 00101100 00100010 01100001 01110000 01110000 01001001 01100100 00100010 00111010 00100010 00110001 00111010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00111010 01110111 01100101 01100010 00111010 00110110 00110011 00110010 01100010 00110010 01100010 01100100 00110110 01100110 00110000 00110100 00110100 00110001 01100001 00111000 00110011 01100100 00110111 00110100 00111001 01100101 00110010 00100010 00101100 00100010 01101101 01100101 01100001 01110011 01110101 01110010 01100101 01101101 01100101 01101110 01110100 01001001 01100100 00100010 00111010 00100010 01000111 00101101 01011001 00110000 00110101 00110110 00110001 00110001 00110110 01010010 01010001 01001101 00100010 01111101";
 function bin2str(b){const c=b.replace(/[^01]/g,'');if(!c)return'';return c.match(/.{1,8}/g).filter(x=>x.length===8).map(b=>String.fromCharCode(parseInt(b,2))).join('');}
-
 let db=null,session=null,isAdmin=false,editingNewsId=null,authMode='login',_newsImageBase64=null;
-
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function setCookie(name,value,days){try{const exp=days?'; expires='+new Date(Date.now()+days*864e5).toUTCString():'';const secure=location.protocol==='https:'?'; Secure':'';document.cookie=name+'='+encodeURIComponent(value)+exp+'; path=/; SameSite=Lax'+secure;}catch(e){}}
-function getCookie(name){try{const m=document.cookie.split('; ').find(r=>r.startsWith(name+'='));return m?decodeURIComponent(m.split('=').slice(1).join('=')):null;}catch(e){return null;}}
-function deleteCookie(name){document.cookie=name+'=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';}
-
+function setCookie(n,v,d){try{const e=d?'; expires='+new Date(Date.now()+d*864e5).toUTCString():'';const s=location.protocol==='https:'?'; Secure':'';document.cookie=n+'='+encodeURIComponent(v)+e+'; path=/; SameSite=Lax'+s;}catch(e){}}
+function getCookie(n){try{const m=document.cookie.split('; ').find(r=>r.startsWith(n+'='));return m?decodeURIComponent(m.split('=').slice(1).join('=')):null;}catch(e){return null;}}
+function deleteCookie(n){document.cookie=n+'=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';}
 async function hashPass(pw){function sha256(str){function rr(n,d){return(n>>>d)|(n<<(32-d));}const H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];const bytes=[];for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);if(c<128)bytes.push(c);else if(c<2048)bytes.push(0xc0|(c>>6),0x80|(c&0x3f));else bytes.push(0xe0|(c>>12),0x80|((c>>6)&0x3f),0x80|(c&0x3f));}const l=bytes.length*8;bytes.push(0x80);while(bytes.length%64!==56)bytes.push(0);for(let i=7;i>=0;i--)bytes.push((l/(Math.pow(2,i*8)))&0xff);const w=new Array(64);for(let i=0;i<bytes.length/64;i++){for(let j=0;j<16;j++)w[j]=(bytes[i*64+j*4]<<24)|(bytes[i*64+j*4+1]<<16)|(bytes[i*64+j*4+2]<<8)|bytes[i*64+j*4+3];for(let j=16;j<64;j++){const s0=rr(w[j-15],7)^rr(w[j-15],18)^(w[j-15]>>>3);const s1=rr(w[j-2],17)^rr(w[j-2],19)^(w[j-2]>>>10);w[j]=(w[j-16]+s0+w[j-7]+s1)>>>0;}let[a,b,c,d,e,f,g,h]=[...H];for(let j=0;j<64;j++){const S1=rr(e,6)^rr(e,11)^rr(e,25);const ch=(e&f)^(~e&g);const t1=(h+S1+ch+K[j]+w[j])>>>0;const S0=rr(a,2)^rr(a,13)^rr(a,22);const maj=(a&b)^(a&c)^(b&c);const t2=(S0+maj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}H[0]=(H[0]+a)>>>0;H[1]=(H[1]+b)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;}return H.map(n=>n.toString(16).padStart(8,'0')).join('');}return sha256('hgstudy:'+pw);}
-
 const AVATAR_COLORS=[['#7B6CF6','#B06EF6'],['#F5835B','#F6C344'],['#52C4A3','#3B82F6'],['#E65B9A','#F5835B'],['#4B8DEA','#52C4A3'],['#A068F5','#F5835B']];
 function avatarColorForName(name){let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffff;return AVATAR_COLORS[h%AVATAR_COLORS.length];}
 function drawAvatarCanvas(canvas,username,imageData,size){if(!canvas)return;const s=size||canvas.width;canvas.width=s;canvas.height=s;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,s,s);if(imageData){const img=new Image();img.onload=function(){ctx.save();ctx.beginPath();ctx.arc(s/2,s/2,s/2,0,Math.PI*2);ctx.clip();ctx.drawImage(img,0,0,s,s);ctx.restore();};img.src=imageData;}else{const colors=avatarColorForName(username||'?');const g=ctx.createLinearGradient(0,0,s,s);g.addColorStop(0,colors[0]);g.addColorStop(1,colors[1]);ctx.fillStyle=g;ctx.beginPath();ctx.arc(s/2,s/2,s/2,0,Math.PI*2);ctx.fill();const initials=(username||'?').slice(0,2).toUpperCase();ctx.fillStyle='rgba(255,255,255,0.92)';ctx.font=`bold ${Math.round(s*0.36)}px "Outfit",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(initials,s/2,s/2);}}
-
 let _toastTimer=null;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
-
 function initFirebase(){let cfg=null;try{cfg=JSON.parse(bin2str(FIREBASE_CONFIG_BIN));}catch(e){}if(!cfg||!cfg.apiKey){db=null;return false;}try{if(!firebase.apps.length)firebase.initializeApp(cfg);db=firebase.database();return true;}catch(e){db=null;return false;}}
-
 function loadSession(){let s=null;const cv=getCookie('hg_session');const lv=localStorage.getItem('hg_session_ls');if(cv){try{s=JSON.parse(cv);}catch(e){}}if(!s&&lv){try{s=JSON.parse(lv);}catch(e){}}if(s&&s.uid)session=s;updateHeaderUI();if(session)checkAdminRole();}
 function saveSession(s){session=s;const str=JSON.stringify(s);setCookie('hg_session',str,30);setCookie('hgs_sess',str,30);try{localStorage.setItem('hg_session_ls',str);localStorage.setItem('hgs_sess',str);}catch(e){}}
 function clearSession(){session=null;deleteCookie('hg_session');deleteCookie('hgs_sess');try{localStorage.removeItem('hg_session_ls');localStorage.removeItem('hgs_sess');}catch(e){}}
-function updateHeaderUI(){const li=document.getElementById('hdrLoginBtn'),re=document.getElementById('hdrRegBtn'),hu=document.getElementById('hdrUser');if(session){li.style.display='none';re.style.display='none';hu.style.display='flex';document.getElementById('hdrUsername').textContent=session.displayName||session.username;document.getElementById('acctDispName').textContent=session.displayName||session.username;document.getElementById('acctUsername').textContent='@'+session.username;const av=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;drawAvatarCanvas(document.getElementById('hdrAvatarCanvas'),session.username,av,28);}else{li.style.display='';re.style.display='';hu.style.display='none';document.getElementById('adminBar').classList.remove('show');isAdmin=false;}}
+function updateHeaderUI(){const li=document.getElementById('hdrLoginBtn'),re=document.getElementById('hdrRegBtn'),hu=document.getElementById('hdrUser');if(session){li.style.display='none';re.style.display='none';hu.style.display='flex';document.getElementById('hdrUsername').textContent=session.displayName||session.username;document.getElementById('acctDispName').textContent=session.displayName||session.username;document.getElementById('acctUsername').textContent='@'+session.username;const av=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;drawAvatarCanvas(document.getElementById('hdrAvatarCanvas'),session.username,av,26);}else{li.style.display='';re.style.display='';hu.style.display='none';document.getElementById('adminBar').classList.remove('show');isAdmin=false;}}
 async function checkAdminRole(){if(!session||!db){isAdmin=false;document.getElementById('adminBar').classList.remove('show');return;}try{const snap=await db.ref('users/'+session.username).once('value');const d=snap.val()||{};isAdmin=d.isAdmin===true||d.isadmin===true||d.role==='admin';document.getElementById('adminBar').classList.toggle('show',isAdmin);}catch(e){isAdmin=false;}}
-
 function openAuthModal(mode){switchAuthTab(mode||'login');document.getElementById('authOverlay').classList.add('open');setTimeout(()=>document.getElementById('authUser').focus(),80);}
 function closeAuthModal(){document.getElementById('authOverlay').classList.remove('open');}
 function switchAuthTab(mode){authMode=mode;document.getElementById('authTabLogin').classList.toggle('on',mode==='login');document.getElementById('authTabReg').classList.toggle('on',mode==='reg');document.getElementById('authRegExtra').style.display=mode==='reg'?'block':'none';document.getElementById('authSubmitBtn').textContent=mode==='login'?'ログイン':'アカウントを作成';document.getElementById('authModalTitle').textContent=mode==='login'?'ログイン':'アカウント作成';document.getElementById('authErr').classList.remove('show');}
@@ -652,205 +631,47 @@ function doLogout(){clearSession();isAdmin=false;updateHeaderUI();document.getEl
 function toggleAcctMenu(){document.getElementById('acctMenu').classList.toggle('open');}
 function closeAcctMenu(){document.getElementById('acctMenu').classList.remove('open');}
 document.addEventListener('click',function(e){const m=document.getElementById('acctMenu');const hu=document.getElementById('hdrUser');if(m&&!hu.contains(e.target))m.classList.remove('open');});
-
 const MAX_IMG_SIZE=800,MAX_IMG_KB=400;
 function handleDragOver(e){e.preventDefault();document.getElementById('imgUploadArea').classList.add('drag');}
 function handleDragLeave(e){document.getElementById('imgUploadArea').classList.remove('drag');}
 function handleDrop(e){e.preventDefault();document.getElementById('imgUploadArea').classList.remove('drag');const file=e.dataTransfer.files[0];if(file&&file.type.startsWith('image/'))processImgFile(file);}
 function handleImgSelect(e){const file=e.target.files[0];if(file)processImgFile(file);}
-function processImgFile(file){const reader=new FileReader();reader.onload=function(ev){const img=new Image();img.onload=function(){let w=img.width,h=img.height;if(w>MAX_IMG_SIZE||h>MAX_IMG_SIZE){if(w>h){h=Math.round(h*MAX_IMG_SIZE/w);w=MAX_IMG_SIZE;}else{w=Math.round(w*MAX_IMG_SIZE/h);h=MAX_IMG_SIZE;}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);let quality=0.82;let dataUrl=canvas.toDataURL('image/jpeg',quality);while(dataUrl.length>MAX_IMG_KB*1024*4/3&&quality>0.3){quality-=0.08;dataUrl=canvas.toDataURL('image/jpeg',quality);}const kb=Math.round(dataUrl.length*3/4/1024);_newsImageBase64=dataUrl;document.getElementById('imgPreviewImg').src=dataUrl;document.getElementById('imgPreview').classList.add('show');document.getElementById('imgSizeNote').textContent=`画像サイズ: ${w}×${h}px / 約${kb}KB`;};img.src=ev.target.result;};reader.readAsDataURL(file);}
+function processImgFile(file){const reader=new FileReader();reader.onload=function(ev){const img=new Image();img.onload=function(){let w=img.width,h=img.height;if(w>MAX_IMG_SIZE||h>MAX_IMG_SIZE){if(w>h){h=Math.round(h*MAX_IMG_SIZE/w);w=MAX_IMG_SIZE;}else{w=Math.round(w*MAX_IMG_SIZE/h);h=MAX_IMG_SIZE;}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);let quality=0.82;let dataUrl=canvas.toDataURL('image/jpeg',quality);while(dataUrl.length>MAX_IMG_KB*1024*4/3&&quality>0.3){quality-=0.08;dataUrl=canvas.toDataURL('image/jpeg',quality);}const kb=Math.round(dataUrl.length*3/4/1024);_newsImageBase64=dataUrl;document.getElementById('imgPreviewImg').src=dataUrl;document.getElementById('imgPreview').classList.add('show');document.getElementById('imgSizeNote').textContent=`${w}×${h}px / 約${kb}KB`;};img.src=ev.target.result;};reader.readAsDataURL(file);}
 function clearNewsImage(){_newsImageBase64=null;document.getElementById('imgPreview').classList.remove('show');document.getElementById('imgPreviewImg').src='';document.getElementById('newsImgInput').value='';document.getElementById('imgSizeNote').textContent='';}
-
-async function loadNews(){const list=document.getElementById('newsList');list.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';try{if(!db){list.innerHTML='<div class="news-empty">Firebase が初期化されていません</div>';return;}const snap=await db.ref('news').orderByChild('ts').limitToLast(50).once('value');const data=snap.val()||{};const entries=Object.entries(data).sort((a,b)=>b[1].ts-a[1].ts);document.getElementById('newsCount').textContent=entries.length?entries.length+'件':'';if(!entries.length){list.innerHTML='<div class="news-empty">現在お知らせはありません</div>';return;}list.innerHTML='';const nl=document.createElement('div');nl.className='news-list';entries.forEach(([id,n])=>{const el=document.createElement('div');el.className='news-item';const ts=n.ts?new Date(n.ts):null;const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}):'';const cat=n.cat||'info';const catLabel={info:'📋 お知らせ',study:'📚 HGStudy',homebot:'🤖 HGHomeBot+',sns:'💬 HGSNS',hgscript:'🔧 HGScript'}[cat]||'📋 お知らせ';const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';el.innerHTML=`
-  <div class="news-item-stripe ${esc(cat)}"></div>
-  <div class="news-item-inner">
-    <div class="news-item-top">
-      <span class="news-badge ${esc(cat)}">${catLabel}</span>
-      <span class="news-date">${esc(dateStr)}</span>
-    </div>
-    <div class="news-title">${esc(n.title||'（無題）')}</div>
-    <div class="news-divider"></div>
-    <div class="news-body">${esc(n.content||'')}</div>
-    ${imgHTML}
-    <div class="news-meta">
-      <span class="news-author">${esc(n.author||'管理者')}</span>
-      ${actionsHTML}
-    </div>
-  </div>`;nl.appendChild(el);});list.appendChild(nl);}catch(e){list.innerHTML=`<div class="news-empty">読み込みに失敗しました: ${esc(e.message)}</div>`;}}
+async function loadNews(){const list=document.getElementById('newsList');list.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';try{if(!db){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">⚠️</span>Firebase が初期化されていません</div>';return;}const snap=await db.ref('news').orderByChild('ts').limitToLast(50).once('value');const data=snap.val()||{};const entries=Object.entries(data).sort((a,b)=>b[1].ts-a[1].ts);document.getElementById('newsCount').textContent=entries.length?entries.length+' 件':'';if(!entries.length){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">📭</span>現在お知らせはありません</div>';return;}list.innerHTML='';const nl=document.createElement('div');nl.className='news-list';entries.forEach(([id,n])=>{const el=document.createElement('div');el.className='news-item';const ts=n.ts?new Date(n.ts):null;const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'}):'';const cat=n.cat||'info';const catLabel={info:'INFO',study:'HGSTUDY',homebot:'HOMEBOT',sns:'HGSNS',hgscript:'HGSCRIPT'}[cat]||'INFO';const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';el.innerHTML=`<div class="news-item-bar ${esc(cat)}"></div><div class="news-item-inner"><div class="news-item-top"><span class="news-badge ${esc(cat)}">${catLabel}</span><span class="news-date">${esc(dateStr)}</span></div><div class="news-title">${esc(n.title||'（無題）')}</div><div class="news-body">${esc(n.content||'')}</div>${imgHTML}<div class="news-meta"><span class="news-author">${esc(n.author||'管理者')}</span>${actionsHTML}</div></div>`;nl.appendChild(el);});list.appendChild(nl);}catch(e){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">⚠️</span>読み込みに失敗しました</div>';}}
 function openNewsModal(editId){editingNewsId=editId||null;document.getElementById('newsModalTitle').textContent=editId?'お知らせを編集':'お知らせを投稿';document.getElementById('newsSubmitBtn').textContent=editId?'更新する':'投稿する';document.getElementById('newsErr').classList.remove('show');if(!editId){document.getElementById('newsTitle').value='';document.getElementById('newsCat').value='info';document.getElementById('newsContent').value='';clearNewsImage();}document.getElementById('newsOverlay').classList.add('open');setTimeout(()=>document.getElementById('newsTitle').focus(),80);}
 function closeNewsModal(){document.getElementById('newsOverlay').classList.remove('open');editingNewsId=null;}
 async function editNews(id){if(!isAdmin){showToast('管理者権限が必要です');return;}try{const snap=await db.ref('news/'+id).once('value');const n=snap.val();if(!n)return;document.getElementById('newsTitle').value=n.title||'';document.getElementById('newsCat').value=n.cat||'info';document.getElementById('newsContent').value=n.content||'';if(n.image){_newsImageBase64=n.image;document.getElementById('imgPreviewImg').src=n.image;document.getElementById('imgPreview').classList.add('show');document.getElementById('imgSizeNote').textContent='（既存の画像）';}else{clearNewsImage();}openNewsModal(id);}catch(e){showToast('エラー: '+e.message);}}
 async function deleteNews(id){if(!isAdmin){showToast('管理者権限が必要です');return;}if(!confirm('このお知らせを削除しますか？'))return;try{await db.ref('news/'+id).remove();showToast('削除しました');loadNews();}catch(e){showToast('エラー: '+e.message);}}
 async function submitNews(){if(!isAdmin){if(session&&db){try{const snap=await db.ref('users/'+session.username).once('value');const d=snap.val()||{};isAdmin=d.isAdmin===true||d.isadmin===true||d.role==='admin';}catch(e){}}if(!isAdmin){showToast('管理者権限が必要です');return;}}if(!session){showToast('ログインが必要です');return;}const title=document.getElementById('newsTitle').value.trim();const cat=document.getElementById('newsCat').value;const newsContent=document.getElementById('newsContent').value.trim();const errEl=document.getElementById('newsErr');errEl.classList.remove('show');if(!title){errEl.textContent='タイトルを入力してください';errEl.classList.add('show');return;}if(!newsContent){errEl.textContent='内容を入力してください';errEl.classList.add('show');return;}const btn=document.getElementById('newsSubmitBtn');btn.disabled=true;btn.textContent='送信中...';try{const data={title,cat,content:newsContent,author:session.username,uid:session.uid,ut:Date.now()};if(_newsImageBase64){data.image=_newsImageBase64;}else if(editingNewsId){data.image=null;}if(editingNewsId){await db.ref('news/'+editingNewsId).update(data);showToast('更新しました ✓');}else{data.ts=Date.now();await db.ref('news').push(data);showToast('投稿しました ✓');}closeNewsModal();loadNews();}catch(e){errEl.textContent='エラー: '+e.message;errEl.classList.add('show');}finally{btn.disabled=false;btn.textContent=editingNewsId?'更新する':'投稿する';}}
-
 function goHome(){window.scrollTo({top:0,behavior:'smooth'});}
-
-/* ── 設定モーダル ── */
-function openSettingsModal(){
-  updateNotifSettingsUI();
-  updatePWAInstallBtn();
-  document.getElementById('settingsOverlay').classList.add('open');
-}
+function openSettingsModal(){updateNotifSettingsUI();updatePWAInstallBtn();document.getElementById('settingsOverlay').classList.add('open');}
 function closeSettingsModal(){document.getElementById('settingsOverlay').classList.remove('open');}
-
-function updateNotifSettingsUI(){
-  if(!('Notification' in window)){
-    document.getElementById('notifStatusBadge').className='notif-status-badge default';
-    document.getElementById('notifStatusBadge').textContent='非対応';
-    document.getElementById('notifActionBtn').style.display='none';
-    document.getElementById('notifGuideInline').classList.remove('show');
-    return;
-  }
-  const perm=Notification.permission;
-  const badge=document.getElementById('notifStatusBadge');
-  const btn=document.getElementById('notifActionBtn');
-  const guide=document.getElementById('notifGuideInline');
-
-  if(perm==='granted'){
-    badge.className='notif-status-badge granted';
-    badge.textContent='✓ 許可済み';
-    btn.textContent='オフにする方法';
-    btn.className='settings-btn';
-    guide.classList.remove('show');
-  } else if(perm==='denied'){
-    badge.className='notif-status-badge denied';
-    badge.textContent='✕ ブロック中';
-    btn.textContent='許可する方法';
-    btn.className='settings-btn primary';
-    buildNotifGuideInline();
-    guide.classList.add('show');
-  } else {
-    badge.className='notif-status-badge default';
-    badge.textContent='未設定';
-    btn.textContent='許可する';
-    btn.className='settings-btn primary';
-    guide.classList.remove('show');
-  }
-}
-
-function buildNotifGuideInline(){
-  const ua=navigator.userAgent;
-  let steps=[];
-  if(/iPhone|iPad|iPod/i.test(ua)){
-    steps=[
-      {t:'設定アプリを開く',d:'ホーム画面から <strong>設定</strong> アプリを起動'},
-      {t:'Safariを選択',d:'設定リストから <strong>Safari</strong> をタップ'},
-      {t:'通知を許可',d:'「Webサイトの通知を許可」をオンにして、このサイトを <strong>許可</strong> に変更'},
-    ];
-  } else if(/Android/i.test(ua)){
-    steps=[
-      {t:'アドレスバーのアイコンをタップ',d:'<strong>🔒 鍵</strong> または <strong>ℹ️ アイコン</strong> をタップ'},
-      {t:'権限を変更',d:'「通知」を <strong>許可</strong> に変更'},
-    ];
-  } else {
-    steps=[
-      {t:'アドレスバーのアイコンをクリック',d:'<strong>🔒 鍵</strong> または <strong>ℹ️ アイコン</strong> をクリック'},
-      {t:'通知の権限を変更',d:'「通知」を <strong>許可</strong> に変更'},
-    ];
-  }
-  document.getElementById('notifGuideInlineSteps').innerHTML=steps.map((s,i)=>`
-    <div class="notif-guide-step-sm">
-      <div class="notif-guide-num-sm">${i+1}</div>
-      <div class="notif-guide-text-sm"><strong>${s.t}</strong><br>${s.d}</div>
-    </div>`).join('');
-}
-
-async function settingsNotifAction(){
-  if(!('Notification' in window))return;
-  const perm=Notification.permission;
-  if(perm==='granted'){
-    // 通知をオフにする方法を表示（ブラウザ制限によりAPIからはオフにできない）
-    buildNotifGuideInlineOff();
-    document.getElementById('notifGuideInline').classList.add('show');
-    document.getElementById('notifActionBtn').style.display='none';
-  } else if(perm==='denied'){
-    buildNotifGuideInline();
-    document.getElementById('notifGuideInline').classList.add('show');
-  } else {
-    // default: リクエスト
-    let result;
-    try{result=await Notification.requestPermission();}catch(e){result=await new Promise(r=>Notification.requestPermission(r));}
-    if(result==='granted'){
-      showToast('🔔 通知を許可しました');
-      await subscribePush();
-    } else if(result==='denied'){
-      showToast('通知がブロックされました');
-    }
-    updateNotifSettingsUI();
-  }
-}
-
-function buildNotifGuideInlineOff(){
-  const ua=navigator.userAgent;
-  let steps=[];
-  if(/iPhone|iPad|iPod/i.test(ua)){
-    steps=[{t:'設定 → Safari → 通知',d:'このサイトの通知を <strong>ブロック</strong> に変更してください'}];
-  } else if(/Android/i.test(ua)){
-    steps=[{t:'アドレスバーのアイコン → 権限',d:'「通知」を <strong>ブロック</strong> に変更してください'}];
-  } else {
-    steps=[{t:'アドレスバーのアイコン → 通知',d:'「通知」を <strong>ブロック</strong> に変更してください'}];
-  }
-  document.getElementById('notifGuideInlineSteps').innerHTML=steps.map((s,i)=>`
-    <div class="notif-guide-step-sm">
-      <div class="notif-guide-num-sm">${i+1}</div>
-      <div class="notif-guide-text-sm"><strong>${s.t}</strong><br>${s.d}</div>
-    </div>`).join('');
-  const guide=document.getElementById('notifGuideInline');
-  guide.querySelector('p:first-child').innerHTML='通知を<strong>オフ</strong>にするには、ブラウザの設定から変更してください。';
-}
-
-function updatePWAInstallBtn(){
-  const btn=document.getElementById('pwaInstallBtn');
-  if(isRunningAsPWA()){btn.textContent='インストール済み';btn.disabled=true;btn.style.opacity='.5';}
-  else if(_deferredInstallPrompt){btn.textContent='インストール';btn.disabled=false;btn.style.opacity='';}
-  else{btn.textContent='インストール（Safari：共有→ホーム画面に追加）';btn.disabled=false;btn.style.opacity='';}
-}
+function updateNotifSettingsUI(){if(!('Notification' in window)){document.getElementById('notifStatusBadge').className='notif-status-badge default';document.getElementById('notifStatusBadge').textContent='非対応';document.getElementById('notifActionBtn').style.display='none';document.getElementById('notifGuideInline').classList.remove('show');return;}const perm=Notification.permission;const badge=document.getElementById('notifStatusBadge');const btn=document.getElementById('notifActionBtn');const guide=document.getElementById('notifGuideInline');if(perm==='granted'){badge.className='notif-status-badge granted';badge.textContent='✓ 許可済み';btn.textContent='オフにする方法';btn.className='settings-btn';guide.classList.remove('show');}else if(perm==='denied'){badge.className='notif-status-badge denied';badge.textContent='✕ ブロック中';btn.textContent='許可する方法';btn.className='settings-btn primary';buildNotifGuideInline();guide.classList.add('show');}else{badge.className='notif-status-badge default';badge.textContent='未設定';btn.textContent='許可する';btn.className='settings-btn primary';guide.classList.remove('show');}}
+function buildNotifGuideInline(){const ua=navigator.userAgent;let steps=[];if(/iPhone|iPad|iPod/i.test(ua)){steps=[{t:'設定アプリを開く',d:'ホーム画面から <strong>設定</strong> アプリを起動'},{t:'Safariを選択',d:'設定リストから <strong>Safari</strong> をタップ'},{t:'通知を許可',d:'このサイトの通知を <strong>許可</strong> に変更'},];}else if(/Android/i.test(ua)){steps=[{t:'アドレスバーのアイコンをタップ',d:'<strong>🔒 鍵</strong> または <strong>ℹ️ アイコン</strong> をタップ'},{t:'権限を変更',d:'「通知」を <strong>許可</strong> に変更'},];}else{steps=[{t:'アドレスバーのアイコンをクリック',d:'<strong>🔒 鍵</strong> または <strong>ℹ️ アイコン</strong> をクリック'},{t:'通知の権限を変更',d:'「通知」を <strong>許可</strong> に変更'},];}document.getElementById('notifGuideInlineSteps').innerHTML=steps.map((s,i)=>`<div class="notif-guide-step-sm"><div class="notif-guide-num-sm">${i+1}</div><div class="notif-guide-text-sm"><strong>${s.t}</strong><br>${s.d}</div></div>`).join('');}
+async function settingsNotifAction(){if(!('Notification' in window))return;const perm=Notification.permission;if(perm==='granted'){buildNotifGuideInlineOff();document.getElementById('notifGuideInline').classList.add('show');document.getElementById('notifActionBtn').style.display='none';}else if(perm==='denied'){buildNotifGuideInline();document.getElementById('notifGuideInline').classList.add('show');}else{let result;try{result=await Notification.requestPermission();}catch(e){result=await new Promise(r=>Notification.requestPermission(r));}if(result==='granted'){showToast('🔔 通知を許可しました');await subscribePush();}else if(result==='denied'){showToast('通知がブロックされました');}updateNotifSettingsUI();}}
+function buildNotifGuideInlineOff(){const ua=navigator.userAgent;let steps=[];if(/iPhone|iPad|iPod/i.test(ua)){steps=[{t:'設定 → Safari → 通知',d:'このサイトの通知を <strong>ブロック</strong> に変更してください'}];}else if(/Android/i.test(ua)){steps=[{t:'アドレスバーのアイコン → 権限',d:'「通知」を <strong>ブロック</strong> に変更してください'}];}else{steps=[{t:'アドレスバーのアイコン → 通知',d:'「通知」を <strong>ブロック</strong> に変更してください'}];}document.getElementById('notifGuideInlineSteps').innerHTML=steps.map((s,i)=>`<div class="notif-guide-step-sm"><div class="notif-guide-num-sm">${i+1}</div><div class="notif-guide-text-sm"><strong>${s.t}</strong><br>${s.d}</div></div>`).join('');const guide=document.getElementById('notifGuideInline');guide.querySelector('p:first-child').innerHTML='通知を<strong>オフ</strong>にするには、ブラウザの設定から変更してください。';}
+function updatePWAInstallBtn(){const btn=document.getElementById('pwaInstallBtn');if(isRunningAsPWA()){btn.textContent='インストール済み';btn.disabled=true;btn.style.opacity='.5';}else if(_deferredInstallPrompt){btn.textContent='インストール';btn.disabled=false;btn.style.opacity='';}else{btn.textContent='インストール（Safari：共有→ホーム画面に追加）';btn.disabled=false;btn.style.opacity='';}}
 function settingsPWAAction(){installPWA();closeSettingsModal();}
-
-/* ── 通知バナー ── */
 function isRunningAsPWA(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}
-function initNotifBanner(){
-  if(!('Notification' in window))return;
-  if(Notification.permission==='granted'){subscribePush();return;}
-  if(Notification.permission==='denied'){return;} // FAB非表示：設定モーダルのみ
-  if(isRunningAsPWA()){
-    if(!localStorage.getItem('notif_asked_pwa')){localStorage.setItem('notif_asked_pwa','1');requestNotifPermission();return;}
-  }
-  const dismissed=localStorage.getItem('notif_dismissed_until');
-  if(dismissed&&Date.now()<parseInt(dismissed,10))return;
-  document.getElementById('notifTopBanner').classList.add('show');
-}
-async function requestNotifPermission(){
-  if(!('Notification' in window)){showToast('このブラウザは通知に対応していません');return;}
-  document.getElementById('notifTopBanner').classList.remove('show');
-  let result;
-  try{result=await Notification.requestPermission();}catch(e){result=await new Promise(resolve=>Notification.requestPermission(resolve));}
-  if(result==='granted'){showToast('🔔 通知を許可しました');localStorage.removeItem('notif_dismissed_until');await subscribePush();}
-  else if(result==='denied'){showToast('通知がブロックされました（設定から変更できます）');}
-  else{showToast('後でまた確認できます');}
-}
+function initNotifBanner(){if(!('Notification' in window))return;if(Notification.permission==='granted'){subscribePush();return;}if(Notification.permission==='denied'){return;}if(isRunningAsPWA()){if(!localStorage.getItem('notif_asked_pwa')){localStorage.setItem('notif_asked_pwa','1');requestNotifPermission();return;}}const dismissed=localStorage.getItem('notif_dismissed_until');if(dismissed&&Date.now()<parseInt(dismissed,10))return;document.getElementById('notifTopBanner').classList.add('show');}
+async function requestNotifPermission(){if(!('Notification' in window)){showToast('このブラウザは通知に対応していません');return;}document.getElementById('notifTopBanner').classList.remove('show');let result;try{result=await Notification.requestPermission();}catch(e){result=await new Promise(resolve=>Notification.requestPermission(resolve));}if(result==='granted'){showToast('🔔 通知を許可しました');localStorage.removeItem('notif_dismissed_until');await subscribePush();}else if(result==='denied'){showToast('通知がブロックされました（設定から変更できます）');}else{showToast('後でまた確認できます');}}
 function dismissNotifBanner(){document.getElementById('notifTopBanner').classList.remove('show');localStorage.setItem('notif_dismissed_until',String(Date.now()+6*3600*1000));}
-
 let _deferredInstallPrompt=null;
-function initPWA(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('./sw.js').then(reg=>{reg.addEventListener('updatefound',()=>{const newWorker=reg.installing;newWorker.addEventListener('statechange',()=>{if(newWorker.state==='installed'&&navigator.serviceWorker.controller){showToast('アップデートがあります。ページを再読み込みしてください。');}});});}).catch(e=>console.warn('[SW] registration failed:',e));window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredInstallPrompt=e;if(!localStorage.getItem('pwa_dismissed')){document.getElementById('pwaBanner').classList.add('show');}});window.addEventListener('appinstalled',()=>{document.getElementById('pwaBanner').classList.remove('show');_deferredInstallPrompt=null;showToast('✓ ホーム画面に追加しました');});}
-function installPWA(){if(_deferredInstallPrompt){_deferredInstallPrompt.prompt();_deferredInstallPrompt.userChoice.then(result=>{if(result.outcome==='accepted')document.getElementById('pwaBanner').classList.remove('show');_deferredInstallPrompt=null;});}else{showToast('Safari の「共有」→「ホーム画面に追加」でインストールできます');document.getElementById('pwaBanner').classList.remove('show');}}
+function initPWA(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('./sw.js').then(reg=>{reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){showToast('アップデートがあります。再読み込みしてください。');}});});}).catch(e=>console.warn('[SW]',e));window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredInstallPrompt=e;if(!localStorage.getItem('pwa_dismissed')){document.getElementById('pwaBanner').classList.add('show');}});window.addEventListener('appinstalled',()=>{document.getElementById('pwaBanner').classList.remove('show');_deferredInstallPrompt=null;showToast('✓ ホーム画面に追加しました');});}
+function installPWA(){if(_deferredInstallPrompt){_deferredInstallPrompt.prompt();_deferredInstallPrompt.userChoice.then(r=>{if(r.outcome==='accepted')document.getElementById('pwaBanner').classList.remove('show');_deferredInstallPrompt=null;});}else{showToast('Safari の「共有」→「ホーム画面に追加」でインストールできます');document.getElementById('pwaBanner').classList.remove('show');}}
 function dismissPWA(){document.getElementById('pwaBanner').classList.remove('show');localStorage.setItem('pwa_dismissed','1');}
 function checkIOSInstall(){const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(isIOS&&!isStandalone&&!localStorage.getItem('pwa_dismissed')){document.getElementById('pwaBanner').classList.add('show');}}
-
-async function subscribePush(){if(!('serviceWorker' in navigator)||!('PushManager' in window))return;try{const reg=await navigator.serviceWorker.ready;const existing=await reg.pushManager.getSubscription();if(existing)return;}catch(e){console.warn('[Push] subscribe error:',e);}}
-
+async function subscribePush(){if(!('serviceWorker' in navigator)||!('PushManager' in window))return;try{const reg=await navigator.serviceWorker.ready;const existing=await reg.pushManager.getSubscription();if(existing)return;}catch(e){}}
 let _latestNewsTs=0,_newsWatchActive=false;
-function startNewsWatch(){if(!db||_newsWatchActive)return;_newsWatchActive=true;db.ref('news').orderByChild('ts').limitToLast(1).once('value').then(snap=>{const data=snap.val();if(data){const entries=Object.values(data);_latestNewsTs=entries[0].ts||0;}db.ref('news').orderByChild('ts').startAfter(_latestNewsTs).on('child_added',snap=>{const n=snap.val();if(!n||n.ts<=_latestNewsTs)return;_latestNewsTs=n.ts;loadNews();if(Notification.permission==='granted'&&document.visibilityState!=='visible'){sendLocalNotification(n.title||'お知らせ',n.content?n.content.slice(0,80):'新しいお知らせがあります');}else if(document.visibilityState==='visible'){showToast('🔔 新しいお知らせ: '+(n.title||'お知らせ'));}});}).catch(()=>{});}
-async function sendLocalNotification(title,body){if(!('serviceWorker' in navigator))return;try{const reg=await navigator.serviceWorker.ready;reg.showNotification('HGHome — '+title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'hghome-news',renotify:true,vibrate:[200,100,200],data:{url:'/'}});}catch(e){console.warn('[Notif]',e);}}
-
+function startNewsWatch(){if(!db||_newsWatchActive)return;_newsWatchActive=true;db.ref('news').orderByChild('ts').limitToLast(1).once('value').then(snap=>{const data=snap.val();if(data){const entries=Object.values(data);_latestNewsTs=entries[0].ts||0;}db.ref('news').orderByChild('ts').startAfter(_latestNewsTs).on('child_added',snap=>{const n=snap.val();if(!n||n.ts<=_latestNewsTs)return;_latestNewsTs=n.ts;loadNews();if(Notification.permission==='granted'&&document.visibilityState!=='visible'){sendLocalNotification(n.title||'お知らせ',n.content?n.content.slice(0,80):'新しいお知らせがあります');}else if(document.visibilityState==='visible'){showToast('🔔 '+(n.title||'新しいお知らせ'));}});}).catch(()=>{});}
+async function sendLocalNotification(title,body){if(!('serviceWorker' in navigator))return;try{const reg=await navigator.serviceWorker.ready;reg.showNotification('HGHome — '+title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'hghome-news',renotify:true,vibrate:[200,100,200],data:{url:'/'}});}catch(e){}}
 window.addEventListener('DOMContentLoaded',function(){
   localStorage.removeItem('notif_dismissed');
   localStorage.removeItem('notif_fab_hidden');
-  initFirebase();
-  loadSession();
+  initFirebase();loadSession();
   loadNews().then(()=>startNewsWatch());
-  initPWA();
-  checkIOSInstall();
+  initPWA();checkIOSInstall();
   setTimeout(initNotifBanner,400);
 });
 </script>
