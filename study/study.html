@@ -17,8 +17,9 @@
 <nav>
   <a href="../index.html" class="nav-logo"><span class="accent">←</span> HGHome</a>
   <div class="nav-tabs" id="navTabsWrap">
-    <button class="nav-tab on" id="tabStudy" onclick="switchTab('study')">学習</button>
-    <button class="nav-tab"   id="tabBlog"  onclick="switchTab('blog')">解説ブログ</button>
+    <button class="nav-tab on" id="tabStudy"   onclick="switchTab('study')">学習</button>
+    <button class="nav-tab"   id="tabBlog"     onclick="switchTab('blog')">解説ブログ</button>
+    <button class="nav-tab"   id="tabHistory"  onclick="switchTab('history')">学習履歴</button>
   </div>
   <div class="nav-actions">
     <button class="nav-btn primary" id="navLoginBtn" onclick="openAuthModal('login')">ログイン</button>
@@ -207,7 +208,7 @@
         </div><!-- /flashcardArea -->
 
         <!-- 4択クイズエリア -->
-        <div id="quizArea">
+        <div id="quizArea" style="display:none">
           <div class="quiz-card-wrap">
             <div class="quiz-progress-wrap">
               <div class="quiz-progress-bar-outer">
@@ -282,19 +283,10 @@
       <button class="btn btn-blog" id="newPostBtn" onclick="openBlogEdit(null)" style="display:none">✏️ 記事を書く</button>
     </div>
 
-    <!-- メインレイアウト: 記事グリッド + 学習履歴サイドバー -->
-    <div class="blog-main-layout">
-      <div class="blog-grid-wrap">
-        <div id="blogPostsGrid" class="blog-posts-grid">
-          <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
-        </div>
+    <div class="blog-grid-wrap">
+      <div id="blogPostsGrid" class="blog-posts-grid">
+        <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
       </div>
-
-      <!-- 学習履歴パネル -->
-      <aside class="history-panel" id="historyPanel">
-        <div class="hp-head">📊 学習履歴</div>
-        <div class="hp-loading"><div class="spinner"></div></div>
-      </aside>
     </div>
   </div><!-- /blogList -->
 
@@ -371,6 +363,23 @@
   </div>
 
 </div><!-- /pageBlog -->
+
+
+<!-- ════════════════════════════════════════════════════
+     PAGE: 学習履歴
+════════════════════════════════════════════════════ -->
+<div id="pageHistory" class="page-view">
+  <div class="history-page-hero">
+    <div class="history-page-hero-inner">
+      <span class="history-page-badge">学習トラッカー</span>
+      <h1 class="history-page-title">学習<span class="grad-text">履歴</span></h1>
+      <p class="history-page-sub">あなたの学習記録と連続学習ストリーク</p>
+    </div>
+  </div>
+  <div class="history-page-body" id="historyPageBody">
+    <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
+  </div>
+</div><!-- /pageHistory -->
 
 
 <!-- ════════════════════════════════════════════════════
