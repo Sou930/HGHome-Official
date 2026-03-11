@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
-   HGStudy  —  study.js  v3
-   フラッシュカード + 解説ブログ (Firebase Realtime DB)
+   HGStudy  —  study.js  v4
+   フラッシュカード + 解説ブログ + 学習履歴 (Firebase Realtime DB)
 ═══════════════════════════════════════════════════════ */
 
 // ── Firebase Config ───────────────────────────────────
@@ -102,6 +102,8 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function fmtDate(ts){if(!ts)return '';const d=new Date(ts);return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function ge(id){return document.getElementById(id);}
 function catBg(cat){const c=CAT_COLORS[cat]||'#6B7280';return `background:${c}22;color:${c};`;}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function yesterdayStr(){return new Date(Date.now()-86400000).toISOString().split('T')[0];}
 
 // ── Markdown ──────────────────────────────────────────
 function renderMarkdown(src){
@@ -142,7 +144,7 @@ window.switchTab=function(tab){
   const pageId=tab==='study'?'pageStudy':'pageBlog';
   navReturn.page=pageId;
   showMainPage(pageId);
-  if(tab==='blog')loadBlogPosts();
+  if(tab==='blog'){loadBlogPosts();loadMyHistory();}
   if(tab==='study'){
     ge('deckBrowser').style.display='';
     ge('studySession').style.display='none';
@@ -349,7 +351,7 @@ async function handleAuthSubmit(e){
     }else{
       const snap=await db.ref(`users/${username}`).once('value');
       if(snap.exists()){errEl.textContent='このユーザー名はすでに使われています';errEl.classList.add('visible');return;}
-      await db.ref(`users/${username}`).set({uid:username,username,hash,displayName:username,bio:'',avatar:'',isAdmin:false,streak:0,created:Date.now()});
+      await db.ref(`users/${username}`).set({uid:username,username,hash,displayName:username,bio:'',avatar:'',isAdmin:false,streak:0,streak_date:'',created:Date.now()});
       currentSession={uid:username,username,isAdmin:false,displayName:username};
       saveSession(currentSession);closeAuthModal();onLogin();
     }
@@ -384,14 +386,227 @@ async function onLogin(){
   updateNavUI();
   ge('welcomeScreen').style.display='none';ge('deckBrowser').style.display='';
   loadAllDecks();requestNotifPermission();startNewsWatch();
+
+  // 連続学習チェック（ログイン時）
+  await checkStreakOnLogin();
+
+  // 履歴パネルを更新
+  loadMyHistory();
+
   showToast(`ようこそ、${currentSession.username}さん！`);
   if(ge('pageBlog').classList.contains('active'))loadBlogPosts();
 }
 function onLogout(){
   updateNavUI();ge('deckBrowser').style.display='none';ge('studySession').style.display='none';ge('welcomeScreen').style.display='flex';
   allPublicDecks={};decks={};currentDeckId=null;allFavs={};displayedCount=PAGE_SIZE;
+  renderHistoryPanel([]);
 }
 window.handleLogout=function(){currentSession=null;clearSession();onLogout();showToast('ログアウトしました');};
+
+// ══════════════════════════════════════════════════════
+//  LEARNING LOGS & STREAK
+// ══════════════════════════════════════════════════════
+
+/**
+ * セッション完了時に学習ログを保存する
+ */
+async function saveStudyLog(){
+  if(!currentSession||!currentDeckId)return;
+  const dk=allPublicDecks[currentDeckId]||decks[currentDeckId];
+  if(!dk)return;
+
+  let correct,total,score;
+  if(studyMode==='4choice'){
+    correct=quizStats.correct;
+    total=quizStats.total;
+  }else{
+    correct=sessionStats.good+sessionStats.easy;
+    total=sessionStats.total;
+  }
+  score=total>0?Math.round(correct/total*100):0;
+
+  const log={
+    date:todayStr(),
+    ts:Date.now(),
+    deckId:currentDeckId,
+    deckName:dk.name||'無題',
+    mode:studyMode,
+    correct,
+    total,
+    score
+  };
+
+  try{
+    await db.ref(`logs/${currentSession.username}`).push(log);
+    await updateStreak();
+    // ブログページが表示中なら履歴を更新
+    if(ge('pageBlog').classList.contains('active'))loadMyHistory();
+  }catch(e){console.error('log save error',e);}
+}
+
+/**
+ * 今日初めて学習したときにストリークを更新する
+ * ストリーク継続条件：昨日か今日に streak_date が設定されていること
+ */
+async function updateStreak(){
+  if(!currentSession)return;
+  const today=todayStr();
+  const yesterday=yesterdayStr();
+  try{
+    const snap=await db.ref(`users/${currentSession.username}`).once('value');
+    const ud=snap.val()||{};
+    const lastDate=ud.streak_date||'';
+
+    // 今日すでに更新済みなら何もしない
+    if(lastDate===today)return;
+
+    let newStreak;
+    if(lastDate===yesterday){
+      // 昨日学習した→連続継続
+      newStreak=(ud.streak||0)+1;
+    }else{
+      // 1日以上空いた→リセット
+      newStreak=1;
+    }
+
+    await db.ref(`users/${currentSession.username}`).update({streak:newStreak,streak_date:today});
+    currentSession.streak=newStreak;
+    saveSession(currentSession);
+    updateNavUI();
+  }catch(e){}
+}
+
+/**
+ * ログイン時にストリークが切れていないか確認し、切れていたら0にリセット
+ */
+async function checkStreakOnLogin(){
+  if(!currentSession)return;
+  const today=todayStr();
+  const yesterday=yesterdayStr();
+  try{
+    const snap=await db.ref(`users/${currentSession.username}/streak_date`).once('value');
+    const lastDate=snap.val();
+    if(!lastDate)return; // まだストリーク未設定
+    if(lastDate===today||lastDate===yesterday)return; // 継続中
+
+    // 1日以上空いた→ストリーク切れ
+    await db.ref(`users/${currentSession.username}`).update({streak:0});
+    currentSession.streak=0;
+    saveSession(currentSession);
+  }catch(e){}
+}
+
+// ── 履歴パネル ──────────────────────────────────────
+
+let _historyLogs=[];
+
+async function loadMyHistory(){
+  if(!currentSession){renderHistoryPanel([]);return;}
+  try{
+    const snap=await db.ref(`logs/${currentSession.username}`)
+      .orderByChild('ts').limitToLast(50).once('value');
+    _historyLogs=Object.values(snap.val()||{}).sort((a,b)=>b.ts-a.ts);
+    renderHistoryPanel(_historyLogs);
+  }catch(e){renderHistoryPanel([]);}
+}
+
+function hpModeIcon(m){return m==='4choice'?'🎯':m==='random'?'🔀':'📖';}
+function hpModeLabel(m){return m==='4choice'?'4択':m==='random'?'ランダム':'通常';}
+function hpFmtDate(dateStr){
+  const today=todayStr();
+  const yesterday=yesterdayStr();
+  if(dateStr===today)return '今日';
+  if(dateStr===yesterday)return '昨日';
+  const d=new Date(dateStr);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function hpScoreColor(s){return s>=80?'var(--green)':s>=50?'var(--yellow)':'#E03030';}
+
+function renderHistoryPanel(logs){
+  const panel=ge('historyPanel');
+  if(!panel)return;
+
+  if(!currentSession){
+    panel.innerHTML=`
+      <div class="hp-head">📊 学習履歴</div>
+      <div class="hp-login-prompt">
+        <p>ログインして学習履歴を確認しよう</p>
+        <button class="hp-login-btn" onclick="openAuthModal('login')">ログイン</button>
+      </div>`;
+    return;
+  }
+
+  const streak=currentSession.streak||0;
+  const streakColor=streak>=7?'#F97316':streak>=3?'#EAB308':'var(--primary)';
+
+  // ストリークバー
+  let html=`
+    <div class="hp-head">📊 学習履歴</div>
+    <div class="hp-streak" style="border-color:${streakColor}30;background:${streakColor}10">
+      <span class="hp-streak-fire">🔥</span>
+      <div class="hp-streak-body">
+        <span class="hp-streak-num" style="color:${streakColor}">${streak}</span>
+        <span class="hp-streak-lbl">日連続学習</span>
+      </div>
+      ${streak===0?`<span class="hp-streak-note">今日から再スタート！</span>`:''}
+    </div>`;
+
+  if(logs.length===0){
+    html+=`<div class="hp-empty">まだ学習履歴がありません<br><small>セッションを完了すると<br>ここに記録されます</small></div>`;
+    panel.innerHTML=html;
+    return;
+  }
+
+  // 日付でグループ化
+  const grouped={};
+  logs.forEach(l=>{(grouped[l.date]=grouped[l.date]||[]).push(l);});
+
+  html+=`<div class="hp-list">`;
+  Object.entries(grouped).slice(0,10).forEach(([date,dayLogs])=>{
+    const totalSessions=dayLogs.length;
+    const avgScore=Math.round(dayLogs.reduce((s,l)=>s+l.score,0)/totalSessions);
+    html+=`
+      <div class="hp-date-group">
+        <div class="hp-date-label">
+          <span>${hpFmtDate(date)}</span>
+          <span class="hp-date-meta">${totalSessions}セッション · 平均 ${avgScore}%</span>
+        </div>`;
+    dayLogs.forEach(l=>{
+      const sc=hpScoreColor(l.score);
+      const pct=Math.min(100,l.score);
+      html+=`
+        <div class="hp-log-item">
+          <span class="hp-log-mode">${hpModeIcon(l.mode)}</span>
+          <div class="hp-log-body">
+            <div class="hp-log-deck">${esc(l.deckName)}</div>
+            <div class="hp-log-detail">
+              <span class="hp-log-tag">${hpModeLabel(l.mode)}</span>
+              <span class="hp-log-qa">${l.correct}/${l.total}問</span>
+            </div>
+            <div class="hp-score-bar-wrap">
+              <div class="hp-score-bar" style="width:${pct}%;background:${sc}"></div>
+            </div>
+          </div>
+          <div class="hp-log-score" style="color:${sc}">${l.score}<span style="font-size:9px">%</span></div>
+        </div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+
+  // 全体統計（下部）
+  const totalSessions=logs.length;
+  const totalCards=logs.reduce((s,l)=>s+l.total,0);
+  const avgScore=totalSessions>0?Math.round(logs.reduce((s,l)=>s+l.score,0)/totalSessions):0;
+  html+=`
+    <div class="hp-footer-stats">
+      <div class="hp-fstat"><div class="hp-fstat-n">${totalSessions}</div><div class="hp-fstat-l">セッション</div></div>
+      <div class="hp-fstat"><div class="hp-fstat-n">${totalCards}</div><div class="hp-fstat-l">総問題数</div></div>
+      <div class="hp-fstat"><div class="hp-fstat-n">${avgScore}%</div><div class="hp-fstat-l">平均正答率</div></div>
+    </div>`;
+
+  panel.innerHTML=html;
+}
 
 // ══════════════════════════════════════════════════════
 //  DECK BROWSER
@@ -526,7 +741,7 @@ window.deleteDeckDirect=async function(deckId){
   catch(e){showToast('削除エラー: '+e.message,'error');}
 };
 
-// ── デッキ作成モーダル (新規のみ) ─────────────────────
+// ── デッキ作成モーダル ─────────────────────────────────
 let dmSelectedCat='';
 window.openCreateDeckModal=function(){
   if(!currentSession){openAuthModal('login');return;}
@@ -592,7 +807,6 @@ function _launchStudy(deckId){
   if(editBtn)editBtn.style.display=(currentSession&&dk.owner===currentSession.username)?'':'none';
   if(!decks[deckId])decks[deckId]=dk;
 
-  // 4択 or フラッシュカード
   const flashArea=ge('flashcardArea'),quizArea=ge('quizArea');
   if(studyMode==='4choice'){
     if(flashArea)flashArea.style.display='none';
@@ -643,7 +857,11 @@ function renderFlashcard(){
 }
 
 function showEditViewInSession(){ge('cardsListView').classList.add('active');ge('sessionComplete').classList.remove('active');renderCardsList();}
+
 function showSessionComplete(){
+  // 学習ログを保存（非同期・エラーは無視）
+  saveStudyLog();
+
   if(studyMode==='4choice'){
     ge('sessionComplete').classList.add('active');ge('cardsListView').classList.remove('active');
     ge('sessionComplete').querySelector('.complete-stats').innerHTML=
@@ -778,7 +996,6 @@ async function renderDeckEditPage(deckId){
   const dk=allPublicDecks[deckId];if(!dk)return;
   ge('editPageDeckName').value=dk.name||'';
   ge('editPageDesc').value=dk.desc||'';
-  // カテゴリボタン
   const catWrap=ge('editPageCats');
   catWrap.innerHTML=DECK_CATS.filter(c=>c!=='ALL').map(c=>
     `<button class="dm-cat-btn${dk.cat===c?' on':''}" onclick="editPageToggleCat('${c}')">${c}</button>`
@@ -841,9 +1058,7 @@ function renderEditPageCards(deckId){
   ).join('');
 }
 
-window.startEditCard=function(deckId,cid){
-  ge(`epcd_${cid}`).style.display='none';ge(`epce_${cid}`).style.display='';ge(`epf_${cid}`).focus();
-};
+window.startEditCard=function(deckId,cid){ge(`epcd_${cid}`).style.display='none';ge(`epce_${cid}`).style.display='';ge(`epf_${cid}`).focus();};
 window.cancelEditCard=function(cid){ge(`epcd_${cid}`).style.display='';ge(`epce_${cid}`).style.display='none';};
 window.saveEditCard=async function(deckId,cid){
   const front=(ge(`epf_${cid}`)?.value||'').trim(),back=(ge(`epb_${cid}`)?.value||'').trim();
@@ -1045,7 +1260,6 @@ window.openProfileEditModal=function(){
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
   drawAvatar(ge('peAvatarPreview'),ud.username,ud._avatar||localStorage.getItem('fm_avatar_'+ud.username)||null,56);
-  // Load current bio
   db.ref(`users/${ud.username}/bio`).once('value').then(s=>{const b=s.val();if(b&&ge('peBio'))ge('peBio').value=b;}).catch(()=>{});
 };
 let _peAvatarData=null;
@@ -1073,7 +1287,6 @@ window.saveProfileEdit=async function(){
   }catch(e){ge('peError').textContent='エラー: '+e.message;ge('peError').style.display='block';}
 };
 
-// ── Follow toggle from any context ───────────────────
 window.toggleFollow=async function(targetUsername){
   if(!currentSession){openAuthModal('login');return;}
   const me=currentSession.username;
@@ -1126,6 +1339,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   ge('studySession').style.display='none';
   initCatFilter();initDmCats();
 
+  // 未ログイン状態でも履歴パネルを初期化
+  renderHistoryPanel([]);
+
   const sess=loadSession();
   if(sess&&sess.uid){
     currentSession=sess;
@@ -1139,5 +1355,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   }else{
     ge('welcomeScreen').style.display='flex';
     loadAllDecks();
+    renderHistoryPanel([]);
   }
 });
