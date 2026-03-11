@@ -22,6 +22,8 @@
   --gold:#C9A84C;--gold2:#E8C46A;--gold-l:#fdf6e3;
   --red:#C0392B;--red-l:#fdecea;
   --green:#1A7A4A;--green-l:#e8f5ee;
+  --blue:#2563EB;--blue-l:#eff6ff;
+  --purple:#7B6CF6;--purple-l:#f3f0ff;
   --paper:#FAFAF7;--paper2:#F3F2EC;--paper3:#EAE8DE;
   --text:#1a1a2e;--text2:#4a4a6a;--text3:#8a8aaa;
   --border:#D8D6CC;--border2:#c8c6bc;
@@ -135,6 +137,44 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 .hero-cta:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,.3)}
 .hero-cta svg{width:18px;height:18px}
 
+/* ── NOTIF PERMISSION BANNER (top, prominent) ── */
+.notif-top-banner{
+  display:none;
+  background:linear-gradient(135deg,#1E2C3E,#162032);
+  border-bottom:2px solid var(--gold);
+  padding:14px 24px;
+  flex-direction:row;align-items:center;gap:14px;
+}
+.notif-top-banner.show{display:flex}
+.notif-top-icon{font-size:1.6rem;flex-shrink:0;animation:bell-shake 1.8s ease infinite;}
+@keyframes bell-shake{
+  0%,100%{transform:rotate(0)}
+  10%,30%,50%{transform:rotate(-14deg)}
+  20%,40%{transform:rotate(14deg)}
+  60%{transform:rotate(0)}
+}
+.notif-top-text{flex:1;color:#fff;font-size:.9rem;line-height:1.4}
+.notif-top-text strong{color:var(--gold);display:block;font-size:1rem;margin-bottom:2px}
+.notif-top-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.notif-allow-btn{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:.85rem;
+  padding:9px 18px;border-radius:var(--r);border:none;cursor:pointer;
+  background:var(--gold);color:var(--navy);white-space:nowrap;
+  transition:background .15s;
+}
+.notif-allow-btn:hover{background:var(--gold2)}
+.notif-dismiss-btn{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.7);font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:500;
+  padding:9px 14px;border-radius:var(--r);cursor:pointer;white-space:nowrap;
+  transition:all .15s;
+}
+.notif-dismiss-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+@media(max-width:600px){
+  .notif-top-banner{flex-wrap:wrap}
+  .notif-top-actions{width:100%;justify-content:flex-end}
+}
+
 /* ── LAYOUT ── */
 .page-body{max-width:1100px;margin:0 auto;padding:48px 24px 80px;display:grid;grid-template-columns:1fr 300px;gap:48px;}
 @media(max-width:860px){.page-body{grid-template-columns:1fr;}}
@@ -167,9 +207,11 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   display:inline-block;font-size:.68rem;font-weight:700;font-family:'Outfit',sans-serif;
   padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em;
 }
-.news-badge.important{background:#fff0f0;color:var(--red);border:1px solid #ffc5c5;}
-.news-badge.info{background:var(--green-l);color:var(--green);border:1px solid #aadfc0;}
-.news-badge.update{background:var(--gold-l);color:#8a6800;border:1px solid #e8c85a;}
+/* カテゴリバッジ: info / study / homebot */
+.news-badge.info{background:var(--blue-l);color:var(--blue);border:1px solid #bfdbfe;}
+.news-badge.study{background:var(--green-l);color:var(--green);border:1px solid #aadfc0;}
+.news-badge.homebot{background:var(--purple-l);color:var(--purple);border:1px solid #c4b5fd;}
+
 .news-title{
   font-family:'Noto Serif JP',serif;font-weight:700;font-size:1rem;
   color:var(--text);line-height:1.4;flex:1;
@@ -177,6 +219,15 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 .news-body{
   font-size:.9rem;color:var(--text2);line-height:1.7;
   white-space:pre-wrap;word-break:break-word;
+}
+/* ニュース画像 */
+.news-image{
+  margin-top:14px;border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--border);max-width:100%;
+}
+.news-image img{
+  width:100%;max-height:480px;object-fit:contain;
+  display:block;background:var(--paper3);
 }
 .news-meta{
   display:flex;align-items:center;justify-content:space-between;
@@ -242,6 +293,33 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 .info-list{display:flex;flex-direction:column;gap:8px;}
 .info-item{font-size:.85rem;color:var(--text2);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
 .info-item::before{content:'▸';color:var(--gold);flex-shrink:0;margin-top:1px}
+
+/* ── IMAGE UPLOAD ── */
+.img-upload-area{
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:20px;text-align:center;cursor:pointer;
+  transition:all .18s;background:var(--paper2);
+  position:relative;
+}
+.img-upload-area:hover,.img-upload-area.drag{border-color:var(--navy);background:var(--paper3);}
+.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-upload-icon{font-size:1.8rem;margin-bottom:6px;}
+.img-upload-label{font-size:.82rem;color:var(--text3);line-height:1.5}
+.img-upload-label strong{color:var(--text2);}
+.img-preview{
+  margin-top:10px;border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--border);position:relative;display:none;
+}
+.img-preview.show{display:block}
+.img-preview img{width:100%;max-height:220px;object-fit:contain;display:block;background:var(--paper3);}
+.img-preview-del{
+  position:absolute;top:6px;right:6px;
+  background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:var(--r);
+  font-size:.75rem;font-weight:700;padding:4px 8px;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+}
+.img-preview-del:hover{background:rgba(192,57,43,.9)}
+.img-size-note{font-size:.75rem;color:var(--text3);margin-top:6px;text-align:center;}
 
 /* ── MODALS ── */
 .overlay{
@@ -331,28 +409,6 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 }
 .pwa-banner-close:hover{color:#fff}
 
-/* ── NOTIF PERMISSION BAR ── */
-.notif-bar{
-  display:none;background:var(--navy3);border:1px solid rgba(201,168,76,.3);
-  border-radius:var(--r);padding:12px 16px;
-  flex-direction:row;align-items:center;gap:12px;margin-bottom:16px;
-}
-.notif-bar.show{display:flex}
-.notif-bar-text{flex:1;font-size:.85rem;color:rgba(255,255,255,.85);line-height:1.4}
-.notif-bar-text strong{color:var(--gold)}
-.notif-btn{
-  font-family:'Outfit',sans-serif;font-weight:700;font-size:.78rem;
-  padding:7px 14px;border-radius:var(--r);border:none;cursor:pointer;
-  background:var(--gold);color:var(--navy);white-space:nowrap;
-  transition:background .15s;
-}
-.notif-btn:hover{background:var(--gold2)}
-.notif-btn-dismiss{
-  background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);
-  font-size:1rem;padding:4px;
-}
-.notif-btn-dismiss:hover{color:rgba(255,255,255,.7)}
-
 /* ── TOAST ── */
 .toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
@@ -402,6 +458,19 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
   </div>
 </header>
 
+<!-- 🔔 通知許可バナー (ヘッダー直下・全員に表示) -->
+<div class="notif-top-banner" id="notifTopBanner">
+  <div class="notif-top-icon">🔔</div>
+  <div class="notif-top-text">
+    <strong>プッシュ通知を有効にする</strong>
+    新しいお知らせが届いたときにすぐ通知を受け取れます
+  </div>
+  <div class="notif-top-actions">
+    <button class="notif-allow-btn" onclick="requestNotifPermission()">通知を許可する</button>
+    <button class="notif-dismiss-btn" onclick="dismissNotifBanner()">今はしない</button>
+  </div>
+</div>
+
 <!-- HERO -->
 <section class="hero">
   <div class="hero-inner">
@@ -428,14 +497,6 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
     <div class="admin-bar" id="adminBar">
       <span class="admin-label">🔑 管理者モード</span>
       <button class="btn-post" onclick="openNewsModal()">＋ 新しいお知らせを投稿</button>
-    </div>
-
-    <!-- Notification permission bar -->
-    <div class="notif-bar" id="notifBar" style="background:var(--navy);color:#fff;border-radius:var(--r);margin-bottom:16px;">
-      <span style="font-size:1.4rem">🔔</span>
-      <div class="notif-bar-text"><strong>プッシュ通知を有効にする</strong>新しいお知らせが届いたときに通知を受け取れます</div>
-      <button class="notif-btn" onclick="requestNotifPermission()">通知を許可する</button>
-      <button class="notif-btn-dismiss" onclick="dismissNotifBar()" title="閉じる">✕</button>
     </div>
 
     <div id="newsList"></div>
@@ -511,7 +572,6 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
         <label class="form-label">パスワード</label>
         <input class="form-input" id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
       </div>
-      <!-- 新規登録時の追加フィールド（パスワード確認のみ） -->
       <div id="authRegExtra" style="display:none">
         <div class="form-group">
           <label class="form-label">パスワード確認</label>
@@ -528,7 +588,7 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
 
 <!-- NEWS POST/EDIT MODAL -->
 <div class="overlay" id="newsOverlay" onclick="if(event.target===this)closeNewsModal()">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:580px">
     <div class="modal-head">
       <h3 class="modal-title" id="newsModalTitle">お知らせを投稿</h3>
       <button class="modal-close" onclick="closeNewsModal()">✕</button>
@@ -543,13 +603,30 @@ body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--text);m
         <label class="form-label">カテゴリ</label>
         <select class="form-select" id="newsCat">
           <option value="info">📋 お知らせ</option>
-          <option value="important">⚠️ 重要</option>
-          <option value="update">🔄 アップデート</option>
+          <option value="study">📚 HGStudy アップデート</option>
+          <option value="homebot">🤖 HGHomeBot+ アップデート</option>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label">内容</label>
-        <textarea class="form-textarea" id="newsContent" placeholder="お知らせの内容を入力してください" style="min-height:160px"></textarea>
+        <textarea class="form-textarea" id="newsContent" placeholder="お知らせの内容を入力してください" style="min-height:140px"></textarea>
+      </div>
+      <!-- 画像アップロード -->
+      <div class="form-group">
+        <label class="form-label">画像（任意）</label>
+        <div class="img-upload-area" id="imgUploadArea"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)">
+          <input type="file" id="newsImgInput" accept="image/*" onchange="handleImgSelect(event)">
+          <div class="img-upload-icon">🖼️</div>
+          <div class="img-upload-label"><strong>クリックまたはドラッグ</strong>して画像を選択<br>JPG / PNG / GIF / WebP</div>
+        </div>
+        <div class="img-preview" id="imgPreview">
+          <img id="imgPreviewImg" src="" alt="プレビュー">
+          <button class="img-preview-del" onclick="clearNewsImage()">✕ 削除</button>
+        </div>
+        <p class="img-size-note" id="imgSizeNote"></p>
       </div>
     </div>
     <div class="modal-footer">
@@ -575,6 +652,7 @@ let session = null;
 let isAdmin = false;
 let editingNewsId = null;
 let authMode = 'login';
+let _newsImageBase64 = null; // 投稿画像の base64
 
 // ── Helpers ──
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -643,13 +721,13 @@ function saveSession(s){
   session=s;
   const str=JSON.stringify(s);
   setCookie('hg_session',str,30);
-  setCookie('hgs_sess',str,30);   // HGStudy 共通
+  setCookie('hgs_sess',str,30);
   try{localStorage.setItem('hg_session_ls',str);localStorage.setItem('hgs_sess',str);}catch(e){}
 }
 function clearSession(){
   session=null;
   deleteCookie('hg_session'); deleteCookie('hgs_sess');
-  try{localStorage.removeItem('hg_session_ls');localStorage.removeItem('hgs_sess');}catch(e){};
+  try{localStorage.removeItem('hg_session_ls');localStorage.removeItem('hgs_sess');}catch(e){}
 }
 
 function updateHeaderUI(){
@@ -722,18 +800,13 @@ async function doRegister(username,pass){
       if(snap.exists()){showAuthErr('このユーザー名はすでに使われています');return;}
       await db.ref('users/'+username).set({username,hash,displayName:username,bio:'',avatar:'',created:Date.now()});
     }
-    // DBからアバター取得してセッションに保存
-    let avatarData = null;
-    try{
-      const avSnap=await db.ref(`users/${username}/avatar`).once('value');
-      avatarData=avSnap.val()||null;
-      if(avatarData) localStorage.setItem('fm_avatar_'+username, avatarData);
-    }catch(e){}
-    saveSession({uid:username,username,displayName:stored.displayName||username,_avatar:avatarData});
+    let avatarData=null;
+    try{const avSnap=await db.ref(`users/${username}/avatar`).once('value');avatarData=avSnap.val()||null;if(avatarData)localStorage.setItem('fm_avatar_'+username,avatarData);}catch(e){}
+    saveSession({uid:username,username,displayName:username,_avatar:avatarData});
     updateHeaderUI();checkAdminRole();
-    requestNotifPermission();
     showToast('アカウントを作成しました！');
     closeAuthModal();loadNews();
+    setTimeout(initNotifBanner, 800);
   }catch(e){showAuthErr('エラー: '+e.message);}
   finally{btn.textContent='アカウントを作成';btn.disabled=false;}
 }
@@ -745,14 +818,13 @@ async function doLogin(username,pass){
     let stored=null;
     if(db){const snap=await db.ref('users/'+username).once('value');stored=snap.val();}
     if(!stored||stored.hash!==hash){showAuthErr('ユーザー名またはパスワードが間違っています');return;}
-    const loginAvatar = stored.avatar||null;
+    const loginAvatar=stored.avatar||null;
     if(loginAvatar){try{localStorage.setItem('fm_avatar_'+username,loginAvatar);}catch(e){}}
     saveSession({uid:username,username,displayName:stored.displayName||username,_avatar:loginAvatar});
     updateHeaderUI();checkAdminRole();
-    requestNotifPermission();
     showToast('ログインしました！');
     closeAuthModal();loadNews();
-    setTimeout(initNotifBar, 800);
+    setTimeout(initNotifBanner, 800);
   }catch(e){showAuthErr('エラー: '+e.message);}
   finally{btn.textContent='ログイン';btn.disabled=false;}
 }
@@ -773,6 +845,63 @@ document.addEventListener('click',function(e){
   const hu=document.getElementById('hdrUser');
   if(m&&!hu.contains(e.target))m.classList.remove('open');
 });
+
+// ── News Image Upload ──
+const MAX_IMG_SIZE = 800; // px (最大辺)
+const MAX_IMG_KB   = 400; // KB (base64後)
+
+function handleDragOver(e){e.preventDefault();document.getElementById('imgUploadArea').classList.add('drag');}
+function handleDragLeave(e){document.getElementById('imgUploadArea').classList.remove('drag');}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('imgUploadArea').classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type.startsWith('image/'))processImgFile(file);
+}
+function handleImgSelect(e){
+  const file=e.target.files[0];
+  if(file)processImgFile(file);
+}
+
+function processImgFile(file){
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const img=new Image();
+    img.onload=function(){
+      // リサイズ
+      let w=img.width,h=img.height;
+      if(w>MAX_IMG_SIZE||h>MAX_IMG_SIZE){
+        if(w>h){h=Math.round(h*MAX_IMG_SIZE/w);w=MAX_IMG_SIZE;}
+        else{w=Math.round(w*MAX_IMG_SIZE/h);h=MAX_IMG_SIZE;}
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      let quality=0.82;
+      let dataUrl=canvas.toDataURL('image/jpeg',quality);
+      // サイズチェック
+      while(dataUrl.length>MAX_IMG_KB*1024*4/3&&quality>0.3){
+        quality-=0.08;
+        dataUrl=canvas.toDataURL('image/jpeg',quality);
+      }
+      const kb=Math.round(dataUrl.length*3/4/1024);
+      _newsImageBase64=dataUrl;
+      document.getElementById('imgPreviewImg').src=dataUrl;
+      document.getElementById('imgPreview').classList.add('show');
+      document.getElementById('imgSizeNote').textContent=`画像サイズ: ${w}×${h}px / 約${kb}KB`;
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearNewsImage(){
+  _newsImageBase64=null;
+  document.getElementById('imgPreview').classList.remove('show');
+  document.getElementById('imgPreviewImg').src='';
+  document.getElementById('newsImgInput').value='';
+  document.getElementById('imgSizeNote').textContent='';
+}
 
 // ── News ──
 async function loadNews(){
@@ -795,7 +924,14 @@ async function loadNews(){
       const ts=n.ts?new Date(n.ts):null;
       const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}):'';
       const cat=n.cat||'info';
-      const catLabel={important:'⚠️ 重要',info:'📋 お知らせ',update:'🔄 アップデート'}[cat]||'お知らせ';
+      // カテゴリラベル
+      const catLabel={
+        info:'📋 お知らせ',
+        study:'📚 HGStudy アップデート',
+        homebot:'🤖 HGHomeBot+ アップデート'
+      }[cat]||'📋 お知らせ';
+      // 画像
+      const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';
       const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';
       el.innerHTML=`
         <div class="news-item-top">
@@ -806,6 +942,7 @@ async function loadNews(){
           <span class="news-date">${esc(dateStr)}</span>
         </div>
         <div class="news-body">${esc(n.content||'')}</div>
+        ${imgHTML}
         <div class="news-meta">
           <span class="news-author">by ${esc(n.author||'管理者')}</span>
           ${actionsHTML}
@@ -827,6 +964,7 @@ function openNewsModal(editId){
     document.getElementById('newsTitle').value='';
     document.getElementById('newsCat').value='info';
     document.getElementById('newsContent').value='';
+    clearNewsImage();
   }
   document.getElementById('newsOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('newsTitle').focus(),80);
@@ -841,6 +979,15 @@ async function editNews(id){
     document.getElementById('newsTitle').value=n.title||'';
     document.getElementById('newsCat').value=n.cat||'info';
     document.getElementById('newsContent').value=n.content||'';
+    // 既存画像をプレビューに復元
+    if(n.image){
+      _newsImageBase64=n.image;
+      document.getElementById('imgPreviewImg').src=n.image;
+      document.getElementById('imgPreview').classList.add('show');
+      document.getElementById('imgSizeNote').textContent='（既存の画像）';
+    } else {
+      clearNewsImage();
+    }
     openNewsModal(id);
   }catch(e){showToast('エラー: '+e.message);}
 }
@@ -855,14 +1002,9 @@ async function deleteNews(id){
 }
 
 async function submitNews(){
-  // isAdmin が未確定の場合は再チェック
   if(!isAdmin){
-    if(session && db){
-      try{
-        const snap=await db.ref('users/'+session.username).once('value');
-        const d=snap.val()||{};
-        isAdmin=d.isAdmin===true||d.isadmin===true||d.role==='admin';
-      }catch(e){}
+    if(session&&db){
+      try{const snap=await db.ref('users/'+session.username).once('value');const d=snap.val()||{};isAdmin=d.isAdmin===true||d.isadmin===true||d.role==='admin';}catch(e){}
     }
     if(!isAdmin){showToast('管理者権限が必要です');return;}
   }
@@ -877,6 +1019,12 @@ async function submitNews(){
   const btn=document.getElementById('newsSubmitBtn');btn.disabled=true;btn.textContent='送信中...';
   try{
     const data={title,cat,content:newsContent,author:session.username,uid:session.uid,ut:Date.now()};
+    // 画像
+    if(_newsImageBase64){data.image=_newsImageBase64;}
+    else if(editingNewsId){
+      // 編集時・画像削除された場合はnullをセット
+      data.image=null;
+    }
     if(editingNewsId){
       await db.ref('news/'+editingNewsId).update(data);
       showToast('更新しました ✓');
@@ -892,144 +1040,148 @@ async function submitNews(){
 
 function goHome(){window.scrollTo({top:0,behavior:'smooth'});}
 
-// ── PWA: Service Worker ──
-let _deferredInstallPrompt = null;
+// ── 🔔 通知許可バナー ──
+// ページ読み込み時・ログイン後に呼び出し
+// 「通知を許可する」 または 「今はしない（今日限り）」 を提示
+function initNotifBanner(){
+  if(!('Notification' in window))return;
+  // すでに許可 or 拒否済みなら何もしない
+  if(Notification.permission==='granted'){subscribePush();return;}
+  if(Notification.permission==='denied')return;
+  // ユーザーが「今日は表示しない」を選んでいれば非表示
+  const dismissed=localStorage.getItem('notif_dismissed_until');
+  if(dismissed&&Date.now()<parseInt(dismissed,10))return;
+  document.getElementById('notifTopBanner').classList.add('show');
+}
 
-function initPWA() {
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('/sw.js').then(reg => {
-    reg.addEventListener('updatefound', () => {
-      const newWorker = reg.installing;
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+async function requestNotifPermission(){
+  if(!('Notification' in window)){showToast('このブラウザは通知に対応していません');return;}
+  document.getElementById('notifTopBanner').classList.remove('show');
+  const result=await Notification.requestPermission();
+  if(result==='granted'){
+    showToast('🔔 通知を許可しました');
+    await subscribePush();
+  } else if(result==='denied'){
+    showToast('通知がブロックされました（ブラウザ設定から変更できます）');
+  } else {
+    showToast('通知の許可がキャンセルされました');
+  }
+}
+
+function dismissNotifBanner(){
+  document.getElementById('notifTopBanner').classList.remove('show');
+  // 24時間は再表示しない
+  localStorage.setItem('notif_dismissed_until', String(Date.now()+86400000));
+}
+
+// ── PWA ──
+let _deferredInstallPrompt=null;
+
+function initPWA(){
+  if(!('serviceWorker' in navigator))return;
+  navigator.serviceWorker.register('/sw.js').then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      newWorker.addEventListener('statechange',()=>{
+        if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
           showToast('アップデートがあります。ページを再読み込みしてください。');
         }
       });
     });
-  }).catch(e => console.warn('[SW] registration failed:', e));
+  }).catch(e=>console.warn('[SW] registration failed:',e));
 
-  window.addEventListener('beforeinstallprompt', e => {
+  window.addEventListener('beforeinstallprompt',e=>{
     e.preventDefault();
-    _deferredInstallPrompt = e;
-    if (!localStorage.getItem('pwa_dismissed')) {
+    _deferredInstallPrompt=e;
+    if(!localStorage.getItem('pwa_dismissed')){
       document.getElementById('pwaBanner').classList.add('show');
     }
   });
-
-  window.addEventListener('appinstalled', () => {
+  window.addEventListener('appinstalled',()=>{
     document.getElementById('pwaBanner').classList.remove('show');
-    _deferredInstallPrompt = null;
+    _deferredInstallPrompt=null;
     showToast('✓ ホーム画面に追加しました');
   });
 }
 
-function installPWA() {
-  if (_deferredInstallPrompt) {
+function installPWA(){
+  if(_deferredInstallPrompt){
     _deferredInstallPrompt.prompt();
-    _deferredInstallPrompt.userChoice.then(result => {
-      if (result.outcome === 'accepted') {
-        document.getElementById('pwaBanner').classList.remove('show');
-      }
-      _deferredInstallPrompt = null;
+    _deferredInstallPrompt.userChoice.then(result=>{
+      if(result.outcome==='accepted')document.getElementById('pwaBanner').classList.remove('show');
+      _deferredInstallPrompt=null;
     });
   } else {
     showToast('Safari の「共有」→「ホーム画面に追加」でインストールできます');
     document.getElementById('pwaBanner').classList.remove('show');
   }
 }
-
-function dismissPWA() {
+function dismissPWA(){
   document.getElementById('pwaBanner').classList.remove('show');
-  localStorage.setItem('pwa_dismissed', '1');
+  localStorage.setItem('pwa_dismissed','1');
 }
-
-function checkIOSInstall() {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  if (isIOS && !isStandalone && !localStorage.getItem('pwa_dismissed')) {
+function checkIOSInstall(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  if(isIOS&&!isStandalone&&!localStorage.getItem('pwa_dismissed')){
     document.getElementById('pwaBanner').classList.add('show');
   }
 }
 
 // ── Push Notifications ──
-function initNotifBar() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') { subscribePush(); return; }
-  if (Notification.permission === 'denied') return;
-  if (!localStorage.getItem('notif_dismissed') && session) {
-    document.getElementById('notifBar').classList.add('show');
-  }
-}
-
-async function requestNotifPermission() {
-  if (!('Notification' in window)) { showToast('このブラウザは通知に対応していません'); return; }
-  const result = await Notification.requestPermission();
-  document.getElementById('notifBar').classList.remove('show');
-  if (result === 'granted') {
-    showToast('🔔 通知を許可しました');
-    await subscribePush();
-  } else {
-    showToast('通知はブロックされました');
-  }
-}
-
-function dismissNotifBar() {
-  document.getElementById('notifBar').classList.remove('show');
-  localStorage.setItem('notif_dismissed', '1');
-}
-
-async function subscribePush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const existing = await reg.pushManager.getSubscription();
-    if (existing) return;
-  } catch(e) { console.warn('[Push] subscribe error:', e); }
+async function subscribePush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const existing=await reg.pushManager.getSubscription();
+    if(existing)return;
+  }catch(e){console.warn('[Push] subscribe error:',e);}
 }
 
 // ── Firebase: Watch for new news ──
-let _latestNewsTs = 0;
-let _newsWatchActive = false;
+let _latestNewsTs=0;
+let _newsWatchActive=false;
 
-function startNewsWatch() {
-  if (!db || _newsWatchActive) return;
-  _newsWatchActive = true;
-  db.ref('news').orderByChild('ts').limitToLast(1).once('value').then(snap => {
-    const data = snap.val();
-    if (data) { const entries = Object.values(data); _latestNewsTs = entries[0].ts || 0; }
-    db.ref('news').orderByChild('ts').startAfter(_latestNewsTs).on('child_added', snap => {
-      const n = snap.val();
-      if (!n || n.ts <= _latestNewsTs) return;
-      _latestNewsTs = n.ts;
+function startNewsWatch(){
+  if(!db||_newsWatchActive)return;
+  _newsWatchActive=true;
+  db.ref('news').orderByChild('ts').limitToLast(1).once('value').then(snap=>{
+    const data=snap.val();
+    if(data){const entries=Object.values(data);_latestNewsTs=entries[0].ts||0;}
+    db.ref('news').orderByChild('ts').startAfter(_latestNewsTs).on('child_added',snap=>{
+      const n=snap.val();
+      if(!n||n.ts<=_latestNewsTs)return;
+      _latestNewsTs=n.ts;
       loadNews();
-      if (Notification.permission === 'granted' && document.visibilityState !== 'visible') {
-        sendLocalNotification(n.title || 'お知らせ', n.content ? n.content.slice(0, 80) : '新しいお知らせがあります');
-      } else if (document.visibilityState === 'visible') {
-        showToast('🔔 新しいお知らせ: ' + (n.title || 'お知らせ'));
+      if(Notification.permission==='granted'&&document.visibilityState!=='visible'){
+        sendLocalNotification(n.title||'お知らせ',n.content?n.content.slice(0,80):'新しいお知らせがあります');
+      } else if(document.visibilityState==='visible'){
+        showToast('🔔 新しいお知らせ: '+(n.title||'お知らせ'));
       }
     });
-  }).catch(() => {});
+  }).catch(()=>{});
 }
 
-async function sendLocalNotification(title, body) {
-  if (!('serviceWorker' in navigator)) return;
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    reg.showNotification('HGHome — ' + title, {
-      body, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png',
-      tag: 'hghome-news', renotify: true, vibrate: [200, 100, 200], data: { url: '/' }
+async function sendLocalNotification(title,body){
+  if(!('serviceWorker' in navigator))return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification('HGHome — '+title,{
+      body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',
+      tag:'hghome-news',renotify:true,vibrate:[200,100,200],data:{url:'/'}
     });
-  } catch(e) { console.warn('[Notif]', e); }
+  }catch(e){console.warn('[Notif]',e);}
 }
 
 // ── Boot ──
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded',function(){
   initFirebase();
   loadSession();
-  loadNews().then(() => startNewsWatch());
+  loadNews().then(()=>startNewsWatch());
   initPWA();
   checkIOSInstall();
-  setTimeout(initNotifBar, 1200);
+  // 通知バナー: 全員に対して少し遅らせて表示
+  setTimeout(initNotifBanner, 1000);
 });
 </script>
 </body>
