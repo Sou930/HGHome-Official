@@ -20,6 +20,7 @@
     <button class="nav-tab on" id="tabStudy"   onclick="switchTab('study')">学習</button>
     <button class="nav-tab"   id="tabBlog"     onclick="switchTab('blog')">解説ブログ</button>
     <button class="nav-tab"   id="tabHistory"  onclick="switchTab('history')">学習履歴</button>
+    <button class="nav-tab"   id="tabRanking"  onclick="switchTab('ranking')">🏆 ランキング</button>
   </div>
   <div class="nav-actions">
     <button class="nav-btn primary" id="navLoginBtn" onclick="openAuthModal('login')">ログイン</button>
@@ -380,6 +381,30 @@
     <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
   </div>
 </div><!-- /pageHistory -->
+
+
+<!-- ════════════════════════════════════════════════════
+     PAGE: ランキング
+════════════════════════════════════════════════════ -->
+<div id="pageRanking" class="page-view">
+  <div class="ranking-hero">
+    <div class="ranking-hero-inner">
+      <span class="ranking-hero-badge">LEADERBOARD</span>
+      <h1 class="ranking-hero-title">🏆 <span class="grad-text">ランキング</span></h1>
+      <p class="ranking-hero-sub">学習者たちの記録を競い合おう</p>
+    </div>
+  </div>
+  <div class="ranking-tabs-wrap">
+    <div class="ranking-tabs">
+      <button class="ranking-tab on" id="rtabCards"  onclick="switchRankingTab('cards')">📇 総カード数</button>
+      <button class="ranking-tab"   id="rtabScore"  onclick="switchRankingTab('score')">🎯 平均正答率</button>
+      <button class="ranking-tab"   id="rtabStreak" onclick="switchRankingTab('streak')">🔥 ストリーク</button>
+    </div>
+  </div>
+  <div class="ranking-body" id="rankingBody">
+    <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
+  </div>
+</div><!-- /pageRanking -->
 
 
 <!-- ════════════════════════════════════════════════════
