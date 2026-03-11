@@ -1123,52 +1123,70 @@ function goHome(){window.scrollTo({top:0,behavior:'smooth'});}
 
 // ── 🔔 通知許可バナー / 拒否済みFAB ──
 function initNotifBanner(){
+  // Notification API 非対応ブラウザ（旧iOS Safariなど）は何もしない
   if(!('Notification' in window))return;
+
+  // 許可済み
   if(Notification.permission==='granted'){subscribePush();return;}
 
-  // 拒否済み → 画面端にフローティングボタンを表示
+  // 拒否済み → FABを表示（sessionStorage で「このタブだけ非表示」を管理）
   if(Notification.permission==='denied'){
-    if(!localStorage.getItem('notif_fab_hidden')){
+    if(!sessionStorage.getItem('notif_fab_hidden')){
       document.getElementById('notifDeniedFab').classList.add('show');
     }
     return;
   }
 
   // default（未決定）→ バナーを表示
+  // 「今はしない」を押してから6時間以内は非表示
   const dismissed=localStorage.getItem('notif_dismissed_until');
   if(dismissed&&Date.now()<parseInt(dismissed,10))return;
+
   document.getElementById('notifTopBanner').classList.add('show');
 }
 
 async function requestNotifPermission(){
-  if(!('Notification' in window)){showToast('このブラウザは通知に対応していません');return;}
+  if(!('Notification' in window)){
+    showToast('このブラウザは通知に対応していません');
+    return;
+  }
   document.getElementById('notifTopBanner').classList.remove('show');
-  const result=await Notification.requestPermission();
+
+  let result;
+  try{
+    result=await Notification.requestPermission();
+  }catch(e){
+    // 古いブラウザはコールバック形式のみ対応
+    result=await new Promise(resolve=>Notification.requestPermission(resolve));
+  }
+
   if(result==='granted'){
     showToast('🔔 通知を許可しました');
     document.getElementById('notifDeniedFab').classList.remove('show');
+    localStorage.removeItem('notif_dismissed_until');
     await subscribePush();
   } else if(result==='denied'){
-    showToast('通知がブロックされました');
+    showToast('通知がブロックされました（ブラウザ設定から変更できます）');
     // 拒否になったのでFABに切り替え
-    if(!localStorage.getItem('notif_fab_hidden')){
+    if(!sessionStorage.getItem('notif_fab_hidden')){
       document.getElementById('notifDeniedFab').classList.add('show');
     }
   } else {
-    showToast('通知の許可がキャンセルされました');
+    // dismissed（ダイアログを閉じた）→ 次回また出す
+    showToast('後でまた確認できます');
   }
 }
 
 function dismissNotifBanner(){
   document.getElementById('notifTopBanner').classList.remove('show');
-  localStorage.setItem('notif_dismissed_until', String(Date.now()+86400000));
+  // 6時間後に再表示（24時間だと長すぎてデバッグしにくい）
+  localStorage.setItem('notif_dismissed_until', String(Date.now()+6*3600*1000));
 }
 
-// 拒否済みFAB
+// 拒否済みFAB：sessionStorage なのでタブを閉じると復活する
 function hideDeniedFab(){
   document.getElementById('notifDeniedFab').classList.remove('show');
-  // このセッション中は再表示しない（ページリロードで復活）
-  localStorage.setItem('notif_fab_hidden','1');
+  sessionStorage.setItem('notif_fab_hidden','1');
 }
 
 // 通知設定ガイドモーダル
@@ -1311,13 +1329,17 @@ async function sendLocalNotification(title,body){
 
 // ── Boot ──
 window.addEventListener('DOMContentLoaded',function(){
+  // 古い localStorage キーをクリーンアップ（旧バージョンとの互換）
+  localStorage.removeItem('notif_dismissed');   // 旧キー
+  localStorage.removeItem('notif_fab_hidden');  // 旧キー（sessionStorageに移行済み）
+
   initFirebase();
   loadSession();
   loadNews().then(()=>startNewsWatch());
   initPWA();
   checkIOSInstall();
-  // 通知バナー: 全員に対して少し遅らせて表示
-  setTimeout(initNotifBanner, 1000);
+  // 通知バナー: レンダリング完了後すぐに判定
+  setTimeout(initNotifBanner, 400);
 });
 </script>
 </body>
