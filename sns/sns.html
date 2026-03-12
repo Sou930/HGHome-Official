@@ -35,6 +35,19 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
           <span class="sidebar-label">トレンド</span>
         </button>
+        <!-- 通知 -->
+        <button class="sidebar-nav-item" data-view="notifications" onclick="setView('notifications');loadNotifications()">
+          <span class="sidebar-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span class="sidebar-badge" id="notifBadge" style="display:none">0</span>
+          </span>
+          <span class="sidebar-label">通知</span>
+        </button>
+        <!-- ブックマーク -->
+        <button class="sidebar-nav-item" data-view="bookmarks" onclick="if(session)setView('bookmarks');else openAuthModal('login')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <span class="sidebar-label">ブックマーク</span>
+        </button>
         <button class="sidebar-nav-item" data-view="profile" onclick="if(session)openProfile(session.username);else openAuthModal('login')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span class="sidebar-label">プロフィール</span>
@@ -78,8 +91,17 @@
   <!-- ── FEED ── -->
   <main class="sns-feed">
     <div class="feed-header">
-      <div class="feed-tabs">
-        <button class="feed-tab active" id="feedHeaderTitle" onclick="onFeedTabClick()">ホーム</button>
+      <div class="feed-tabs" id="homeFeedTabs">
+        <!-- ホームのとき: おすすめ / フォロー中 -->
+        <button class="feed-tab active" id="feedTabRec" onclick="switchFeedTab('rec')">おすすめ</button>
+        <button class="feed-tab" id="feedTabFollow" onclick="switchFeedTab('follow')">フォロー中</button>
+      </div>
+      <!-- 他ビューのタイトルバー -->
+      <div class="feed-title-bar" id="feedTitleBar" style="display:none">
+        <button class="feed-back-btn" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <span id="feedTitleText"></span>
       </div>
     </div>
 
@@ -112,7 +134,14 @@
             <input type="file" id="postImgInput" class="img-input" accept="image/*" onchange="handlePostImgSelect(event)">
           </div>
           <div class="composer-right">
-            <span class="composer-count" id="composerCount">280</span>
+            <!-- 文字数円形プログレス -->
+            <svg class="char-ring" id="composerRing" viewBox="0 0 32 32" width="28" height="28">
+              <circle class="char-ring-bg" cx="16" cy="16" r="12" fill="none" stroke-width="3"/>
+              <circle class="char-ring-fill" id="composerRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3"
+                stroke-dasharray="75.4" stroke-dashoffset="0" transform="rotate(-90 16 16)"/>
+            </svg>
+            <span class="composer-count" id="composerCount" style="display:none">0</span>
+            <div class="composer-divider"></div>
             <button class="composer-submit" id="composerSubmitBtn" onclick="submitPost()" disabled>投稿</button>
           </div>
         </div>
@@ -131,13 +160,21 @@
 
     <!-- Search -->
     <div id="searchViewWrap" style="display:none">
-      <!-- Mobile search bar -->
       <div style="padding:12px 16px;border-bottom:1px solid var(--line);">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="search-input" id="searchInput" placeholder="ユーザーまたは#タグを検索"
             onkeydown="if(event.key==='Enter')doSearch()" oninput="onSearchInput(event)">
+          <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
         </div>
+      </div>
+      <!-- 検索タブ: ユーザー / 投稿 / ハッシュタグ -->
+      <div class="search-tabs" id="searchTabs" style="display:none">
+        <button class="feed-tab active" id="sTabUsers" onclick="switchSearchTab('users')">ユーザー</button>
+        <button class="feed-tab" id="sTabPosts" onclick="switchSearchTab('posts')">投稿</button>
+        <button class="feed-tab" id="sTabTags" onclick="switchSearchTab('tags')">タグ</button>
       </div>
       <div id="searchView">
         <div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>
@@ -159,6 +196,16 @@
       <div id="threadView"></div>
     </div>
 
+    <!-- 通知 -->
+    <div id="notificationsViewWrap" style="display:none">
+      <div id="notificationsView"></div>
+    </div>
+
+    <!-- ブックマーク -->
+    <div id="bookmarksViewWrap" style="display:none">
+      <div id="bookmarksView"></div>
+    </div>
+
   </main>
 
   <!-- ── RIGHT PANEL ── -->
@@ -166,19 +213,20 @@
     <div class="right-search">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="search-input" id="rightSearchInput" placeholder="ユーザーまたは#タグを検索"
-          onkeydown="if(event.key==='Enter'){copySearchAndGo(this.value);}">
+        <input type="text" class="search-input" id="rightSearchInput" placeholder="HGSNS を検索"
+          onkeydown="if(event.key==='Enter'){copySearchAndGo(this.value);}"
+          oninput="onRightSearchInput(this)">
       </div>
     </div>
 
     <!-- トレンド -->
     <div class="right-card">
-      <div class="right-card-head">🔥 トレンド</div>
+      <div class="right-card-head">🔥 いまトレンド</div>
       <div id="rightTrends"></div>
       <div class="right-card-foot" onclick="setView('trend')">すべて見る →</div>
     </div>
 
-    <!-- おすすめユーザー -->
+    <!-- おすすめユーザー（改善版） -->
     <div class="right-card">
       <div class="right-card-head">おすすめユーザー</div>
       <div id="suggestUsers"></div>
@@ -225,7 +273,6 @@
       <span class="sheet-title" id="sheetTitle">新しい投稿</span>
       <button class="sheet-close" onclick="closeMobileCompose()">✕</button>
     </div>
-    <!-- Reply context for sheet -->
     <div class="sheet-reply-to" id="sheetReplyBanner" style="display:none">
       返信先: <span class="reply-name" id="sheetReplyName"></span>
     </div>
@@ -233,9 +280,7 @@
       <canvas id="sheetAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
       <div style="flex:1">
         <textarea class="sheet-textarea" id="sheetTextarea" placeholder="いまどうしてる？" maxlength="280" oninput="updateSheetCount()"></textarea>
-        <!-- Quote preview -->
         <div id="sheetQuotePreview" style="display:none"></div>
-        <!-- Image preview -->
         <div class="composer-img-preview" id="sheetImgPreview">
           <img id="sheetImgPreviewImg" src="" alt="">
           <button class="composer-img-del" onclick="clearSheetImage()">✕</button>
@@ -265,9 +310,7 @@
       <button class="modal-close" onclick="closeReplyModal()">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Original post context -->
       <div class="reply-modal-context" id="replyModalContext"></div>
-      <!-- Reply compose -->
       <div class="reply-modal-compose">
         <canvas id="replyAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
         <div class="reply-compose-body">
@@ -351,7 +394,6 @@
           </div>
         </div>
       </div>
-      <!-- Quote preview -->
       <div class="post-quote-embed" id="quotePreviewEmbed"></div>
     </div>
   </div>
@@ -376,7 +418,12 @@
       </div>
       <div class="form-group">
         <label class="form-label">パスワード</label>
-        <input class="form-input" id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+        <div class="pass-wrap">
+          <input class="form-input" id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+          <button class="pass-toggle" type="button" onclick="togglePassVis('authPass',this)" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <div id="authRegExtra" style="display:none">
         <div class="form-group">
@@ -425,6 +472,12 @@
     </div>
     <div class="modal-body" style="padding:0;max-height:420px;overflow-y:auto" id="followListBody"></div>
   </div>
+</div>
+
+<!-- ── IMAGE LIGHTBOX ── -->
+<div class="img-lightbox" id="imgLightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()">
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
