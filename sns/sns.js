@@ -152,6 +152,16 @@ function updateSidebarUI(){
     drawAvatarCanvas(document.getElementById('sidebarAvatarCanvas'),session.username,avData,40);
     drawAvatarCanvas(document.getElementById('composerAvatarCanvas'),session.username,avData,44);
     drawAvatarCanvas(document.getElementById('sheetAvatarCanvas'),session.username,avData,40);
+    // モバイルナビ アバター
+    const navAv=document.getElementById('navAvatarCanvas');
+    if(navAv){
+      drawAvatarCanvas(navAv,session.username,avData,26);
+      navAv.style.display='block';
+      const profileWrap=document.getElementById('navProfileIconWrap');
+      if(profileWrap){
+        profileWrap.querySelectorAll('.nav-icon-outline,.nav-icon-fill').forEach(s=>s.style.display='none');
+      }
+    }
     document.getElementById('feedComposer').style.display='flex';
   }else{
     if(guest)guest.style.display='flex';
@@ -319,7 +329,7 @@ function openMobileCompose(replyCtx){
     sheetReplyBanner.style.display='block';
     sheetReplyName.textContent='@'+(replyCtx.displayName||replyCtx.username);
   }else{
-    sheetTitle.textContent='新しい投稿';
+    sheetTitle.textContent='新しいポスト';
     sheetReplyBanner.style.display='none';
   }
   document.getElementById('sheetQuotePreview').style.display='none';
@@ -333,9 +343,8 @@ function openMobileCompose(replyCtx){
 function closeMobileCompose(){document.getElementById('mobileComposeOverlay').classList.remove('open');}
 function updateSheetCount(){
   const ta=document.getElementById('sheetTextarea');const len=ta.value.length;const max=280;
-  const el=document.getElementById('sheetCount');
-  el.textContent=max-len;
-  el.className='composer-count'+(len>max?' over':len>max*.9?' warn':'');
+  // 文字数リング更新
+  updateCharRing(len,max,'sheetRingFill','__none__');
   document.getElementById('sheetSubmitBtn').disabled=len===0||len>max;
 }
 async function submitSheetPost(){
@@ -1465,7 +1474,15 @@ async function onSuggestFollow(username){
 // ── View Management ──
 function setView(view){
   currentView=view;
-  document.querySelectorAll('.sidebar-nav-item[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
+  document.querySelectorAll('.sidebar-nav-item[data-view]').forEach(el=>{
+    const active=el.dataset.view===view;
+    el.classList.toggle('active',active);
+    // fill/outline アイコン切り替え（Xスタイル）
+    const outlines=el.querySelectorAll('.nav-icon-outline');
+    const fills=el.querySelectorAll('.nav-icon-fill');
+    outlines.forEach(s=>s.style.display=active?'none':'');
+    fills.forEach(s=>s.style.display=active?'':'none');
+  });
 
   const panels={
     home:'homeView',profile:'profileViewWrap',search:'searchViewWrap',
