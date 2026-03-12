@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
-   HGStudy  —  study.js  v4.1
-   フラッシュカード + 解説ブログ + 学習履歴 (Firebase Realtime DB)
+   HGStudy  —  study.js  v4.1 (ブログ機能削除版)
+   フラッシュカード + 学習履歴 (Firebase Realtime DB)
 ═══════════════════════════════════════════════════════ */
 
 // ── Firebase Config ───────────────────────────────────
@@ -56,16 +56,12 @@ function clearSession(){
 }
 
 // ── Constants ─────────────────────────────────────────
-const BLOG_TAGS  = ['文法','語彙','歴史','数学','物理','化学','生物','英語','その他'];
 const DECK_CATS  = ['ALL','代数','幾何','甲','乙','漢文','歴史','地理','物理','生物','英語A','英語B','ロシア語','PYTHON','C','その他'];
 const CAT_COLORS = {'代数':'#F59E0B','幾何':'#10B981','甲':'#6366F1','乙':'#8B5CF6','漢文':'#EC4899','歴史':'#F97316','地理':'#14B8A6','物理':'#3B82F6','生物':'#22C55E','英語A':'#EAB308','英語B':'#F59E0B','ロシア語':'#EF4444','PYTHON':'#06B6D4','C':'#64748B','その他':'#6B7280'};
 const PAGE_SIZE  = 10;
 
 // ── State ─────────────────────────────────────────────
 let currentSession = null;
-
-// Blog
-let allPosts={}, currentPostId=null, blogSort='new', editingPostId=null, selectedTag='';
 
 // Decks
 let allPublicDecks={}, allFavs={}, deckSort='pop', deckCat='ALL';
@@ -105,39 +101,18 @@ function catBg(cat){const c=CAT_COLORS[cat]||'#6B7280';return `background:${c}22
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function yesterdayStr(){return new Date(Date.now()-86400000).toISOString().split('T')[0];}
 
-// ── Markdown ──────────────────────────────────────────
-function renderMarkdown(src){
-  if(!src)return '';
-  let s=src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/^#{3} (.+)$/gm,'<h3>$1</h3>').replace(/^#{2} (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>')
-    .replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>').replace(/^---$/gm,'<hr>')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>')
-    .replace(/\|\|(.+?)\|\|/g,'<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>')
-    .replace(/\[(.+?)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  s=s.replace(/(^- .+\n?)+/gm,m=>'<ul>'+m.split('\n').filter(l=>l.startsWith('- ')).map(l=>`<li>${l.slice(2)}</li>`).join('')+'</ul>');
-  s=s.replace(/(^\d+\. .+\n?)+/gm,m=>'<ol>'+m.split('\n').filter(l=>/^\d+\./.test(l)).map(l=>`<li>${l.replace(/^\d+\. /,'')}</li>`).join('')+'</ol>');
-  s=s.replace(/```[\w]*\n?([\s\S]+?)```/g,'<pre><code>$1</code></pre>');
-  s=s.replace(/\n{2,}/g,'\n\n');
-  const lines=s.split('\n');const out=[];let buf=[];
-  const BLOCKS=/^(<h[1-6]|<ul|<ol|<li|<blockquote|<hr|<pre)/;
-  for(const line of lines){if(BLOCKS.test(line.trim())){if(buf.length){out.push(`<p>${buf.join(' ')}</p>`);buf=[];}out.push(line);}else if(line.trim()===''){if(buf.length){out.push(`<p>${buf.join(' ')}</p>`);buf=[];}}else{buf.push(line);}}
-  if(buf.length)out.push(`<p>${buf.join(' ')}</p>`);
-  return out.join('\n');
-}
-
 // ══════════════════════════════════════════════════════
 //  PAGE NAVIGATION
 // ══════════════════════════════════════════════════════
 
-const ALL_PAGES=['pageStudy','pageBlog','pageHistory','pageRanking','pageProfile','pageDeckEdit'];
+const ALL_PAGES=['pageStudy','pageHistory','pageRanking','pageProfile','pageDeckEdit'];
 
 function showMainPage(pageId){
   ALL_PAGES.forEach(id=>{const el=ge(id);if(el)el.classList.toggle('active',id===pageId);});
-  const isMain=['pageStudy','pageBlog','pageHistory','pageRanking'].includes(pageId);
+  const isMain=['pageStudy','pageHistory','pageRanking'].includes(pageId);
   const navTabsEl=ge('navTabsWrap');
   if(navTabsEl)navTabsEl.style.display=isMain?'':'none';
   ge('tabStudy').classList.toggle('on',pageId==='pageStudy');
-  ge('tabBlog').classList.toggle('on',pageId==='pageBlog');
   ge('tabHistory').classList.toggle('on',pageId==='pageHistory');
   ge('tabRanking').classList.toggle('on',pageId==='pageRanking');
 }
@@ -148,10 +123,6 @@ window.switchTab=function(tab){
     showMainPage('pageStudy');
     ge('deckBrowser').style.display='';
     ge('studySession').style.display='none';
-  }else if(tab==='blog'){
-    navReturn.page='pageBlog';
-    showMainPage('pageBlog');
-    loadBlogPosts();
   }else if(tab==='history'){
     navReturn.page='pageHistory';
     showMainPage('pageHistory');
@@ -197,127 +168,6 @@ window.goBackFromEdit=function(){
   ge('deckBrowser').style.display='';
   ge('studySession').style.display='none';
   renderDeckGrid();
-};
-
-// ══════════════════════════════════════════════════════
-//  BLOG
-// ══════════════════════════════════════════════════════
-
-function showBlogList(){ge('blogList').style.display='';ge('blogPost').style.display='none';ge('blogEdit').style.display='none';}
-function showBlogPostView(){ge('blogList').style.display='none';ge('blogPost').style.display='';ge('blogEdit').style.display='none';}
-function showBlogEditView(){ge('blogList').style.display='none';ge('blogPost').style.display='none';ge('blogEdit').style.display='';}
-
-async function loadBlogPosts(){
-  try{const snap=await db.ref('blogs').once('value');allPosts=snap.val()||{};renderBlogGrid();}
-  catch(e){ge('blogPostsGrid').innerHTML=`<div class="blog-empty"><div class="empty-emoji">⚠️</div><p>読み込みエラー: ${esc(e.message)}</p></div>`;}
-}
-
-function renderBlogGrid(){
-  const grid=ge('blogPostsGrid'),count=ge('blogHeroCount');
-  let posts=Object.entries(allPosts);
-  count.textContent=posts.length;
-  if(posts.length===0){grid.innerHTML='<div class="blog-empty"><div class="empty-emoji">📝</div><p>まだ記事がありません</p></div>';return;}
-  posts.sort((a,b)=>blogSort==='new'?b[1].createdAt-a[1].createdAt:a[1].createdAt-b[1].createdAt);
-  grid.innerHTML=posts.map(([id,p])=>`
-    <div class="blog-card" onclick="openPost('${id}')">
-      <div class="blog-card-top">
-        <span class="blog-card-tag">${esc(p.tag||'その他')}</span>
-        ${currentSession&&(currentSession.username===p.author||currentSession.isAdmin)?`<div class="blog-card-actions-mini" onclick="event.stopPropagation()">
-          <button class="blog-action-mini" onclick="openBlogEdit('${id}')">編集</button>
-          <button class="blog-action-mini danger" onclick="deletePost('${id}')">削除</button></div>`:''}</div>
-      <div class="blog-card-title">${esc(p.title||'無題')}</div>
-      <div class="blog-card-preview">${esc((p.content||'').slice(0,120))}${(p.content||'').length>120?'…':''}</div>
-      <div class="blog-card-meta">
-        <span class="blog-card-author" onclick="event.stopPropagation();openUserProfile('${esc(p.author||'')}')">@${esc(p.author||'')}</span>
-        <span>${fmtDate(p.createdAt)}</span><span>💬 ${p.commentCount||0}</span></div></div>`).join('');
-}
-
-window.setBlogSort=function(s){blogSort=s;ge('sortBlogNew').classList.toggle('on',s==='new');ge('sortBlogOld').classList.toggle('on',s==='old');renderBlogGrid();};
-
-window.openPost=async function(postId){
-  currentPostId=postId;showBlogPostView();
-  const p=allPosts[postId];if(!p)return;
-  ge('postTag').textContent=p.tag||'その他';ge('postTitle').textContent=p.title||'無題';
-  ge('postAuthor').textContent='@'+(p.author||'');ge('postDate').textContent=fmtDate(p.createdAt);
-  ge('postBody').innerHTML=renderMarkdown(p.content||'');
-  const isOwner=currentSession&&(currentSession.username===p.author||currentSession.isAdmin);
-  ge('editPostBtn').style.display=isOwner?'':'none';ge('deletePostBtn').style.display=isOwner?'':'none';
-  loadComments(postId);
-  ge('commentFormWrap').style.display=currentSession?'':'none';
-  ge('commentLoginPrompt').style.display=currentSession?'none':'';
-  window.scrollTo({top:0,behavior:'smooth'});
-};
-
-window.deletePost=async function(postId){
-  if(!currentSession)return;const p=allPosts[postId];if(!p)return;
-  if(!confirm(`「${p.title}」を削除しますか？`))return;
-  try{await db.ref(`blogs/${postId}`).remove();delete allPosts[postId];renderBlogGrid();showBlogList();showToast('記事を削除しました');}
-  catch(e){showToast('削除エラー: '+e.message,'error');}
-};
-
-window.openBlogEdit=function(postId){
-  if(!currentSession){openAuthModal('login');return;}
-  editingPostId=postId||null;showBlogEditView();setBlogEditMode('edit');
-  const grid=ge('tagSelGrid');
-  grid.innerHTML=BLOG_TAGS.map(t=>`<button class="tag-opt${selectedTag===t?' on':''}" onclick="selectBlogTag('${t}')">${t}</button>`).join('');
-  if(postId&&allPosts[postId]){const p=allPosts[postId];ge('editTitle').value=p.title||'';ge('editBody').value=p.content||'';selectedTag=p.tag||'';}
-  else{ge('editTitle').value='';ge('editBody').value='';selectedTag='';}
-  updateTagGrid();
-};
-window.selectBlogTag=function(tag){selectedTag=tag;updateTagGrid();};
-function updateTagGrid(){const g=ge('tagSelGrid');if(!g)return;g.querySelectorAll('.tag-opt').forEach(b=>b.classList.toggle('on',b.textContent===selectedTag));}
-window.cancelBlogEdit=function(){if(editingPostId&&allPosts[editingPostId])openPost(editingPostId);else showBlogList();};
-window.setBlogEditMode=function(mode){
-  ge('editModeBtn').classList.toggle('on',mode==='edit');ge('previewModeBtn').classList.toggle('on',mode==='preview');
-  ge('editPane').style.display=mode==='edit'?'':'none';ge('previewPane').style.display=mode==='preview'?'':'none';
-  if(mode==='preview'){ge('previewTitle').textContent=ge('editTitle').value||'（タイトルなし）';ge('previewTag').textContent=selectedTag||'その他';ge('previewBody').innerHTML=renderMarkdown(ge('editBody').value);}
-};
-window.savePost=async function(){
-  if(!currentSession){openAuthModal('login');return;}
-  const title=ge('editTitle').value.trim(),content=ge('editBody').value.trim();
-  if(!title){showToast('タイトルを入力してください','error');return;}
-  if(!content){showToast('本文を入力してください','error');return;}
-  const now=Date.now();
-  const data={title,content,tag:selectedTag||'その他',author:currentSession.username,updatedAt:now,
-    ...(editingPostId&&allPosts[editingPostId]?{createdAt:allPosts[editingPostId].createdAt,commentCount:allPosts[editingPostId].commentCount||0}:{createdAt:now,commentCount:0})};
-  try{
-    if(editingPostId){await db.ref(`blogs/${editingPostId}`).update(data);allPosts[editingPostId]={...allPosts[editingPostId],...data};showToast('記事を更新しました','success');openPost(editingPostId);}
-    else{const ref=db.ref('blogs').push();await ref.set(data);allPosts[ref.key]=data;showToast('記事を公開しました','success');renderBlogGrid();openPost(ref.key);}
-    editingPostId=null;
-  }catch(e){showToast('保存エラー: '+e.message,'error');}
-};
-
-async function loadComments(postId){
-  const list=ge('commentList');list.innerHTML='<div style="padding:16px;color:var(--text3);font-size:13px">読み込み中...</div>';
-  try{
-    const snap=await db.ref(`blogs_comments/${postId}`).orderByChild('createdAt').once('value');
-    const arr=Object.entries(snap.val()||{}).sort((a,b)=>a[1].createdAt-b[1].createdAt);
-    ge('commentCount').textContent=arr.length;
-    if(arr.length===0){list.innerHTML='<div class="comment-empty">まだコメントはありません</div>';return;}
-    list.innerHTML=arr.map(([cid,c])=>`<div class="comment-item" id="c_${cid}">
-      <div class="comment-header"><span class="comment-author">@${esc(c.author)}</span><span class="comment-date">${fmtDate(c.createdAt)}</span>
-      ${currentSession&&(currentSession.username===c.author||currentSession.isAdmin)?`<button class="comment-del" onclick="deleteComment('${postId}','${cid}')">✕</button>`:''}</div>
-      <div class="comment-body">${esc(c.body)}</div></div>`).join('');
-  }catch(e){list.innerHTML='<div class="comment-empty">読み込みエラー</div>';}
-}
-window.submitComment=async function(){
-  if(!currentSession){openAuthModal('login');return;}
-  const input=ge('commentInput'),body=(input.value||'').trim();
-  if(!body||!currentPostId)return;
-  try{
-    const ref=db.ref(`blogs_comments/${currentPostId}`).push();
-    await ref.set({author:currentSession.username,body,createdAt:Date.now()});
-    const p=allPosts[currentPostId];if(p){p.commentCount=(p.commentCount||0)+1;await db.ref(`blogs/${currentPostId}/commentCount`).set(p.commentCount);}
-    input.value='';loadComments(currentPostId);showToast('コメントを投稿しました','success');
-  }catch(e){showToast('投稿エラー: '+e.message,'error');}
-};
-window.deleteComment=async function(postId,commentId){
-  if(!confirm('このコメントを削除しますか？'))return;
-  try{
-    await db.ref(`blogs_comments/${postId}/${commentId}`).remove();
-    const p=allPosts[postId];if(p&&p.commentCount>0){p.commentCount--;await db.ref(`blogs/${postId}/commentCount`).set(p.commentCount);}
-    loadComments(postId);showToast('コメントを削除しました');
-  }catch(e){showToast('削除エラー','error');}
 };
 
 // ══════════════════════════════════════════════════════
@@ -380,10 +230,10 @@ function updateNavUI(){
     const av=currentSession._avatar||localStorage.getItem('fm_avatar_'+currentSession.username)||null;
     drawAvatar(ge('navAvatarCanvas'),currentSession.username,av,28);
     drawAvatar(ge('acctMenuAvatar'),currentSession.username,av,40);
-    ge('newPostBtn').style.display='';ge('createDeckBtn').style.display='';
+    ge('createDeckBtn').style.display='';
   }else{
     ge('navLoginBtn').style.display='';ge('navUserBtn').style.display='none';
-    ge('newPostBtn').style.display='none';ge('createDeckBtn').style.display='none';
+    ge('createDeckBtn').style.display='none';
   }
 }
 
@@ -399,11 +249,9 @@ async function onLogin(){
   ge('welcomeScreen').style.display='none';ge('deckBrowser').style.display='';
   loadAllDecks();requestNotifPermission();startNewsWatch();
 
-  // 連続学習チェック（ログイン時）
   await checkStreakOnLogin();
 
   showToast(`ようこそ、${currentSession.username}さん！`);
-  if(ge('pageBlog').classList.contains('active'))loadBlogPosts();
   if(ge('pageHistory').classList.contains('active'))loadHistoryPage();
 }
 function onLogout(){
@@ -503,13 +351,10 @@ async function loadHistoryPage(){
   }catch(e){renderHistoryPageContent([]);}
 }
 
-// GitHub風カレンダーを生成
 function buildCalendarHTML(logs){
-  // 日付→セッション数マップ
   const dateMap={};
   logs.forEach(l=>{dateMap[l.date]=(dateMap[l.date]||0)+1;});
 
-  // 今日から52週前まで
   const today=new Date();
   today.setHours(0,0,0,0);
   const days=[];
@@ -520,18 +365,9 @@ function buildCalendarHTML(logs){
     days.push({key,dow:d.getDay(),count:dateMap[key]||0});
   }
 
-  // 先頭を日曜始まりに揃えるため空白を挿入
   const firstDow=days[0].dow;
   const blanks=Array(firstDow).fill(null);
   const allCells=[...blanks,...days];
-
-  // 月ラベル用
-  const monthLabels=[];
-  let lastMonth=-1;
-  days.forEach((d,i)=>{
-    const m=new Date(d.key).getMonth();
-    if(m!==lastMonth){monthLabels.push({idx:i+firstDow,label:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'][m]});lastMonth=m;}
-  });
 
   const maxCount=Math.max(1,...Object.values(dateMap));
 
@@ -544,9 +380,7 @@ function buildCalendarHTML(logs){
     return 'var(--cal-l4)';
   }
 
-  // 週ラベル
   const weekLabels=['日','月','火','水','木','金','土'];
-
   const totalWeeks=Math.ceil(allCells.length/7);
 
   let gridCells='';
@@ -554,13 +388,6 @@ function buildCalendarHTML(logs){
     if(!d){gridCells+=`<div class="cal-cell cal-blank"></div>`;return;}
     const tip=d.count>0?`${d.key}：${d.count}セッション`:`${d.key}：なし`;
     gridCells+=`<div class="cal-cell" style="background:${cellColor(d.count)}" data-tip="${tip}" data-count="${d.count}"></div>`;
-  });
-
-  // 月ラベル（カラム位置で計算）
-  let monthHTML='';
-  monthLabels.forEach(ml=>{
-    const col=Math.floor(ml.idx/7);
-    monthHTML+=`<span class="cal-month-lbl" style="grid-column:${col+2}">${ml.label}</span>`;
   });
 
   return `
@@ -609,11 +436,9 @@ function renderHistoryPageContent(logs){
   logs.forEach(l=>{(grouped[l.date]=grouped[l.date]||[]).push(l);});
 
   let html=`
-    <!-- カレンダー -->
     <div class="hp-section-title">📅 学習カレンダー</div>
     ${buildCalendarHTML(logs)}
 
-    <!-- ストリーク + 統計 -->
     <div class="hp-page-stats">
       <div class="hp-page-streak" style="border-color:${streakColor}40;background:${streakColor}10">
         <div class="hp-page-streak-fire">🔥</div>
@@ -665,7 +490,6 @@ function renderHistoryPageContent(logs){
   html+=`</div>`;
   body.innerHTML=html;
 
-  // カレンダーのツールチップ
   body.querySelectorAll('.cal-cell[data-tip]').forEach(cell=>{
     cell.addEventListener('mouseenter',e=>{
       const tip=document.createElement('div');
@@ -699,7 +523,6 @@ async function loadRankingPage(){
   const body=ge('rankingBody');if(!body)return;
   body.innerHTML='<div style="padding:60px;text-align:center"><div class="spinner"></div></div>';
   try{
-    // ユーザー一覧を取得（streak, displayName, avatar）
     const [usersSnap, logsSnap]=await Promise.all([
       db.ref('users').once('value'),
       db.ref('logs').once('value')
@@ -707,7 +530,6 @@ async function loadRankingPage(){
     const users=usersSnap.val()||{};
     const allLogs=logsSnap.val()||{};
 
-    // 各ユーザーの統計を計算
     _rankingData=Object.entries(users).map(([username,ud])=>{
       const userLogs=Object.values(allLogs[username]||{});
       const totalCards=userLogs.reduce((s,l)=>s+(l.total||0),0);
@@ -735,7 +557,7 @@ function renderRankingList(){
     sorted.sort((a,b)=>b.totalCards-a.totalCards);
     valueKey='totalCards';valueFmt=v=>`${v}問`;valueLabel='総カード数';valueColor='var(--primary)';
   }else if(_rankingTab==='score'){
-    sorted=sorted.filter(u=>u.sessions>=3);// 3セッション以上のみ
+    sorted=sorted.filter(u=>u.sessions>=3);
     sorted.sort((a,b)=>b.avgScore-a.avgScore);
     valueKey='avgScore';valueFmt=v=>`${v}%`;valueLabel='平均正答率（3セッション以上）';valueColor='var(--green)';
   }else{
@@ -762,7 +584,6 @@ function renderRankingList(){
     const isMe=currentSession&&u.username===currentSession.username;
     const pct=Math.round((u[valueKey]/maxVal)*100);
     const medal=rank<=3?medals[rank-1]:`${rank}`;
-    const av=u.avatar||localStorage.getItem('fm_avatar_'+u.username)||null;
 
     html+=`
       <div class="ranking-item${isMe?' ranking-item-me':''}" id="ri_${u.username}">
@@ -785,7 +606,6 @@ function renderRankingList(){
   html+=`</div></div>`;
   body.innerHTML=html;
 
-  // アバター描画（非同期で）
   sorted.forEach(u=>{
     const canvas=ge(`rav_${u.username}`);
     if(canvas){
@@ -852,7 +672,6 @@ function renderDeckGrid(){
   let list=Object.entries(allPublicDecks);
   if(deckCat!=='ALL')list=list.filter(([,d])=>d.cat===deckCat);
 
-  // 人気順: お気に入り数 × 2 + 閲覧数 の合計スコアで降順
   if(deckSort==='pop'){
     list.sort((a,b)=>{
       const scoreA=(a[1].favCount||0)*2+(a[1].viewCount||0);
@@ -1000,7 +819,6 @@ function _launchStudy(deckId){
   ge('deckBrowser').style.display='none';ge('studySession').style.display='';
   ge('sessDeckName').textContent=dk.name||'無題';
 
-  // まずセッション内のすべての子要素を非表示/非アクティブにリセット
   ge('cardsListView').classList.remove('active');
   ge('sessionComplete').classList.remove('active');
 
@@ -1008,7 +826,6 @@ function _launchStudy(deckId){
   if(editBtn)editBtn.style.display=(currentSession&&dk.owner===currentSession.username)?'':'none';
   if(!decks[deckId])decks[deckId]=dk;
 
-  // studyArea を常にアクティブにする（重要: quiz/flashcard の親）
   const studyArea=ge('studyArea');
   if(studyArea)studyArea.classList.add('active');
 
@@ -1016,13 +833,11 @@ function _launchStudy(deckId){
   const quizArea=ge('quizArea');
 
   if(studyMode==='4choice'){
-    // 4択: flashcard を隠し quiz を表示
     if(flashArea)flashArea.style.display='none';
     if(quizArea)quizArea.style.display='';
     buildQuizQueue();
     renderQuizCard();
   }else{
-    // 通常/ランダム: quiz を隠し flashcard を表示
     if(flashArea)flashArea.style.display='';
     if(quizArea)quizArea.style.display='none';
     buildStudyQueue();
@@ -1070,12 +885,10 @@ function renderFlashcard(){
 function showEditViewInSession(){ge('cardsListView').classList.add('active');ge('sessionComplete').classList.remove('active');renderCardsList();}
 
 function showSessionComplete(){
-  // 学習ログを保存
   saveStudyLog();
 
   if(studyMode==='4choice'){
     ge('sessionComplete').classList.add('active');ge('cardsListView').classList.remove('active');
-    // quizArea を隠してセッション完了を表示
     const quizArea=ge('quizArea');if(quizArea)quizArea.style.display='none';
     ge('sessionComplete').querySelector('.complete-stats').innerHTML=
       `正解: <strong>${quizStats.correct}</strong> &nbsp;|&nbsp; 不正解: <strong>${quizStats.wrong}</strong> &nbsp;|&nbsp; 正答率: <strong>${Math.round(quizStats.correct/Math.max(1,quizStats.total)*100)}%</strong>`;
@@ -1180,30 +993,25 @@ function renderQuizCard(){
 
   quizAnswered=false;
 
-  // 選択肢を作る: 正解 + ランダムな不正解3つ
   const allCards=Object.values(d.cards);
   const wrongCards=allCards.filter(c=>c!==card).sort(()=>Math.random()-.5).slice(0,3);
   const choices=[card,...wrongCards].sort(()=>Math.random()-.5);
   currentQuizChoices=choices;
   quizCorrectIdx=choices.indexOf(card);
 
-  // プログレス
   const progressBar=ge('quizProgressBar');
   const progressText=ge('quizProgress');
   if(progressBar)progressBar.style.width=`${(quizIdx/quizQueue.length)*100}%`;
   if(progressText)progressText.textContent=`${quizIdx+1} / ${quizQueue.length}`;
 
-  // 問題文
   const questionEl=ge('quizQuestion');
   if(questionEl)questionEl.textContent=card.front;
 
-  // 結果・次へボタンをリセット
   const resultEl=ge('quizResult');
   const nextBtn=ge('quizNextBtn');
   if(resultEl){resultEl.textContent='';resultEl.className='quiz-result';}
   if(nextBtn)nextBtn.style.display='none';
 
-  // 選択肢を描画
   const choicesEl=ge('quizChoices');
   if(!choicesEl)return;
   choicesEl.innerHTML=choices.map((c,i)=>
@@ -1392,7 +1200,6 @@ async function renderProfilePage(username){
     if(currentSession&&!isSelf){const myF=allFollows[currentSession.username]||{};amFollowing=myF[username]===true;}
 
     const userDecks=Object.entries(allPublicDecks).filter(([,d])=>d.owner===username);
-    const userPosts=Object.entries(allPosts).filter(([,p])=>p.author===username);
     const av=localStorage.getItem('fm_avatar_'+username)||ud.avatar||null;
     const streakVal=ud.streak||0;
     const createdTs=ud.created||ud.createdAt||0;
@@ -1426,35 +1233,16 @@ async function renderProfilePage(username){
       <div class="profile-stat"><div class="pstat-val" style="color:var(--primary)">${followerCount}</div><div class="pstat-lbl">フォロワー</div></div>
       <div class="profile-stat"><div class="pstat-val" style="color:var(--blog)">${followingCount}</div><div class="pstat-lbl">フォロー中</div></div>
       <div class="profile-stat"><div class="pstat-val" style="color:#F59E0B">${userDecks.length}</div><div class="pstat-lbl">デッキ</div></div>
-      <div class="profile-stat"><div class="pstat-val" style="color:#52C4A3">${userPosts.length}</div><div class="pstat-lbl">記事</div></div>
-    </div>
-
-    <div class="profile-tabs-wrap">
-      <div class="profile-tabs">
-        <button class="profile-tab on" id="ptabDecks" onclick="switchProfileTab('decks')">📚 デッキ</button>
-        <button class="profile-tab" id="ptabPosts" onclick="switchProfileTab('posts')">✏️ 記事</button>
-      </div>
     </div>
 
     <div class="profile-content">
-      <div id="profileDecksView">
-        ${userDecks.length===0?'<div class="profile-empty">デッキがありません</div>':
-          `<div class="profile-deck-grid">${userDecks.map(([id,dk])=>`
-            <div class="profile-deck-card" onclick="showStudyModeModal('${id}');goBackFromProfile()">
-              ${dk.cat?`<span class="dc-tag" style="${catBg(dk.cat)};font-size:9px;padding:2px 7px;border-radius:4px;font-weight:800;">${esc(dk.cat)}</span>`:''}
-              <div class="profile-deck-name">${esc(dk.name||'無題')}</div>
-              <div class="profile-deck-meta">${dk.cardCount||0}枚 · ⭐ ${dk.favCount||0}</div>
-            </div>`).join('')}</div>`}
-      </div>
-      <div id="profilePostsView" style="display:none">
-        ${userPosts.length===0?'<div class="profile-empty">記事がありません</div>':
-          `<div class="profile-posts-list">${userPosts.sort((a,b)=>b[1].createdAt-a[1].createdAt).map(([id,p])=>`
-            <div class="profile-post-item" onclick="switchTab('blog');openPost('${id}')">
-              <span class="blog-card-tag" style="font-size:9px;">${esc(p.tag||'その他')}</span>
-              <div class="profile-post-title">${esc(p.title||'無題')}</div>
-              <div class="profile-post-meta">${fmtDate(p.createdAt)} · 💬 ${p.commentCount||0}</div>
-            </div>`).join('')}</div>`}
-      </div>
+      ${userDecks.length===0?'<div class="profile-empty">デッキがありません</div>':
+        `<div class="profile-deck-grid">${userDecks.map(([id,dk])=>`
+          <div class="profile-deck-card" onclick="showStudyModeModal('${id}');goBackFromProfile()">
+            ${dk.cat?`<span class="dc-tag" style="${catBg(dk.cat)};font-size:9px;padding:2px 7px;border-radius:4px;font-weight:800;">${esc(dk.cat)}</span>`:''}
+            <div class="profile-deck-name">${esc(dk.name||'無題')}</div>
+            <div class="profile-deck-meta">${dk.cardCount||0}枚 · ⭐ ${dk.favCount||0}</div>
+          </div>`).join('')}</div>`}
     </div>`;
 
     drawAvatar(ge('profileAvatar'),username,av,80);
@@ -1463,13 +1251,6 @@ async function renderProfilePage(username){
     <div style="padding:60px;text-align:center;color:var(--text3)">読み込みエラー: ${esc(e.message)}</div>`;
   }
 }
-
-window.switchProfileTab=function(tab){
-  ge('ptabDecks').classList.toggle('on',tab==='decks');
-  ge('ptabPosts').classList.toggle('on',tab==='posts');
-  ge('profileDecksView').style.display=tab==='decks'?'':'none';
-  ge('profilePostsView').style.display=tab==='posts'?'':'none';
-};
 
 window.toggleProfileFollow=async function(targetUsername){
   if(!currentSession){openAuthModal('login');return;}
@@ -1537,14 +1318,6 @@ window.saveProfileEdit=async function(){
     showToast('プロフィールを更新しました','success');
     renderProfilePage(currentSession.username);
   }catch(e){ge('peError').textContent='エラー: '+e.message;ge('peError').style.display='block';}
-};
-
-window.toggleFollow=async function(targetUsername){
-  if(!currentSession){openAuthModal('login');return;}
-  const me=currentSession.username;
-  const amSnap=await db.ref(`follows/${me}/${targetUsername}`).once('value');const am=amSnap.val()===true;
-  if(am){await db.ref(`follows/${me}/${targetUsername}`).remove();showToast(`@${targetUsername} のフォローを解除しました`);}
-  else{await db.ref(`follows/${me}/${targetUsername}`).set(true);showToast(`@${targetUsername} をフォローしました`);}
 };
 
 // ── Push Notifications ────────────────────────────────
