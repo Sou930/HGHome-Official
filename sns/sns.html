@@ -94,48 +94,70 @@
         <span class="sidebar-name" style="font-size:.95rem;color:var(--white2)">HGHome</span>
       </a>
 
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" id="mainNav">
+        <!-- ホーム -->
         <button class="sidebar-nav-item active" data-view="home" onclick="setView('home');loadFeed()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H15v-6H9v6H4a1 1 0 01-1-1V9.5z"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          </span>
           <span class="sidebar-label">ホーム</span>
         </button>
+        <!-- 検索 -->
         <button class="sidebar-nav-item" data-view="search" onclick="setView('search');document.getElementById('searchInput')?.focus()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          </span>
           <span class="sidebar-label">検索</span>
         </button>
+        <!-- トレンド -->
         <button class="sidebar-nav-item" data-view="trend" onclick="setView('trend')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+          </span>
           <span class="sidebar-label">トレンド</span>
         </button>
-
         <!-- 通知 -->
         <button class="sidebar-nav-item" data-view="notifications" onclick="setView('notifications');loadNotifications()">
           <span class="sidebar-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
             <span class="sidebar-badge" id="notifBadge" style="display:none">0</span>
           </span>
           <span class="sidebar-label">通知</span>
         </button>
-
         <!-- ブックマーク -->
         <button class="sidebar-nav-item" data-view="bookmarks" onclick="if(session)setView('bookmarks');else openAuthModal('login')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          </span>
           <span class="sidebar-label">ブックマーク</span>
         </button>
-
+        <!-- プロフィール -->
         <button class="sidebar-nav-item" data-view="profile" onclick="if(session)openProfile(session.username);else openAuthModal('login')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="sidebar-icon-wrap" id="navProfileIconWrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            <!-- ログイン後はアバターcanvas -->
+            <canvas id="navAvatarCanvas" width="26" height="26"
+              style="border-radius:50%;display:none;border:2px solid var(--accent);"></canvas>
+          </span>
           <span class="sidebar-label">プロフィール</span>
         </button>
-
+        <!-- HGStudy -->
         <a class="sidebar-nav-item" href="../study/study.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          </span>
           <span class="sidebar-label">HGStudy</span>
         </a>
       </nav>
 
       <button class="sidebar-post-btn" onclick="if(session)document.getElementById('composerText').focus();else openAuthModal('login')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M23.6 3.94l-3.54-3.54a1.35 1.35 0 00-1.91 0L1.1 17.45l-.86 5.18a.68.68 0 00.78.78l5.18-.86L23.6 5.85a1.35 1.35 0 000-1.91zm-17.1 15.3l-3.8.63.63-3.8L17.1 2.29l3.17 3.17L6.5 19.24zm13.32-13.3l-3.17-3.17 1.63-1.63 3.17 3.17-1.63 1.63z"/></svg>
         <span class="btn-label">投稿する</span>
       </button>
 
@@ -171,6 +193,10 @@
     <div class="feed-header">
       <!-- ホーム用タブ（おすすめ / フォロー中） -->
       <div class="feed-tabs" id="homeFeedTabs">
+        <!-- モバイル用ロゴ（中央）→ CSSで desktop非表示 -->
+        <div class="mobile-header-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="var(--accent)" width="22" height="22"><path d="M23.954 4.569a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.691 8.094 4.066 6.13 1.64 3.161a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.061a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.937 4.937 0 004.604 3.417 9.868 9.868 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63a9.936 9.936 0 002.46-2.548l-.047-.02z"/></svg>
+        </div>
         <button class="feed-tab active" id="feedTabRec"    onclick="switchFeedTab('rec')">おすすめ</button>
         <button class="feed-tab"        id="feedTabFollow" onclick="switchFeedTab('follow')">フォロー中</button>
       </div>
@@ -340,28 +366,33 @@
 </div><!-- /sns-wrap -->
 
 <!-- ── Mobile FAB ── -->
-<button class="mobile-fab" id="mobileFab" onclick="openMobileCompose()">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+<button class="mobile-fab" id="mobileFab" onclick="if(session)openMobileCompose();else openAuthModal('login')" aria-label="新しい投稿">
+  <!-- Xと同じ鉛筆アイコン -->
+  <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M23.6 3.94l-3.54-3.54a1.35 1.35 0 00-1.91 0L1.1 17.45l-.86 5.18a.68.68 0 00.78.78l5.18-.86L23.6 5.85a1.35 1.35 0 000-1.91zm-17.1 15.3l-3.8.63.63-3.8L17.1 2.29l3.17 3.17L6.5 19.24zm13.32-13.3l-3.17-3.17 1.63-1.63 3.17 3.17-1.63 1.63z"/></svg>
 </button>
 
 <!-- ── TOAST ── -->
 <div class="toast" id="snsToast"></div>
 
-<!-- ── MOBILE COMPOSE BOTTOM SHEET ── -->
-<div class="mobile-compose-overlay" id="mobileComposeOverlay" onclick="if(event.target===this)closeMobileCompose()">
+<!-- ── MOBILE COMPOSE (X風・全画面) ── -->
+<div class="mobile-compose-overlay" id="mobileComposeOverlay">
   <div class="mobile-compose-sheet">
-    <div class="sheet-handle"></div>
+    <!-- ヘッダー: キャンセル | タイトル | 投稿 -->
     <div class="sheet-header">
-      <span class="sheet-title" id="sheetTitle">新しい投稿</span>
-      <button class="sheet-close" onclick="closeMobileCompose()">✕</button>
+      <button class="sheet-cancel-btn" onclick="closeMobileCompose()">キャンセル</button>
+      <span class="sheet-title" id="sheetTitle">新しいポスト</span>
+      <button class="composer-submit sheet-post-btn" id="sheetSubmitBtn" onclick="submitSheetPost()" disabled>投稿</button>
     </div>
+    <!-- 返信バナー -->
     <div class="sheet-reply-to" id="sheetReplyBanner" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       返信先: <span class="reply-name" id="sheetReplyName"></span>
     </div>
+    <!-- 入力エリア -->
     <div class="sheet-compose-row">
       <canvas id="sheetAvatarCanvas" width="40" height="40"
-        style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
-      <div style="flex:1">
+        style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;margin-top:2px;"></canvas>
+      <div style="flex:1;min-width:0;">
         <textarea class="sheet-textarea" id="sheetTextarea"
           placeholder="いまどうしてる？" maxlength="280"
           oninput="updateSheetCount()"></textarea>
@@ -372,16 +403,21 @@
         </div>
       </div>
     </div>
+    <!-- ツールバー -->
     <div class="sheet-toolbar">
       <div class="sheet-tools">
-        <button class="composer-tool-btn" onclick="document.getElementById('sheetImgInput').click()">
+        <button class="composer-tool-btn" onclick="document.getElementById('sheetImgInput').click()" title="画像">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <input type="file" id="sheetImgInput" class="img-input" accept="image/*" onchange="handleSheetImgSelect(event)">
       </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="composer-count" id="sheetCount">280</span>
-        <button class="composer-submit" id="sheetSubmitBtn" onclick="submitSheetPost()" disabled>投稿</button>
+      <!-- 文字数リング -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg class="char-ring" id="sheetRing" viewBox="0 0 32 32" width="24" height="24">
+          <circle class="char-ring-bg" cx="16" cy="16" r="12" fill="none" stroke-width="3"/>
+          <circle class="char-ring-fill" id="sheetRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3"
+            stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
+        </svg>
       </div>
     </div>
   </div>
