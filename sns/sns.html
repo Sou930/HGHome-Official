@@ -8,6 +8,78 @@
 <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
 <link rel="apple-touch-icon" href="../icons/icon-192.png">
 <link rel="stylesheet" href="sns.css">
+
+<!-- ── バッジ定義（X風）── -->
+<style>
+/* ── USER BADGES ── */
+.user-badge {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:17px; height:17px;
+  border-radius:50%;
+  flex-shrink:0;
+  vertical-align:middle;
+  margin-left:2px;
+}
+/* 管理者バッジ: 赤 */
+.badge-admin {
+  background:#e0245e;
+  color:#fff;
+  title:"管理者";
+}
+/* 開発者バッジ: 緑 */
+.badge-dev {
+  background:#17bf63;
+  color:#fff;
+  title:"開発者";
+}
+/* 公式バッジ: 青 */
+.badge-official {
+  background:#1d9bf0;
+  color:#fff;
+  title:"公式";
+}
+.user-badge svg {
+  width:10px; height:10px;
+}
+
+/* プロフィールページ用大バッジ */
+.badge-admin-lg, .badge-dev-lg, .badge-official-lg {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px; height:22px;
+  border-radius:50%;
+  flex-shrink:0;
+  margin-left:4px;
+  vertical-align:middle;
+}
+.badge-admin-lg  { background:#e0245e; color:#fff; }
+.badge-dev-lg    { background:#17bf63; color:#fff; }
+.badge-official-lg { background:#1d9bf0; color:#fff; }
+.badge-admin-lg svg, .badge-dev-lg svg, .badge-official-lg svg {
+  width:13px; height:13px;
+}
+
+/* 投稿内バッジラベル（ホバー時ツールチップ代わり） */
+.user-badge[title]:hover::after {
+  content: attr(title);
+  position:absolute;
+  bottom:calc(100% + 4px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.85);
+  color:#fff;
+  font-size:.7rem;
+  padding:3px 8px;
+  border-radius:4px;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:999;
+}
+.user-badge { position:relative; }
+</style>
 </head>
 <body>
 
@@ -35,6 +107,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
           <span class="sidebar-label">トレンド</span>
         </button>
+
         <!-- 通知 -->
         <button class="sidebar-nav-item" data-view="notifications" onclick="setView('notifications');loadNotifications()">
           <span class="sidebar-icon-wrap">
@@ -43,15 +116,18 @@
           </span>
           <span class="sidebar-label">通知</span>
         </button>
+
         <!-- ブックマーク -->
         <button class="sidebar-nav-item" data-view="bookmarks" onclick="if(session)setView('bookmarks');else openAuthModal('login')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
           <span class="sidebar-label">ブックマーク</span>
         </button>
+
         <button class="sidebar-nav-item" data-view="profile" onclick="if(session)openProfile(session.username);else openAuthModal('login')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span class="sidebar-label">プロフィール</span>
         </button>
+
         <a class="sidebar-nav-item" href="../study/study.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
           <span class="sidebar-label">HGStudy</span>
@@ -65,11 +141,13 @@
 
       <div class="sidebar-sep"></div>
 
+      <!-- ゲスト表示 -->
       <div id="sidebarGuest" style="display:none;flex-direction:column;gap:6px;padding:4px 0;">
         <button class="btn btn-primary" style="width:100%;border-radius:var(--r-xl)" onclick="openAuthModal('login')">ログイン</button>
         <button class="btn btn-ghost" style="width:100%;border-radius:var(--r-xl)" onclick="openAuthModal('reg')">アカウント作成</button>
       </div>
 
+      <!-- ログイン済み表示 -->
       <div id="sidebarAuth" style="display:none">
         <button class="sidebar-profile" onclick="openProfile(session.username)">
           <canvas id="sidebarAvatarCanvas" class="sidebar-avatar" width="40" height="40"></canvas>
@@ -91,12 +169,12 @@
   <!-- ── FEED ── -->
   <main class="sns-feed">
     <div class="feed-header">
+      <!-- ホーム用タブ（おすすめ / フォロー中） -->
       <div class="feed-tabs" id="homeFeedTabs">
-        <!-- ホームのとき: おすすめ / フォロー中 -->
-        <button class="feed-tab active" id="feedTabRec" onclick="switchFeedTab('rec')">おすすめ</button>
-        <button class="feed-tab" id="feedTabFollow" onclick="switchFeedTab('follow')">フォロー中</button>
+        <button class="feed-tab active" id="feedTabRec"    onclick="switchFeedTab('rec')">おすすめ</button>
+        <button class="feed-tab"        id="feedTabFollow" onclick="switchFeedTab('follow')">フォロー中</button>
       </div>
-      <!-- 他ビューのタイトルバー -->
+      <!-- サブページ用タイトルバー -->
       <div class="feed-title-bar" id="feedTitleBar" style="display:none">
         <button class="feed-back-btn" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -107,11 +185,12 @@
 
     <!-- Desktop Composer -->
     <div class="feed-composer" id="feedComposer" style="display:none">
-      <canvas id="composerAvatarCanvas" class="composer-avatar" width="44" height="44" onclick="if(session)openProfile(session.username)"></canvas>
+      <canvas id="composerAvatarCanvas" class="composer-avatar" width="44" height="44"
+        onclick="if(session)openProfile(session.username)"></canvas>
       <div class="composer-body">
         <div class="composer-reply-to" id="composerReplyBanner" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          <span id="composerReplyText">返信先: <span class="reply-to-name" id="composerReplyName"></span></span>
+          <span>返信先: <span class="reply-to-name" id="composerReplyName"></span></span>
           <button class="composer-reply-to-close" onclick="clearReplyContext()">✕</button>
         </div>
         <textarea
@@ -134,7 +213,7 @@
             <input type="file" id="postImgInput" class="img-input" accept="image/*" onchange="handlePostImgSelect(event)">
           </div>
           <div class="composer-right">
-            <!-- 文字数円形プログレス -->
+            <!-- 文字数リング -->
             <svg class="char-ring" id="composerRing" viewBox="0 0 32 32" width="28" height="28">
               <circle class="char-ring-bg" cx="16" cy="16" r="12" fill="none" stroke-width="3"/>
               <circle class="char-ring-fill" id="composerRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3"
@@ -148,60 +227,62 @@
       </div>
     </div>
 
-    <!-- Home feed -->
+    <!-- ── VIEW: ホーム ── -->
     <div id="homeView">
       <div id="feedPosts"></div>
     </div>
 
-    <!-- Profile -->
+    <!-- ── VIEW: プロフィール ── -->
     <div id="profileViewWrap" style="display:none">
       <div id="profileView"></div>
     </div>
 
-    <!-- Search -->
+    <!-- ── VIEW: 検索 ── -->
     <div id="searchViewWrap" style="display:none">
       <div style="padding:12px 16px;border-bottom:1px solid var(--line);">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="search-input" id="searchInput" placeholder="ユーザーまたは#タグを検索"
-            onkeydown="if(event.key==='Enter')doSearch()" oninput="onSearchInput(event)">
+          <input type="text" class="search-input" id="searchInput"
+            placeholder="ユーザーまたは#タグを検索"
+            onkeydown="if(event.key==='Enter')doSearch()"
+            oninput="onSearchInput(event)">
           <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" style="display:none">
             <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
         </div>
       </div>
-      <!-- 検索タブ: ユーザー / 投稿 / ハッシュタグ -->
+      <!-- 検索タブ -->
       <div class="search-tabs" id="searchTabs" style="display:none">
         <button class="feed-tab active" id="sTabUsers" onclick="switchSearchTab('users')">ユーザー</button>
-        <button class="feed-tab" id="sTabPosts" onclick="switchSearchTab('posts')">投稿</button>
-        <button class="feed-tab" id="sTabTags" onclick="switchSearchTab('tags')">タグ</button>
+        <button class="feed-tab"        id="sTabPosts" onclick="switchSearchTab('posts')">投稿</button>
+        <button class="feed-tab"        id="sTabTags"  onclick="switchSearchTab('tags')">タグ</button>
       </div>
       <div id="searchView">
         <div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>
       </div>
     </div>
 
-    <!-- Trend -->
+    <!-- ── VIEW: トレンド ── -->
     <div id="trendViewWrap" style="display:none">
       <div id="trendView"></div>
     </div>
 
-    <!-- Hashtag posts -->
+    <!-- ── VIEW: ハッシュタグ ── -->
     <div id="hashtagViewWrap" style="display:none">
       <div id="hashtagView"></div>
     </div>
 
-    <!-- Thread/Post detail -->
+    <!-- ── VIEW: スレッド / 投稿詳細 ── -->
     <div id="threadViewWrap" style="display:none">
       <div id="threadView"></div>
     </div>
 
-    <!-- 通知 -->
+    <!-- ── VIEW: 通知 ── -->
     <div id="notificationsViewWrap" style="display:none">
       <div id="notificationsView"></div>
     </div>
 
-    <!-- ブックマーク -->
+    <!-- ── VIEW: ブックマーク ── -->
     <div id="bookmarksViewWrap" style="display:none">
       <div id="bookmarksView"></div>
     </div>
@@ -213,7 +294,8 @@
     <div class="right-search">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="search-input" id="rightSearchInput" placeholder="HGSNS を検索"
+        <input type="text" class="search-input" id="rightSearchInput"
+          placeholder="HGSNS を検索"
           onkeydown="if(event.key==='Enter'){copySearchAndGo(this.value);}"
           oninput="onRightSearchInput(this)">
       </div>
@@ -226,7 +308,7 @@
       <div class="right-card-foot" onclick="setView('trend')">すべて見る →</div>
     </div>
 
-    <!-- おすすめユーザー（改善版） -->
+    <!-- おすすめユーザー -->
     <div class="right-card">
       <div class="right-card-head">おすすめユーザー</div>
       <div id="suggestUsers"></div>
@@ -257,12 +339,12 @@
 
 </div><!-- /sns-wrap -->
 
-<!-- Mobile FAB -->
+<!-- ── Mobile FAB ── -->
 <button class="mobile-fab" id="mobileFab" onclick="openMobileCompose()">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
-<!-- TOAST -->
+<!-- ── TOAST ── -->
 <div class="toast" id="snsToast"></div>
 
 <!-- ── MOBILE COMPOSE BOTTOM SHEET ── -->
@@ -277,9 +359,12 @@
       返信先: <span class="reply-name" id="sheetReplyName"></span>
     </div>
     <div class="sheet-compose-row">
-      <canvas id="sheetAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+      <canvas id="sheetAvatarCanvas" width="40" height="40"
+        style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
       <div style="flex:1">
-        <textarea class="sheet-textarea" id="sheetTextarea" placeholder="いまどうしてる？" maxlength="280" oninput="updateSheetCount()"></textarea>
+        <textarea class="sheet-textarea" id="sheetTextarea"
+          placeholder="いまどうしてる？" maxlength="280"
+          oninput="updateSheetCount()"></textarea>
         <div id="sheetQuotePreview" style="display:none"></div>
         <div class="composer-img-preview" id="sheetImgPreview">
           <img id="sheetImgPreviewImg" src="" alt="">
@@ -312,7 +397,8 @@
     <div class="modal-body">
       <div class="reply-modal-context" id="replyModalContext"></div>
       <div class="reply-modal-compose">
-        <canvas id="replyAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+        <canvas id="replyAvatarCanvas" width="40" height="40"
+          style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
         <div class="reply-compose-body">
           <textarea class="reply-compose-textarea" id="replyTextarea"
             placeholder="返信を入力..."
@@ -377,7 +463,8 @@
     </div>
     <div class="modal-body">
       <div class="reply-modal-compose" style="margin-bottom:12px;">
-        <canvas id="quoteAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+        <canvas id="quoteAvatarCanvas" width="40" height="40"
+          style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
         <div class="reply-compose-body">
           <textarea class="reply-compose-textarea" id="quoteTextarea"
             placeholder="コメントを追加..."
@@ -409,17 +496,22 @@
     <div class="modal-body">
       <div class="auth-tabs">
         <button class="auth-tab on" id="authTabLogin" onclick="switchAuthTab('login')">ログイン</button>
-        <button class="auth-tab" id="authTabReg" onclick="switchAuthTab('reg')">アカウント作成</button>
+        <button class="auth-tab"    id="authTabReg"   onclick="switchAuthTab('reg')">アカウント作成</button>
       </div>
       <div class="form-err" id="authErr"></div>
       <div class="form-group">
         <label class="form-label">ユーザー名</label>
-        <input class="form-input" id="authUser" type="text" placeholder="英数字・アンダースコア" autocomplete="username" onkeydown="if(event.key==='Enter')authSubmit()">
+        <input class="form-input" id="authUser" type="text"
+          placeholder="英数字・アンダースコア"
+          autocomplete="username"
+          onkeydown="if(event.key==='Enter')authSubmit()">
       </div>
       <div class="form-group">
         <label class="form-label">パスワード</label>
         <div class="pass-wrap">
-          <input class="form-input" id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+          <input class="form-input" id="authPass" type="password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')authSubmit()">
           <button class="pass-toggle" type="button" onclick="togglePassVis('authPass',this)" tabindex="-1">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
@@ -428,7 +520,8 @@
       <div id="authRegExtra" style="display:none">
         <div class="form-group">
           <label class="form-label">パスワード確認</label>
-          <input class="form-input" id="authPassConfirm" type="password" onkeydown="if(event.key==='Enter')authSubmit()">
+          <input class="form-input" id="authPassConfirm" type="password"
+            onkeydown="if(event.key==='Enter')authSubmit()">
         </div>
       </div>
     </div>
@@ -453,7 +546,8 @@
       </div>
       <div class="form-group">
         <label class="form-label">自己紹介</label>
-        <textarea class="form-textarea" id="editBio" maxlength="160" placeholder="自己紹介（160文字以内）"></textarea>
+        <textarea class="form-textarea" id="editBio" maxlength="160"
+          placeholder="自己紹介（160文字以内）"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -480,6 +574,7 @@
   <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()">
 </div>
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script src="sns.js"></script>
