@@ -1,4 +1,4 @@
-/* ── HGSNS CSS v4 ── */
+/* ── HGSNS CSS v4.1 (fixed) ── */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -50,23 +50,29 @@ body{
   .sidebar-post-btn .btn-label{display:none}
   .sidebar-post-btn{min-width:0;width:50px;height:50px;border-radius:50%;padding:0;justify-content:center;}
   .sidebar-profile{display:none!important}
+
+  /* ログアウトボタンをアイコンのみに（72px幅でテキストがはみ出すため）*/
+  .sidebar-logout-btn{justify-content:center;padding:12px;font-size:0;}
+  .sidebar-logout-btn svg{flex-shrink:0;width:22px;height:22px;}
+  .sidebar-logout-text{display:none;}
+
+  /* HGStudyリンクもアイコンのみに */
+  .sidebar-nav-hgstudy{justify-content:center;padding:12px;}
 }
 
 /* ═══════════════════════════
-   MOBILE  ≤800px  X風
+   MOBILE  <=800px  X風
 ═══════════════════════════ */
 @media(max-width:800px){
   :root{--feed-w:100vw;}
   .sns-wrap{display:flex;flex-direction:column;max-width:100vw;width:100%;}
 
-  /* 右パネル非表示 */
   .sns-right{display:none!important}
   .sns-feed{width:100%;min-width:0;border-right:none;order:-1;}
 
-  /* ボトムナビ分の余白 */
   body{padding-bottom:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));}
 
-  /* ── ヘッダー ── */
+  /* ヘッダー */
   .feed-header{
     position:sticky;top:0;z-index:100;
     background:rgba(0,0,0,.9);
@@ -74,13 +80,9 @@ body{
     border-bottom:1px solid var(--line);
     min-height:var(--mobile-header-h);
   }
-  .feed-tabs{
-    min-height:var(--mobile-header-h);
-    display:flex;
-  }
+  .feed-tabs{min-height:var(--mobile-header-h);display:flex;}
   .feed-tab{font-size:.88rem;padding:14px 8px;}
 
-  /* サブページ タイトルバー */
   .feed-title-bar{
     min-height:var(--mobile-header-h);
     padding:0 4px 0 2px;
@@ -88,15 +90,10 @@ body{
     display:flex;align-items:center;
     position:relative;
   }
-  .feed-back-btn{
-    width:40px;height:40px;flex-shrink:0;
-  }
-  #feedTitleText{
-    font-size:.98rem;font-weight:700;
-    flex:1;text-align:center;
-  }
+  .feed-back-btn{width:40px;height:40px;flex-shrink:0;}
+  #feedTitleText{font-size:.98rem;font-weight:700;flex:1;text-align:center;}
 
-  /* ── ボトムナビゲーション（X風 5タブ）── */
+  /* ボトムナビゲーション */
   .sns-sidebar{
     position:fixed;bottom:0;left:0;right:0;
     z-index:200;
@@ -118,7 +115,6 @@ body{
     align-items:stretch;height:var(--mobile-nav-h);
   }
 
-  /* 各タブ */
   .sidebar-nav-item{
     flex:1;flex-direction:column;
     align-items:center;justify-content:center;
@@ -129,42 +125,19 @@ body{
     background:none!important;
     position:relative;
   }
-  /* タップ時の縮小アニメ */
   .sidebar-nav-item:active svg{transform:scale(.82);transition:transform .08s;}
-  /* アクティブ */
   .sidebar-nav-item.active{color:var(--white);}
-  /* アイコン */
-  .sidebar-nav-item svg{
-    width:25px;height:25px;
-    flex-shrink:0;
-    transition:transform .12s;
-  }
-  /* ラベル非表示（Xはアイコンのみ）*/
+  .sidebar-nav-item svg{width:25px;height:25px;flex-shrink:0;transition:transform .12s;}
   .sidebar-label{display:none!important;}
 
-  /* 鉛筆 投稿ボタン（ナビ内）*/
-  .sidebar-post-btn{
-    flex:1;min-width:0;width:auto;
-    height:var(--mobile-nav-h);
-    border-radius:0;padding:0 4px;
-    margin:0;background:none;
-    color:var(--white3);
-    display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-    gap:0;font-size:0;
-    transition:none;
-    box-shadow:none;
-  }
-  .sidebar-post-btn:hover{background:none;box-shadow:none;}
-  .sidebar-post-btn svg{width:25px;height:25px;}
-  .sidebar-post-btn:active svg{transform:scale(.82);}
-  .sidebar-post-btn .btn-label{display:none!important;}
+  /* モバイルでは投稿ボタン・HGStudyリンクを非表示（FABで代替）*/
+  .sidebar-post-btn{display:none!important;}
+  .sidebar-nav-hgstudy{display:none!important;}
 
   /* ロゴ・プロフィール・セパレーター・認証UI 非表示 */
   .sidebar-logo,.sidebar-profile,.sidebar-sep,
   #sidebarGuest,#sidebarAuth{display:none!important;}
 
-  /* 通知バッジ */
   .sidebar-icon-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
   .sidebar-badge{
     position:absolute;top:-2px;right:-5px;
@@ -172,10 +145,9 @@ body{
     font-size:.58rem;border:1.5px solid var(--bg);
   }
 
-  /* デスクトップコンポーザー非表示 */
   .feed-composer{display:none!important;}
 
-  /* ── FAB（Xと同じ右下固定・鉛筆アイコン）── */
+  /* FAB */
   .mobile-fab{
     display:flex!important;
     position:fixed;
@@ -193,28 +165,21 @@ body{
   .mobile-fab:active{transform:scale(.9);box-shadow:0 1px 5px rgba(201,168,76,.35);}
   .mobile-fab svg{width:22px;height:22px;}
 
-  /* ── 投稿カード ── */
+  /* 投稿カード */
   .post{padding:10px 12px;gap:10px;}
   .post-avatar{width:38px;height:38px;}
   .post-thread-line{min-height:8px;}
-
-  /* アクション数字を表示（Xはスマホでも出す）*/
   .post-action span{display:inline!important;font-size:.75rem;}
   .post-actions{gap:0;margin-top:2px;}
-  .post-action{
-    padding:5px 4px;gap:3px;flex:1;
-    justify-content:center;font-size:.78rem;
-  }
+  .post-action{padding:5px 4px;gap:3px;flex:1;justify-content:center;font-size:.78rem;}
   .post-action.share{flex:0 0 auto;}
   .post-action svg{width:16px;height:16px;}
   .post-text{font-size:.92rem;line-height:1.58;}
   .post-dispname{font-size:.88rem;}
   .post-username,.post-time{font-size:.78rem;}
-
-  /* 3点メニュー: 常に表示 */
   .post-menu-btn{opacity:1;width:28px;height:28px;}
 
-  /* ── プロフィール ── */
+  /* プロフィール */
   .profile-banner{height:110px;}
   .profile-avatar-wrap{margin-top:-36px;margin-bottom:8px;}
   .profile-avatar{width:68px;height:68px;border-width:3px;}
@@ -224,17 +189,43 @@ body{
   .profile-info{padding:0 12px 12px;}
   .profile-bio{font-size:.88rem;margin-bottom:8px;}
 
-  /* ── スレッド詳細 ── */
+  /* スレッド詳細 */
   .post-detail{padding:12px 12px;}
   .post-detail .post-text{font-size:1rem;}
   .post-detail-meta{gap:10px;font-size:.82rem;padding:8px 0;}
   .post-detail-actions{gap:0;}
   .post-detail-actions .post-action{flex:1;justify-content:center;padding:7px 2px;}
 
-  /* ── 検索 ── */
+  /* 検索タブ */
   .search-tabs .feed-tab{font-size:.83rem;padding:11px 6px;}
 
-  /* ── 投稿シート（Xは全画面）── */
+  /* モーダルをボトムシート化 */
+  .overlay{padding:0;align-items:flex-end;}
+  .modal{
+    border-radius:18px 18px 0 0;
+    margin-top:auto;max-width:100%;
+    animation:sheetUp .22s cubic-bezier(.16,1,.3,1);
+    max-height:92dvh;
+    overflow-y:auto;
+  }
+  #followListOverlay .modal-body{max-height:58dvh;}
+
+  /* トースト */
+  .toast{
+    bottom:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 10px);
+    font-size:.83rem;padding:9px 18px;
+  }
+
+  /* ライトボックス */
+  .img-lightbox img{max-width:100vw;max-height:82dvh;border-radius:0;}
+  .lightbox-close{top:calc(env(safe-area-inset-top, 0px) + 10px);right:12px;}
+
+  /* ハッシュタグ / トレンド */
+  .hashtag-header{padding:12px 12px;}
+  .hashtag-title{font-size:1.05rem;}
+  .trend-item{padding:10px 12px;}
+
+  /* 投稿シート全画面 */
   .mobile-compose-overlay{align-items:flex-start;}
   .mobile-compose-sheet{
     border-radius:0;
@@ -256,15 +247,6 @@ body{
     position:absolute;left:50%;transform:translateX(-50%);
     font-size:.9rem;font-weight:700;pointer-events:none;
   }
-  .sheet-close{
-    order:-1;
-    color:var(--white);font-weight:600;
-    font-size:.9rem;
-    width:auto;height:auto;
-    border-radius:var(--r-full);
-    padding:5px 10px;
-    border:1.5px solid rgba(255,255,255,.2);
-  }
   .sheet-compose-row{
     flex:1;gap:10px;
     padding:14px 14px 8px;
@@ -282,33 +264,9 @@ body{
   }
   .sheet-reply-to{margin:0 14px 0;border-radius:0 var(--r) var(--r) 0;}
 
-  /* ── 通知 ── */
+  /* 通知 */
   .notif-item{padding:10px 12px;gap:10px;}
   .notif-icon{width:34px;height:34px;font-size:.95rem;}
-
-  /* ── モーダルをボトムシート化 ── */
-  .overlay{padding:0;align-items:flex-end;}
-  .modal{
-    border-radius:18px 18px 0 0;
-    margin-top:auto;max-width:100%;
-    animation:sheetUp .22s cubic-bezier(.16,1,.3,1);
-  }
-  #followListOverlay .modal-body{max-height:58dvh;}
-
-  /* ── トースト ── */
-  .toast{
-    bottom:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 10px);
-    font-size:.83rem;padding:9px 18px;
-  }
-
-  /* ── ライトボックス ── */
-  .img-lightbox img{max-width:100vw;max-height:82dvh;border-radius:0;}
-  .lightbox-close{top:calc(env(safe-area-inset-top, 0px) + 10px);right:12px;}
-
-  /* ── ハッシュタグ / トレンド ── */
-  .hashtag-header{padding:12px 12px;}
-  .hashtag-title{font-size:1.05rem;}
-  .trend-item{padding:10px 12px;}
 }
 
 /* ═══════════════════════════
@@ -434,7 +392,13 @@ body{
 }
 .feed-back-btn:hover{background:rgba(255,255,255,.08)}
 #feedTitleText{font-size:1.05rem;font-weight:700;color:var(--white);}
-.search-tabs{display:flex;border-bottom:1px solid var(--line);background:rgba(0,0,0,.8);}
+.search-tabs{
+  display:flex;
+  border-bottom:1px solid var(--line);
+  background:rgba(0,0,0,.8);
+  position:sticky;top:0;
+  z-index:40;
+}
 .search-clear-btn{
   background:none;border:none;color:var(--white3);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
@@ -505,7 +469,7 @@ body{
   border-bottom:1px solid var(--line);transition:background .12s;cursor:pointer;position:relative;
 }
 .post:hover{background:rgba(255,255,255,.018)}
-.post-avatar-col{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.post-avatar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
 .post-avatar{width:44px;height:44px;border-radius:50%;border:2px solid transparent;flex-shrink:0;cursor:pointer;transition:border-color var(--trans);}
 .post-avatar:hover{border-color:var(--accent)}
 .post-thread-line{width:2px;flex:1;background:var(--line);border-radius:2px;min-height:12px;}
@@ -603,7 +567,11 @@ body{
 /* ═══════════════════════════
    RIGHT PANEL
 ═══════════════════════════ */
-.sns-right{padding:12px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sns-right{
+  padding:12px 14px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  min-width:0; /* オーバーフロー防止 */
+}
 .right-search{position:sticky;top:0;z-index:10;padding:8px 0 12px;background:var(--bg);}
 .search-wrap{
   display:flex;align-items:center;gap:10px;background:var(--bg3);border:1.5px solid transparent;
@@ -612,7 +580,7 @@ body{
 .search-wrap:focus-within{border-color:var(--accent);background:var(--bg2);}
 .search-wrap svg{flex-shrink:0;color:var(--white3);}
 .search-wrap:focus-within svg{color:var(--accent);}
-.search-input{flex:1;background:none;border:none;outline:none;color:var(--white);font-family:'Outfit',sans-serif;font-size:.9rem;}
+.search-input{flex:1;background:none;border:none;outline:none;color:var(--white);font-family:'Outfit',sans-serif;font-size:.9rem;min-width:0;}
 .search-input::placeholder{color:var(--white3)}
 .right-card{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r-xl);margin-bottom:14px;overflow:hidden;}
 .right-card-head{padding:14px 16px 10px;font-weight:700;font-size:.98rem;color:var(--white);}
@@ -745,7 +713,7 @@ body{
 .reply-modal-context .post-text{font-size:.9rem;margin-bottom:0;}
 .reply-modal-compose{display:flex;gap:12px;}
 .reply-modal-compose canvas{width:40px;height:40px;border-radius:50%;flex-shrink:0;}
-.reply-compose-body{flex:1;}
+.reply-compose-body{flex:1;min-width:0;}
 .reply-compose-textarea{width:100%;background:transparent;border:none;outline:none;color:var(--white);font-family:'Outfit',sans-serif;font-size:1rem;resize:none;min-height:80px;line-height:1.5;}
 .reply-compose-textarea::placeholder{color:var(--white3);}
 .reply-compose-toolbar{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--line);}
@@ -781,6 +749,13 @@ body{
 /* ═══════════════════════════
    MISC
 ═══════════════════════════ */
+
+/* ファイル入力を非表示（必須 / 未設定だとINPUTが画面上に表示される）*/
+.img-input{display:none!important;}
+
+/* FABはデスクトップ非表示（モバイルで display:flex!important で上書き）*/
+.mobile-fab{display:none;}
+
 .back-home-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--r-xl);color:var(--white3);text-decoration:none;font-size:.87rem;font-weight:500;transition:all .15s;border:none;background:none;cursor:pointer;width:100%;}
 .back-home-btn:hover{background:rgba(255,255,255,.06);color:var(--white)}
 .back-home-btn svg{width:16px;height:16px;flex-shrink:0;}
@@ -814,10 +789,10 @@ body{
 .lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--trans);}
 .lightbox-close:hover{background:rgba(255,255,255,.22)}
 .nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:var(--r-full);background:var(--accent);color:var(--navy);font-size:.64rem;font-weight:700;padding:0 4px;margin-left:auto;}
+
 /* ═══════════════════════════
    NAV ICON FILL/OUTLINE LOGIC
-   デスクトップ: outline表示・active時fill
-   モバイル: 同じ（CSSでなくJSで制御）
+   active時: fill表示、outline非表示
 ═══════════════════════════ */
 .sidebar-nav-item .nav-icon-fill{display:none;}
 .sidebar-nav-item.active .nav-icon-outline{display:none;}
@@ -826,11 +801,8 @@ body{
 /* ═══════════════════════════
    MOBILE HEADER LOGO
 ═══════════════════════════ */
-.mobile-header-logo{
-  display:none; /* デスクトップでは非表示 */
-}
+.mobile-header-logo{display:none;}
 @media(max-width:800px){
-  /* ホームのタブバー中央にロゴ */
   .feed-tabs{position:relative;}
   .mobile-header-logo{
     display:flex;
@@ -840,7 +812,6 @@ body{
     pointer-events:none;
     z-index:1;
   }
-  /* タブテキストを左右に分けて中央ロゴを見せる */
   #feedTabRec  {padding-left:12px;text-align:left;}
   #feedTabFollow{padding-right:12px;text-align:right;}
 }
@@ -853,76 +824,45 @@ body{
   color:var(--white);font-family:'Outfit',sans-serif;
   font-size:.92rem;font-weight:500;
   padding:6px 4px;border-radius:var(--r-full);
-  transition:opacity .15s;
-  flex-shrink:0;
+  transition:opacity .15s;flex-shrink:0;
 }
 .sheet-cancel-btn:hover{opacity:.7;}
-.sheet-post-btn{
-  padding:7px 16px;
-  font-size:.88rem;
-  flex-shrink:0;
-}
-/* ── モバイルシート全画面override ── */
+.sheet-post-btn{padding:7px 16px;font-size:.88rem;flex-shrink:0;}
+
+/* ── モバイルシート全画面 override ── */
 @media(max-width:800px){
-  .mobile-compose-overlay{
-    background:var(--bg2); /* 全画面なので背景不要 */
-    align-items:flex-start;
-  }
-  .mobile-compose-overlay.open{
-    display:flex;
-  }
+  .mobile-compose-overlay{background:var(--bg2);align-items:flex-start;}
+  .mobile-compose-overlay.open{display:flex;}
   .mobile-compose-sheet{
-    border-radius:0;
-    min-height:100dvh;
-    max-height:100dvh;
-    padding:0;
-    display:flex;
-    flex-direction:column;
+    border-radius:0;min-height:100dvh;max-height:100dvh;padding:0;
+    display:flex;flex-direction:column;
     padding-bottom:env(safe-area-inset-bottom,16px);
   }
   .sheet-handle{display:none;}
   .sheet-header{
-    display:flex;align-items:center;
-    justify-content:space-between;
-    padding:0 14px;
-    min-height:52px;
-    border-bottom:1px solid var(--line);
-    margin-bottom:0;
-    position:relative;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 14px;min-height:52px;
+    border-bottom:1px solid var(--line);margin-bottom:0;position:relative;
   }
   .sheet-title{
     position:absolute;left:50%;top:50%;
     transform:translate(-50%,-50%);
-    font-size:.9rem;font-weight:700;
-    pointer-events:none;
+    font-size:.9rem;font-weight:700;pointer-events:none;
   }
   .sheet-compose-row{
-    flex:1;gap:12px;
-    padding:14px 14px 8px;
-    align-items:flex-start;
-    overflow-y:auto;
-    display:flex;
+    flex:1;gap:12px;padding:14px 14px 8px;
+    align-items:flex-start;overflow-y:auto;display:flex;
   }
-  .sheet-textarea{
-    font-size:1rem;min-height:120px;
-    line-height:1.65;
-  }
+  .sheet-textarea{font-size:1rem;min-height:120px;line-height:1.65;}
   .sheet-toolbar{
-    padding:8px 14px;
-    border-top:1px solid var(--line);
-    position:sticky;bottom:0;
-    background:rgba(0,0,0,.96);
-    backdrop-filter:blur(12px);
-    margin-top:0;
+    padding:8px 14px;border-top:1px solid var(--line);
+    position:sticky;bottom:0;background:rgba(0,0,0,.96);
+    backdrop-filter:blur(12px);margin-top:0;
   }
   .sheet-reply-to{
-    margin:0;
-    border-radius:0;
-    padding:8px 14px;
-    border-left:none;
-    border-bottom:1px solid var(--line);
-    background:transparent;
-    font-size:.84rem;
+    margin:0;border-radius:0;padding:8px 14px;
+    border-left:none;border-bottom:1px solid var(--line);
+    background:transparent;font-size:.84rem;
     display:flex;align-items:center;gap:6px;
   }
 }
