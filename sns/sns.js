@@ -1,4 +1,5 @@
 // ── HGSNS JS v4 ── badges / filtered rec feed / follow feed fix / X-like scoring
+// ── Promise.all 並列化最適化済み ──
 
 const FIREBASE_CONFIG_BIN = "01111011 00100010 01100001 01110000 01101001 01001011 01100101 01111001 00100010 00111010 00100010 01000001 01001001 01111010 01100001 01010011 01111001 01000011 01100110 00111000 01010000 01001010 01011001 01111000 01000011 01001010 01000011 01000110 01000011 01000100 00110001 01110000 01101000 01000100 01011111 00101101 01011000 01010110 01010101 01011010 00111001 00110010 01000100 01010011 01010110 01110101 01010010 01100001 01110101 01010101 00100010 00101100 00100010 01100001 01110101 01110100 01101000 01000100 01101111 01101101 01100001 01101001 01101110 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100001 01110000 01110000 00101110 01100011 01101111 01101101 00100010 00101100 00100010 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 01010101 01010010 01001100 00100010 00111010 00100010 01101000 01110100 01110100 01110000 01110011 00111010 00101111 00101111 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101101 01100100 01100101 01100110 01100001 01110101 01101100 01110100 00101101 01110010 01110100 01100100 01100010 00101110 01100001 01110011 01101001 01100001 00101101 01110011 01101111 01110101 01110100 01101000 01100101 01100001 01110011 01110100 00110001 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01110000 01110010 01101111 01101010 01100101 01100011 01110100 01001001 01100100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00100010 00101100 00100010 01110011 01110100 01101111 01110010 01100001 01100111 01100101 01000010 01110101 01100011 01101011 01100101 01110100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01110011 01110100 01101111 01110010 01100001 01100111 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01101101 01100101 01110011 01110011 01100001 01100111 01101001 01101110 01100111 01010011 01100101 01101110 01100100 01100101 01110010 01001001 01100100 00100010 00111010 00100010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00100010 00101100 00100010 01100001 01110000 01110000 01001001 01100100 00100010 00111010 00100010 00110001 00111010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00111010 01110111 01100101 01100010 00111010 00110110 00110011 00110010 01100010 00110010 01100010 01100100 00110110 01100110 00110000 00110100 00110100 00110001 01100001 00111000 00110011 01100100 00110111 00110100 00111001 01100101 00110010 00100010 00101100 00100010 01101101 01100101 01100001 01110011 01110101 01110010 01100101 01101101 01100101 01101110 01110100 01001001 01100100 00100010 00111010 00100010 01000111 00101101 01011001 00110000 00110101 00110110 00110001 00110001 00110110 01010010 01010001 01001101 00100010 01111101";
 
@@ -54,7 +55,6 @@ function renderTextWithHashtags(text){
 }
 
 // ── バッジ ──
-// Firebase から isadmin / isdev / isofficial を取得してキャッシュ
 async function getUserFlags(username){
   if(_userFlagsCache[username]!==undefined)return _userFlagsCache[username];
   if(!db){_userFlagsCache[username]={};return{};}
@@ -67,13 +67,10 @@ async function getUserFlags(username){
   }catch(e){_userFlagsCache[username]={};return{};}
 }
 
-// バッジHTML生成（Xと同じ: 名前の右に小さな丸バッジ）
-// size: 'sm'(投稿内) | 'lg'(プロフィール)
 function buildBadgeHtml(flags, size){
   if(!flags)return'';
   const cls=size==='lg'?'-lg':'';
   let html='';
-  // 優先順: admin > official > dev（複数付く場合もある）
   if(flags.isadmin){
     html+=`<span class="user-badge badge-admin${cls}" title="管理者">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7l-9-5z"/></svg>
@@ -152,7 +149,6 @@ function updateSidebarUI(){
     drawAvatarCanvas(document.getElementById('sidebarAvatarCanvas'),session.username,avData,40);
     drawAvatarCanvas(document.getElementById('composerAvatarCanvas'),session.username,avData,44);
     drawAvatarCanvas(document.getElementById('sheetAvatarCanvas'),session.username,avData,40);
-    // モバイルナビ アバター
     const navAv=document.getElementById('navAvatarCanvas');
     if(navAv){
       drawAvatarCanvas(navAv,session.username,avData,26);
@@ -343,7 +339,6 @@ function openMobileCompose(replyCtx){
 function closeMobileCompose(){document.getElementById('mobileComposeOverlay').classList.remove('open');}
 function updateSheetCount(){
   const ta=document.getElementById('sheetTextarea');const len=ta.value.length;const max=280;
-  // 文字数リング更新
   updateCharRing(len,max,'sheetRingFill','__none__');
   document.getElementById('sheetSubmitBtn').disabled=len===0||len>max;
 }
@@ -452,10 +447,20 @@ async function loadBookmarksView(){
       el.innerHTML+='<div class="feed-empty"><span class="feed-empty-icon">🔖</span>まだブックマークがありません</div>';return;
     }
     el.appendChild(postsEl);
-    const posts=await Promise.all(entries.map(async e=>{
-      try{const s=await db.ref(`posts/${e.owner}/${e.postId}`).once('value');const p=s.val();if(!p)return null;return{id:e.postId,owner:e.owner,...p};}catch(err){return null;}
-    }));
-    const valid=posts.filter(Boolean);
+    // ── 並列化: ブックマーク投稿の一括取得 ──
+    const posts = await Promise.allSettled(
+      entries.map(async e => {
+        try{
+          const s=await db.ref(`posts/${e.owner}/${e.postId}`).once('value');
+          const p=s.val();
+          if(!p)return null;
+          return{id:e.postId,owner:e.owner,...p};
+        }catch(err){return null;}
+      })
+    );
+    const valid=posts
+      .filter(r=>r.status==='fulfilled'&&r.value!==null)
+      .map(r=>r.value);
     if(!valid.length){postsEl.innerHTML='<div class="feed-empty">投稿が見つかりません</div>';return;}
     await renderPosts(postsEl,valid);
   }catch(e){el.innerHTML+=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
@@ -529,50 +534,47 @@ async function loadFeed(){
 }
 
 // ── X風スコアリング ──
-// likes*3 + reposts*4 + replies*2 + views*0.01 に時間減衰をかける
 function calcEngagementScore(p){
   const likeCount  = p.likes  ? Object.keys(p.likes).length  : 0;
   const repostCount= p.reposts? Object.keys(p.reposts).length: 0;
   const replyCount = p.replyCount||0;
   const views      = p.views||0;
   const engagement = likeCount*3 + repostCount*4 + replyCount*2 + views*0.01;
-  // 時間減衰: 投稿後の時間（時間単位）に対して指数的に減衰
   const hoursAgo = Math.max(0.1, (Date.now()-p.ts)/(1000*60*60));
-  // Xに近い: score / (age+2)^1.8
   return engagement / Math.pow(hoursAgo+2, 1.8);
 }
 
-// おすすめフィード（返信を除外・X風スコアリング）
+// ── おすすめフィード（並列化）──
 async function loadRecFeed(feedEl){
   if(!db){feedEl.innerHTML='<div class="feed-empty">DB未接続</div>';return;}
   try{
     const usersSnap=await db.ref('users').once('value');
     const users=Object.keys(usersSnap.val()||{});
-    const postArrays=await Promise.all(users.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
-        .then(s=>{
-          const d=s.val()||{};
-          return Object.entries(d)
-            // ── 返信を除外 ──
-            .filter(([,p])=>!p.replyTo)
-            .map(([id,p])=>({id,owner:u,...p}));
-        })
-        .catch(()=>[])
-    ));
 
-    let posts=postArrays.flat();
+    // ── 並列化: 全ユーザーの投稿を同時取得 ──
+    const postArrays = await Promise.allSettled(
+      users.map(u =>
+        db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
+          .then(s => {
+            const d=s.val()||{};
+            return Object.entries(d)
+              .filter(([,p])=>!p.replyTo)
+              .map(([id,p])=>({id,owner:u,...p}));
+          })
+      )
+    );
 
-    // 直近72時間以内のものを優先しつつ X風スコアで並び替え
+    let posts = postArrays
+      .filter(r=>r.status==='fulfilled')
+      .flatMap(r=>r.value);
+
     const now=Date.now();
     const recent=posts.filter(p=>(now-p.ts)<72*60*60*1000);
     const older =posts.filter(p=>(now-p.ts)>=72*60*60*1000);
 
-    // スコア順
     recent.sort((a,b)=>calcEngagementScore(b)-calcEngagementScore(a));
     older .sort((a,b)=>calcEngagementScore(b)-calcEngagementScore(a));
 
-    // 72h以内を先に、古いものを後に混在（Xは新旧ミックス）
-    // 上位35件の中に古い投稿も最大5件まで差し込む
     const combined=[...recent.slice(0,30),...older.slice(0,5)]
       .sort((a,b)=>calcEngagementScore(b)-calcEngagementScore(a))
       .slice(0,60);
@@ -584,7 +586,7 @@ async function loadRecFeed(feedEl){
   }catch(e){feedEl.innerHTML=`<div class="feed-empty">読み込みエラー: ${esc(e.message)}</div>`;}
 }
 
-// フォロー中フィード（自分+フォロー相手 / 返信も表示 / buildPostElと同一モデル）
+// ── フォロー中フィード（並列化）──
 async function loadFollowFeed(feedEl){
   if(!session){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔒</span>ログインが必要です</div>';return;}
   try{
@@ -593,24 +595,28 @@ async function loadFollowFeed(feedEl){
     const followList=Object.keys(followData).filter(k=>followData[k]===true);
     const targets=[session.username,...followList];
 
-    const postArrays=await Promise.all(targets.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(40).once('value')
-        .then(s=>{
-          const d=s.val()||{};
-          // owner を必ず付与、username が無ければ owner で補完（モデル統一）
-          return Object.entries(d).map(([id,p])=>({
-            id,
-            owner:u,
-            username:p.username||u,
-            displayName:p.displayName||p.username||u,
-            ...p
-          }));
-        })
-        .catch(()=>[])
-    ));
+    // ── 並列化: フォロー中ユーザーの投稿を同時取得 ──
+    const postArrays = await Promise.allSettled(
+      targets.map(u =>
+        db.ref('posts/'+u).orderByChild('ts').limitToLast(40).once('value')
+          .then(s => {
+            const d=s.val()||{};
+            return Object.entries(d).map(([id,p])=>({
+              id,
+              owner:u,
+              username:p.username||u,
+              displayName:p.displayName||p.username||u,
+              ...p
+            }));
+          })
+      )
+    );
 
-    // フォロー中フィードは時系列（新しい順）
-    let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,80);
+    let posts = postArrays
+      .filter(r=>r.status==='fulfilled')
+      .flatMap(r=>r.value)
+      .sort((a,b)=>b.ts-a.ts)
+      .slice(0,80);
 
     if(!posts.length){
       feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>フォロー中のユーザーの投稿がありません<br><small style="margin-top:8px;display:block">誰かをフォローしてみましょう</small></div>';return;
@@ -627,18 +633,28 @@ function switchFeedTab(tab){
   if(currentView==='home')loadFeed();
 }
 
-async function renderPosts(container,posts,showThreadLines){
+// ── renderPosts（並列化）──
+async function renderPosts(container, posts, showThreadLines){
   container.innerHTML='';
-  for(let i=0;i<posts.length;i++){
-    const p=posts[i];
-    const hasThread=showThreadLines&&i<posts.length-1;
-    const el=await buildPostEl(p,hasThread);
-    container.appendChild(el);
-  }
+
+  // 全投稿の DOM 生成を並列実行
+  const results = await Promise.allSettled(
+    posts.map((p, i) => {
+      const hasThread = showThreadLines && i < posts.length - 1;
+      return buildPostEl(p, hasThread);
+    })
+  );
+
+  // 順序を保ったまま追加。失敗した投稿はスキップ
+  results.forEach(result => {
+    if(result.status === 'fulfilled'){
+      container.appendChild(result.value);
+    }
+  });
 }
 
-// ── buildPostEl（バッジ対応）──
-async function buildPostEl(p,showThreadLine){
+// ── buildPostEl（内部の非同期処理を並列化）──
+async function buildPostEl(p, showThreadLine){
   const el=document.createElement('div');
   el.className='post';
   el.dataset.postId=p.id;
@@ -647,11 +663,14 @@ async function buildPostEl(p,showThreadLine){
   const username=p.username||p.owner;
   const owner=p.owner||p.username;
 
-  const av=await getAvatarDataUrl(username);
-  const avHtml=avatarImgTag(username,av,44);
+  // ── 並列化: アバター・バッジ・ブックマークを同時取得 ──
+  const [av, flags, bookmarked] = await Promise.all([
+    getAvatarDataUrl(username),
+    getUserFlags(username),
+    session ? isBookmarked(owner, p.id) : Promise.resolve(false)
+  ]);
 
-  // バッジ取得
-  const flags=await getUserFlags(username);
+  const avHtml=avatarImgTag(username,av,44);
   const badgeHtml=buildBadgeHtml(flags,'sm');
 
   const likeCount  =p.likes  ?Object.keys(p.likes).length  :0;
@@ -659,7 +678,6 @@ async function buildPostEl(p,showThreadLine){
   const views=p.views||0;
   const liked   =session&&p.likes  &&p.likes[session.username];
   const reposted=session&&p.reposts&&p.reposts[session.username];
-  const bookmarked=session?await isBookmarked(owner,p.id):false;
   const isOwner=session&&session.username===username;
 
   const imgHtml=p.image
@@ -934,19 +952,24 @@ async function openThread(owner,postId){
   const el=document.getElementById('threadView');
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
   try{
+    // ── 並列化: 投稿データ・アバター・バッジ・ブックマークを同時取得 ──
     const snap=await db.ref(`posts/${owner}/${postId}`).once('value');
     const post=snap.val();if(!post){el.innerHTML='<div class="feed-empty">投稿が見つかりません</div>';return;}
     post.id=postId;post.owner=owner;
     const username=post.username||owner;
-    const av=await getAvatarDataUrl(username);
-    const flags=await getUserFlags(username);
+
+    const [av, flags, bookmarked] = await Promise.all([
+      getAvatarDataUrl(username),
+      getUserFlags(username),
+      session ? isBookmarked(owner, postId) : Promise.resolve(false)
+    ]);
+
     const badgeHtml=buildBadgeHtml(flags,'lg');
     const likeCount  =post.likes  ?Object.keys(post.likes).length  :0;
     const repostCount=post.reposts?Object.keys(post.reposts).length:0;
     const views=post.views||0;
     const liked   =session&&post.likes  &&post.likes[session.username];
     const reposted=session&&post.reposts&&post.reposts[session.username];
-    const bookmarked=session?await isBookmarked(owner,postId):false;
     const avHtml=avatarImgTag(username,av,48);
     const imgHtml=post.image?`<div class="post-img" onclick="openLightbox('${esc(post.image)}')" style="cursor:zoom-in"><img src="${esc(post.image)}" alt="" loading="lazy"></div>`:'';
     let quoteHtml='';
@@ -1007,26 +1030,37 @@ async function openThread(owner,postId){
     loadReplies(owner,postId);
   }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
 }
+
+// ── loadReplies（並列化）──
 async function loadReplies(owner,postId){
   const el=document.getElementById('threadReplies');if(!el)return;
   try{
     const usersSnap=await db.ref('users').once('value');
     const users=Object.keys(usersSnap.val()||{});
-    const replyArrays=await Promise.all(users.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').once('value')
-        .then(s=>{
-          const d=s.val()||{};
-          return Object.entries(d)
-            .filter(([,p])=>p.replyTo&&p.replyTo.postId===postId&&p.replyTo.owner===owner)
-            .map(([id,p])=>({
-              id,owner:u,
-              username:p.username||u,
-              displayName:p.displayName||p.username||u,
-              ...p
-            }));
-        }).catch(()=>[])
-    ));
-    const replies=replyArrays.flat().sort((a,b)=>a.ts-b.ts);
+
+    // ── 並列化: 全ユーザーの返信を同時検索 ──
+    const replyArrays = await Promise.allSettled(
+      users.map(u =>
+        db.ref('posts/'+u).orderByChild('ts').once('value')
+          .then(s => {
+            const d=s.val()||{};
+            return Object.entries(d)
+              .filter(([,p])=>p.replyTo&&p.replyTo.postId===postId&&p.replyTo.owner===owner)
+              .map(([id,p])=>({
+                id,owner:u,
+                username:p.username||u,
+                displayName:p.displayName||p.username||u,
+                ...p
+              }));
+          })
+      )
+    );
+
+    const replies = replyArrays
+      .filter(r=>r.status==='fulfilled')
+      .flatMap(r=>r.value)
+      .sort((a,b)=>a.ts-b.ts);
+
     if(!replies.length){el.innerHTML='<div class="feed-empty" style="padding:30px">まだ返信がありません</div>';return;}
     await renderPosts(el,replies,true);
   }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
@@ -1080,26 +1114,36 @@ async function toggleFollow(targetUsername){
   return !following;
 }
 
-// ── Profile View（バッジ対応）──
+// ── Profile View（並列化）──
 async function openProfile(username){
   viewHistory.push(currentView);
   viewedProfile=username;setView('profile');
   const el=document.getElementById('profileView');
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
   try{
-    const snap=await db.ref('users/'+username).once('value');
+    // ── 並列化: ユーザー情報・アバター・バッジ・フォロー情報を同時取得 ──
+    const [snap, av, flags, followsSnap, followersSnap, postsSnap] = await Promise.all([
+      db.ref('users/'+username).once('value'),
+      getAvatarDataUrl(username),
+      getUserFlags(username),
+      db.ref('follows/'+username).once('value'),
+      db.ref('follows').once('value'),
+      db.ref('posts/'+username).once('value')
+    ]);
+
     const u=snap.val()||{username};
-    const av=await getAvatarDataUrl(username);
-    const flags=await getUserFlags(username);
     const badgeHtml=buildBadgeHtml(flags,'lg');
-    const [followsSnap,followersSnap]=await Promise.all([db.ref('follows/'+username).once('value'),db.ref('follows').once('value')]);
     const followCount=followsSnap.val()?Object.values(followsSnap.val()).filter(v=>v===true).length:0;
     let followerCount=0;const allFollows=followersSnap.val()||{};
     for(const uid in allFollows){if(allFollows[uid][username]===true)followerCount++;}
-    const postsSnap=await db.ref('posts/'+username).once('value');
     const postCount=postsSnap.numChildren();
     const isMe=session&&session.username===username;
-    const isFollowing=session&&(await db.ref(`follows/${session.username}/${username}`).once('value')).val()===true;
+
+    // isFollowing だけ session 依存なので条件付き
+    const isFollowing = session
+      ? (await db.ref(`follows/${session.username}/${username}`).once('value')).val()===true
+      : false;
+
     const actionBtn=isMe
       ?`<button class="profile-edit-btn" onclick="openEditProfile()">プロフィールを編集</button>`
       :`<button class="profile-follow-btn ${isFollowing?'following':''}" id="profileFollowBtn" onclick="onProfileFollow('${esc(username)}')">${isFollowing?'フォロー中':'フォロー'}</button>`;
@@ -1176,14 +1220,13 @@ async function submitEditProfile(){
     const str=JSON.stringify(session);
     setCookie('hg_session',str,30);setCookie('hgs_sess',str,30);
     try{localStorage.setItem('hg_session_ls',str);localStorage.setItem('hgs_sess',str);}catch(e){}
-    // バッジキャッシュをリセット
     delete _userFlagsCache[session.username];
     updateSidebarUI();closeEditProfile();showToast('プロフィールを更新しました ✓');openProfile(session.username);
   }catch(e){document.getElementById('editProfileErr').textContent='エラー: '+e.message;document.getElementById('editProfileErr').classList.add('show');}
   finally{btn.disabled=false;}
 }
 
-// ── Follow List Modal ──
+// ── Follow List Modal（並列化）──
 async function openFollowList(username,type){
   document.getElementById('followListTitle').textContent=type==='follows'?'フォロー中':'フォロワー';
   document.getElementById('followListBody').innerHTML='<div class="spinner"><div class="spin"></div></div>';
@@ -1194,26 +1237,39 @@ async function openFollowList(username,type){
     else{const snap=await db.ref('follows').once('value');const d=snap.val()||{};for(const uid in d)if(d[uid][username]===true)users.push(uid);}
     if(!users.length){document.getElementById('followListBody').innerHTML='<div class="feed-empty">まだいません</div>';return;}
     const body=document.getElementById('followListBody');body.innerHTML='';
-    for(const u of users){
-      const uSnap=await db.ref('users/'+u).once('value');const ud=uSnap.val()||{username:u};
-      const av=await getAvatarDataUrl(u);const cvId='flav_'+u;
-      const flags=await getUserFlags(u);
-      const badgeHtml=buildBadgeHtml(flags,'sm');
-      const item=document.createElement('div');item.className='follow-user-item';
-      item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info">
-          <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(ud.displayName||u)}${badgeHtml}</div>
-          <div class="suggest-uname">@${esc(u)}</div>
-        </div>`;
-      item.onclick=()=>{closeFollowList();openProfile(u);};
-      body.appendChild(item);
-      drawAvatarCanvas(document.getElementById(cvId),u,av,40);
-    }
+
+    // ── 並列化: 全ユーザーのデータ・アバター・バッジを同時取得 ──
+    const userDataList = await Promise.allSettled(
+      users.map(async u => {
+        const [uSnap, av, flags] = await Promise.all([
+          db.ref('users/'+u).once('value'),
+          getAvatarDataUrl(u),
+          getUserFlags(u)
+        ]);
+        return { u, ud: uSnap.val()||{username:u}, av, flags };
+      })
+    );
+
+    userDataList
+      .filter(r=>r.status==='fulfilled')
+      .forEach(({ value: { u, ud, av, flags } }) => {
+        const cvId='flav_'+u;
+        const badgeHtml=buildBadgeHtml(flags,'sm');
+        const item=document.createElement('div');item.className='follow-user-item';
+        item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
+          <div class="suggest-info">
+            <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(ud.displayName||u)}${badgeHtml}</div>
+            <div class="suggest-uname">@${esc(u)}</div>
+          </div>`;
+        item.onclick=()=>{closeFollowList();openProfile(u);};
+        body.appendChild(item);
+        drawAvatarCanvas(document.getElementById(cvId),u,av,40);
+      });
   }catch(e){document.getElementById('followListBody').innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
 }
 function closeFollowList(){document.getElementById('followListOverlay').classList.remove('open');}
 
-// ── Hashtag View ──
+// ── Hashtag View（並列化）──
 async function openHashtag(tag){
   viewHistory.push(currentView);
   setView('hashtag');
@@ -1223,17 +1279,25 @@ async function openHashtag(tag){
   try{
     const usersSnap=await db.ref('users').once('value');
     const users=Object.keys(usersSnap.val()||{});
-    const postArrays=await Promise.all(users.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(50).once('value')
-        .then(s=>{
-          const d=s.val()||{};
-          return Object.entries(d)
-            .filter(([,p])=>p.text&&extractHashtags(p.text).includes(normalTag))
-            .map(([id,p])=>({id,owner:u,username:p.username||u,...p}));
-        })
-        .catch(()=>[])
-    ));
-    const posts=postArrays.flat().sort((a,b)=>b.ts-a.ts);
+
+    // ── 並列化 ──
+    const postArrays = await Promise.allSettled(
+      users.map(u =>
+        db.ref('posts/'+u).orderByChild('ts').limitToLast(50).once('value')
+          .then(s => {
+            const d=s.val()||{};
+            return Object.entries(d)
+              .filter(([,p])=>p.text&&extractHashtags(p.text).includes(normalTag))
+              .map(([id,p])=>({id,owner:u,username:p.username||u,...p}));
+          })
+      )
+    );
+
+    const posts = postArrays
+      .filter(r=>r.status==='fulfilled')
+      .flatMap(r=>r.value)
+      .sort((a,b)=>b.ts-a.ts);
+
     el.innerHTML=`
       <div class="hashtag-header">
         <div class="hashtag-title">${esc(tag)}</div>
@@ -1298,7 +1362,7 @@ async function loadTrendView(){
   });
 }
 
-// ── Search ──
+// ── Search（並列化）──
 let _searchDebounce=null;
 async function doSearch(){
   const q=(document.getElementById('searchInput')?.value||'').trim().toLowerCase();
@@ -1315,24 +1379,41 @@ async function doSearch(){
   if(tabsEl)tabsEl.style.display='flex';
   el.innerHTML='<div class="spinner"><div class="spin"></div></div>';
   try{
-    const usersSnap=await db.ref('users').once('value');
+    // ── 並列化: ユーザー検索・投稿検索・タグ検索を同時実行 ──
+    const [usersSnap, tagsSnap] = await Promise.all([
+      db.ref('users').once('value'),
+      db.ref('hashtags').once('value')
+    ]);
+
     const usersData=usersSnap.val()||{};
     _searchResults.users=Object.entries(usersData).filter(([k,v])=>
       k.toLowerCase().includes(q)||(v.displayName||'').toLowerCase().includes(q)
     );
+
     const allUsers=Object.keys(usersData);
-    const postArrays=await Promise.all(allUsers.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
-        .then(s=>{const d=s.val()||{};return Object.entries(d).filter(([,p])=>p.text&&p.text.toLowerCase().includes(q)).map(([id,p])=>({id,owner:u,username:p.username||u,...p}));})
-        .catch(()=>[])
-    ));
-    _searchResults.posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,30);
-    const tagsSnap=await db.ref('hashtags').once('value');
+    const postArrays = await Promise.allSettled(
+      allUsers.map(u =>
+        db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
+          .then(s=>{
+            const d=s.val()||{};
+            return Object.entries(d)
+              .filter(([,p])=>p.text&&p.text.toLowerCase().includes(q))
+              .map(([id,p])=>({id,owner:u,username:p.username||u,...p}));
+          })
+      )
+    );
+    _searchResults.posts = postArrays
+      .filter(r=>r.status==='fulfilled')
+      .flatMap(r=>r.value)
+      .sort((a,b)=>b.ts-a.ts)
+      .slice(0,30);
+
     const tagsData=tagsSnap.val()||{};
     _searchResults.tags=Object.entries(tagsData)
       .filter(([k,v])=>(v.tag||k).toLowerCase().includes(q.replace('#','')))
       .sort((a,b)=>(b[1].count||0)-(a[1].count||0))
       .slice(0,15);
+
     renderSearchTab(_searchTab);
   }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
 }
@@ -1349,21 +1430,34 @@ async function renderSearchTab(tab){
   if(tab==='users'){
     const matched=_searchResults.users;
     if(!matched.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">👤</span>ユーザーが見つかりません</div>';return;}
-    for(const [uname,u] of matched){
-      const av=await getAvatarDataUrl(uname);const cvId='srav_'+uname;
-      const flags=await getUserFlags(uname);
-      const badgeHtml=buildBadgeHtml(flags,'sm');
-      const item=document.createElement('div');item.className='follow-user-item';
-      item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info">
-          <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(u.displayName||uname)}${badgeHtml}</div>
-          <div class="suggest-uname">@${esc(uname)}</div>
-          ${u.bio?`<div class="suggest-bio">${esc(u.bio.slice(0,60))}</div>`:''}
-        </div>`;
-      item.onclick=()=>openProfile(uname);
-      el.appendChild(item);
-      drawAvatarCanvas(document.getElementById(cvId),uname,av,40);
-    }
+
+    // ── 並列化: 検索結果ユーザーのアバター・バッジを同時取得 ──
+    const userDataList = await Promise.allSettled(
+      matched.map(async ([uname, u]) => {
+        const [av, flags] = await Promise.all([
+          getAvatarDataUrl(uname),
+          getUserFlags(uname)
+        ]);
+        return { uname, u, av, flags };
+      })
+    );
+
+    userDataList
+      .filter(r=>r.status==='fulfilled')
+      .forEach(({ value: { uname, u, av, flags } }) => {
+        const cvId='srav_'+uname;
+        const badgeHtml=buildBadgeHtml(flags,'sm');
+        const item=document.createElement('div');item.className='follow-user-item';
+        item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
+          <div class="suggest-info">
+            <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(u.displayName||uname)}${badgeHtml}</div>
+            <div class="suggest-uname">@${esc(uname)}</div>
+            ${u.bio?`<div class="suggest-bio">${esc(u.bio.slice(0,60))}</div>`:''}
+          </div>`;
+        item.onclick=()=>openProfile(uname);
+        el.appendChild(item);
+        drawAvatarCanvas(document.getElementById(cvId),uname,av,40);
+      });
   }else if(tab==='posts'){
     const posts=_searchResults.posts;
     if(!posts.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">📄</span>投稿が見つかりません</div>';return;}
@@ -1404,64 +1498,86 @@ function copySearchAndGo(val){
   doSearch();
 }
 
-// ── おすすめユーザー（バッジ対応 + X風スコアリング）──
+// ── おすすめユーザー（並列化）──
 async function loadSuggestUsers(){
   const el=document.getElementById('suggestUsers');if(!el)return;
   try{
-    const usersSnap=await db.ref('users').once('value');
+    const [usersSnap, followsAllSnap] = await Promise.all([
+      db.ref('users').once('value'),
+      db.ref('follows').once('value')
+    ]);
+
     const usersData=usersSnap.val()||{};
     const allUsers=Object.keys(usersData).filter(u=>u!==(session?.username));
     if(!allUsers.length){el.innerHTML='<div style="padding:12px 16px;font-size:.84rem;color:var(--white3)">他のユーザーがいません</div>';return;}
 
-    let myFollows={},myFollowers={};
-    const followsAllSnap=await db.ref('follows').once('value');
     const followsAll=followsAllSnap.val()||{};
+    let myFollows={},myFollowers={};
     if(session){
       myFollows=followsAll[session.username]||{};
       for(const uid in followsAll){if(followsAll[uid][session.username]===true)myFollowers[uid]=true;}
     }
 
-    const scored=await Promise.all(allUsers.map(async u=>{
-      const uData=usersData[u]||{};
-      let followerCount=0;
-      for(const uid in followsAll){if(followsAll[uid][u]===true)followerCount++;}
-      let postCount=0,lastActive=0;
-      try{
-        const postsSnap=await db.ref('posts/'+u).orderByChild('ts').limitToLast(5).once('value');
-        const postsData=postsSnap.val()||{};
-        postCount=postsSnap.numChildren();
-        Object.values(postsData).forEach(p=>{if(p.ts>lastActive)lastActive=p.ts;});
-      }catch(e){}
-      const alreadyFollowing=myFollows[u]===true;
-      const mutualPending=myFollowers[u]&&!alreadyFollowing;
-      const now=Date.now();
-      const daysSinceActive=lastActive?Math.max(0.1,(now-lastActive)/(1000*60*60*24)):30;
-      let score=followerCount*2+postCount*0.5+(mutualPending?20:0)+(1/daysSinceActive)*5;
-      return{u,uData,followerCount,postCount,alreadyFollowing,mutualPending,score};
-    }));
+    // ── 並列化: 全ユーザーのスコア計算に必要なデータを同時取得 ──
+    const scored = await Promise.allSettled(
+      allUsers.map(async u => {
+        const uData=usersData[u]||{};
+        let followerCount=0;
+        for(const uid in followsAll){if(followsAll[uid][u]===true)followerCount++;}
+        let postCount=0,lastActive=0;
+        try{
+          const postsSnap=await db.ref('posts/'+u).orderByChild('ts').limitToLast(5).once('value');
+          const postsData=postsSnap.val()||{};
+          postCount=postsSnap.numChildren();
+          Object.values(postsData).forEach(p=>{if(p.ts>lastActive)lastActive=p.ts;});
+        }catch(e){}
+        const alreadyFollowing=myFollows[u]===true;
+        const mutualPending=myFollowers[u]&&!alreadyFollowing;
+        const now=Date.now();
+        const daysSinceActive=lastActive?Math.max(0.1,(now-lastActive)/(1000*60*60*24)):30;
+        let score=followerCount*2+postCount*0.5+(mutualPending?20:0)+(1/daysSinceActive)*5;
+        return{u,uData,followerCount,postCount,alreadyFollowing,mutualPending,score};
+      })
+    );
 
-    const notFollowing=scored.filter(s=>!s.alreadyFollowing).sort((a,b)=>b.score-a.score);
-    const following   =scored.filter(s=>s.alreadyFollowing ).sort((a,b)=>b.score-a.score);
+    const validScored = scored
+      .filter(r=>r.status==='fulfilled')
+      .map(r=>r.value);
+
+    const notFollowing=validScored.filter(s=>!s.alreadyFollowing).sort((a,b)=>b.score-a.score);
+    const following   =validScored.filter(s=>s.alreadyFollowing ).sort((a,b)=>b.score-a.score);
     const ordered=[...notFollowing.slice(0,4),...following.slice(0,1)].slice(0,4);
 
+    // ── 並列化: 表示用アバター・バッジを同時取得 ──
+    const displayData = await Promise.allSettled(
+      ordered.map(async item => {
+        const [av, flags] = await Promise.all([
+          getAvatarDataUrl(item.u),
+          getUserFlags(item.u)
+        ]);
+        return { ...item, av, flags };
+      })
+    );
+
     el.innerHTML='';
-    for(const {u,uData,followerCount,mutualPending,alreadyFollowing} of ordered){
-      const av=await getAvatarDataUrl(u);const cvId='sgav_'+u;
-      const flags=await getUserFlags(u);
-      const badgeHtml=buildBadgeHtml(flags,'sm');
-      const item=document.createElement('div');item.className='suggest-user';
-      const mutualHint  =mutualPending?`<div class="suggest-mutual"><span>フォローされています</span></div>`:'';
-      const followerHint=followerCount>0?`<div class="suggest-mutual">${formatCount(followerCount)} フォロワー</div>`:'';
-      item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info" onclick="openProfile('${esc(u)}')">
-          <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(uData.displayName||u)}${badgeHtml}</div>
-          <div class="suggest-uname">@${esc(u)}</div>
-          ${uData.bio?`<div class="suggest-bio">${esc(uData.bio.slice(0,40))}</div>`:mutualPending?mutualHint:followerHint}
-        </div>
-        <button class="follow-btn ${alreadyFollowing?'following':''}" id="sfbtn_${u}" onclick="onSuggestFollow('${esc(u)}')">${alreadyFollowing?'フォロー中':'フォロー'}</button>`;
-      el.appendChild(item);
-      drawAvatarCanvas(document.getElementById(cvId),u,av,40);
-    }
+    displayData
+      .filter(r=>r.status==='fulfilled')
+      .forEach(({ value: { u, uData, followerCount, mutualPending, alreadyFollowing, av, flags } }) => {
+        const cvId='sgav_'+u;
+        const badgeHtml=buildBadgeHtml(flags,'sm');
+        const item=document.createElement('div');item.className='suggest-user';
+        const mutualHint  =mutualPending?`<div class="suggest-mutual"><span>フォローされています</span></div>`:'';
+        const followerHint=followerCount>0?`<div class="suggest-mutual">${formatCount(followerCount)} フォロワー</div>`:'';
+        item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
+          <div class="suggest-info" onclick="openProfile('${esc(u)}')">
+            <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(uData.displayName||u)}${badgeHtml}</div>
+            <div class="suggest-uname">@${esc(u)}</div>
+            ${uData.bio?`<div class="suggest-bio">${esc(uData.bio.slice(0,40))}</div>`:mutualPending?mutualHint:followerHint}
+          </div>
+          <button class="follow-btn ${alreadyFollowing?'following':''}" id="sfbtn_${u}" onclick="onSuggestFollow('${esc(u)}')">${alreadyFollowing?'フォロー中':'フォロー'}</button>`;
+        el.appendChild(item);
+        drawAvatarCanvas(document.getElementById(cvId),u,av,40);
+      });
   }catch(e){el.innerHTML=`<div style="padding:12px 16px;font-size:.83rem;color:var(--white3)">読み込みエラー</div>`;}
 }
 async function onSuggestFollow(username){
@@ -1477,7 +1593,6 @@ function setView(view){
   document.querySelectorAll('.sidebar-nav-item[data-view]').forEach(el=>{
     const active=el.dataset.view===view;
     el.classList.toggle('active',active);
-    // fill/outline アイコン切り替え（Xスタイル）
     const outlines=el.querySelectorAll('.nav-icon-outline');
     const fills=el.querySelectorAll('.nav-icon-fill');
     outlines.forEach(s=>s.style.display=active?'none':'');
