@@ -813,52 +813,57 @@ window.startStudyWithMode=function(mode){
 };
 
 function _launchStudy(deckId){
-  currentDeckId=deckId;const dk=allPublicDecks[deckId];if(!dk)return;
+  currentDeckId=deckId;
+  const dk=allPublicDecks[deckId];if(!dk)return;
   db.ref(`decks/${deckId}/viewCount`).transaction(v=>(v||0)+1).catch(()=>{});
   db.ref(`decks/${deckId}/vc`).transaction(v=>(v||0)+1).catch(()=>{});
-  ge('deckBrowser').style.display='none';ge('studySession').style.display='';
-  ge('sessDeckName').textContent=dk.name||'無題';
 
+  ge('deckBrowser').style.display='none';
+  ge('studySession').style.display='';
+  ge('sessDeckName').textContent=dk.name||'無題';
   ge('cardsListView').classList.remove('active');
   ge('sessionComplete').classList.remove('active');
+  ge('studyArea')?.classList.add('active');
 
   const editBtn=ge('editDeckBtn');
   if(editBtn)editBtn.style.display=(currentSession&&dk.owner===currentSession.username)?'':'none';
-  if(!decks[deckId])decks[deckId]=dk;
-
-  const studyArea=ge('studyArea');
-  if(studyArea)studyArea.classList.add('active');
 
   const flashArea=ge('flashcardArea');
   const quizArea=ge('quizArea');
 
-  if(studyMode==='4choice'){
-    if(flashArea)flashArea.style.display='none';
-    if(quizArea)quizArea.style.display='';
-    const dk2=decks[deckId]||allPublicDecks[deckId];
-    const cardCount=dk2&&dk2.cards?Object.keys(dk2.cards).length:0;
-    if(cardCount===0){
-      // カードデータ未ロードの場合はFirebaseから取得
-      db.ref(`cards/${deckId}`).once('value').then(snap=>{
-        const raw=snap.val()||{};
-        if(!decks[deckId])decks[deckId]={...allPublicDecks[deckId]};
-        decks[deckId].cards={};
-        for(const[cid,card]of Object.entries(raw)){
-          if(!card||typeof card!=='object')continue;
-          decks[deckId].cards[cid]={front:card.f||card.front||'',back:card.b||card.back||'',deckId,
-            due:card.due||Date.now(),interval:card.interval||0,ease:card.ease||2.5,reps:card.reps||0};
-        }
-        buildQuizQueue();renderQuizCard();
-      }).catch(()=>{buildQuizQueue();renderQuizCard();});
-    }else{
-      buildQuizQueue();renderQuizCard();
+  // 常にFirebaseから最新カードデータを取得してから開始
+  db.ref(`cards/${deckId}`).once('value').then(snap=>{
+    const raw=snap.val()||{};
+    if(!decks[deckId])decks[deckId]={...dk};
+    decks[deckId].cards={};
+    for(const[cid,card]of Object.entries(raw)){
+      if(!card||typeof card!=='object')continue;
+      decks[deckId].cards[cid]={
+        front:card.f||card.front||'',
+        back:card.b||card.back||'',
+        deckId,
+        due:card.due||Date.now(),
+        interval:card.interval||0,
+        ease:card.ease||2.5,
+        reps:card.reps||0
+      };
     }
-  }else{
-    if(flashArea)flashArea.style.display='';
-    if(quizArea)quizArea.style.display='none';
-    buildStudyQueue();
-    renderFlashcard();
-  }
+    if(allPublicDecks[deckId])allPublicDecks[deckId].cards=decks[deckId].cards;
+
+    if(studyMode==='4choice'){
+      if(flashArea)flashArea.style.display='none';
+      if(quizArea)quizArea.style.display='';
+      buildQuizQueue();
+      renderQuizCard();
+    }else{
+      if(flashArea)flashArea.style.display='';
+      if(quizArea)quizArea.style.display='none';
+      buildStudyQueue();
+      renderFlashcard();
+    }
+  }).catch(e=>{
+    showToast('カードの読み込みに失敗しました: '+e.message,'error');
+  });
 }
 
 window.backToBrowser=function(){
@@ -1002,14 +1007,16 @@ window.deleteCardSession=async function(cardId){
 //  4択クイズ
 // ══════════════════════════════════════════════════════
 
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
 function buildQuizQueue(){
   const d=decks[currentDeckId]||allPublicDecks[currentDeckId];
-  if(!d){quizQueue=[];return;}
-  // cardsが未ロードの場合は再取得
-  if(!d.cards||Object.keys(d.cards).length===0){quizQueue=[];return;}
-  decks[currentDeckId]=d;
-  quizQueue=Object.keys(d.cards).filter(k=>d.cards[k]&&d.cards[k].front).sort(()=>Math.random()-.5);
+  if(!d||!d.cards){quizQueue=[];return;}
+  // front・backが両方ある有効なカードのIDのみ、ランダム順で並べる
+  const ids=Object.keys(d.cards).filter(k=>{const c=d.cards[k];return c&&c.front&&c.back;});
+  quizQueue=shuffle(ids);
   quizIdx=0;quizAnswered=false;quizStats={correct:0,wrong:0,total:quizQueue.length};
+  decks[currentDeckId]=d;
 }
 
 function renderQuizCard(){
@@ -1017,11 +1024,9 @@ function renderQuizCard(){
   if(!d){showToast('デッキが見つかりません','error');return;}
 
   if(quizQueue.length===0){
-    // カードが読み込まれていない可能性があるので再ビルド
     buildQuizQueue();
     if(quizQueue.length===0){showSessionComplete();return;}
   }
-
   if(quizIdx>=quizQueue.length){showSessionComplete();return;}
 
   const cardId=quizQueue[quizIdx];
@@ -1030,9 +1035,11 @@ function renderQuizCard(){
 
   quizAnswered=false;
 
-  const allCards=Object.values(d.cards).filter(c=>c&&c.front&&c.back);
-  const wrongCards=allCards.filter(c=>c!==card).sort(()=>Math.random()-.5).slice(0,3);
-  const choices=[card,...wrongCards].sort(()=>Math.random()-.5);
+  // 単語帳内の全カードからこの問題以外をランダムに最大3つ選んで不正解選択肢に
+  const allValid=Object.values(d.cards).filter(c=>c&&c.front&&c.back&&c!==card);
+  const wrongChoices=shuffle([...allValid]).slice(0,3);
+  // 正解を含めた4択をシャッフル
+  const choices=shuffle([card,...wrongChoices]);
   currentQuizChoices=choices;
   quizCorrectIdx=choices.indexOf(card);
 
@@ -1042,7 +1049,7 @@ function renderQuizCard(){
   if(progressText)progressText.textContent=`${quizIdx+1} / ${quizQueue.length}`;
 
   const questionEl=ge('quizQuestion');
-  if(questionEl)questionEl.textContent=card.front;
+  if(questionEl)questionEl.textContent=card.front;  // 表面が問題
 
   const resultEl=ge('quizResult');
   const nextBtn=ge('quizNextBtn');
@@ -1051,6 +1058,7 @@ function renderQuizCard(){
 
   const choicesEl=ge('quizChoices');
   if(!choicesEl)return;
+  // 選択肢は裏面（答え）を表示
   choicesEl.innerHTML=choices.map((c,i)=>
     `<button class="quiz-choice" onclick="selectQuizAnswer(${i})">${esc(c.back)}</button>`
   ).join('');
