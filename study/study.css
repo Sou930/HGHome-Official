@@ -719,16 +719,20 @@ nav {
 /* Card Controls */
 .card-controls { display:flex; gap:8px; justify-content:center; }
 .ctrl-btn {
-  flex:1; max-width:140px; padding:11px 10px; border-radius:var(--r-xs);
-  font-family:var(--Fb); font-size:12px; font-weight:700; letter-spacing:.3px;
-  cursor:pointer; border:1px solid var(--border);
-  background:var(--surface2); color:var(--text2); transition:all .12s;
+  flex:1; max-width:200px; padding:12px 24px; border-radius:var(--r-xs);
+  font-family:var(--Fb); font-size:13px; font-weight:700; letter-spacing:.3px;
+  cursor:pointer; border:1px solid var(--primary);
+  background:var(--primary); color:#fff; transition:all .12s;
 }
 .ctrl-btn:disabled { opacity:.32; cursor:not-allowed; pointer-events:none; }
-.ctrl-btn.again:not(:disabled):hover { border-color:#E03030; color:#E03030; background:#FFF0F0; }
-.ctrl-btn.good:not(:disabled):hover  { border-color:var(--primary); color:var(--primary); background:var(--primary-l); }
-.ctrl-btn.easy:not(:disabled):hover  { border-color:var(--green); color:var(--green); background:var(--green-l); }
-[data-theme="dark"] .ctrl-btn.again:not(:disabled):hover { background:#200808; }
+.ctrl-btn.next:not(:disabled):hover { background:var(--primary-d); border-color:var(--primary-d); }
+.card-controls { display:flex; justify-content:center; margin-top:14px; }
+
+/* スワイプアニメーション */
+@keyframes swipeLeft  { to { transform:translateX(-80px) rotate(-6deg); opacity:0; } }
+@keyframes swipeRight { to { transform:translateX( 80px) rotate( 6deg); opacity:0; } }
+.flashcard.swiping-left  { animation:swipeLeft  .22s ease forwards; }
+.flashcard.swiping-right { animation:swipeRight .22s ease forwards; }
 
 /* Session Complete */
 .session-complete {
