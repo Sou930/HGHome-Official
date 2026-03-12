@@ -1,4 +1,4 @@
-/* ── HGSNS CSS v3 ── */
+/* ── HGSNS CSS v4 ── */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -12,6 +12,9 @@
   --like:#f91880;--like-dim:rgba(249,24,128,.12);
   --repost:#00ba7c;--repost-dim:rgba(0,186,124,.12);
   --reply:#1d9bf0;--reply-dim:rgba(29,155,240,.12);
+  --badge-admin:#e0245e;
+  --badge-dev:#17bf63;
+  --badge-official:#1d9bf0;
   --r:6px;--r-lg:12px;--r-xl:20px;--r-full:9999px;
   --sidebar-w:260px;--feed-w:600px;--right-w:320px;
   --trans:.15s cubic-bezier(.16,1,.3,1);
@@ -157,6 +160,74 @@ body{
 .sidebar-username{font-size:.76rem;color:var(--white3);}
 .sidebar-dots{color:var(--white3);font-size:1rem;}
 
+/* ── USER BADGES ── */
+/* X風の小丸バッジ: 投稿ヘッダー・検索・フォローリストなどで使用 */
+.user-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;height:16px;
+  border-radius:50%;
+  flex-shrink:0;
+  vertical-align:middle;
+  position:relative;
+  cursor:default;
+  transition:transform .12s;
+}
+.user-badge:hover{transform:scale(1.15);}
+.user-badge svg{width:9px;height:9px;display:block;}
+
+/* 管理者: 赤 */
+.badge-admin{background:var(--badge-admin);color:#fff;}
+/* 公式: 青 */
+.badge-official{background:var(--badge-official);color:#fff;}
+/* 開発者: 緑 */
+.badge-dev{background:var(--badge-dev);color:#fff;}
+
+/* プロフィール用大バッジ */
+.user-badge-lg{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;height:22px;
+  border-radius:50%;
+  flex-shrink:0;
+  vertical-align:middle;
+  position:relative;
+  cursor:default;
+  transition:transform .12s;
+}
+.user-badge-lg:hover{transform:scale(1.12);}
+.user-badge-lg svg{width:13px;height:13px;display:block;}
+.badge-admin-lg {background:var(--badge-admin);color:#fff;}
+.badge-official-lg{background:var(--badge-official);color:#fff;}
+.badge-dev-lg   {background:var(--badge-dev);color:#fff;}
+
+/* ツールチップ（Xと同様: バッジにホバーで説明表示）*/
+.user-badge::after,
+.user-badge-lg::after{
+  content:attr(title);
+  position:absolute;
+  bottom:calc(100% + 5px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(15,15,15,.92);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+  font-size:.7rem;
+  font-weight:600;
+  padding:3px 9px;
+  border-radius:var(--r-full);
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .12s;
+  z-index:1000;
+  border:1px solid var(--line);
+}
+.user-badge:hover::after,
+.user-badge-lg:hover::after{opacity:1;}
+
 /* ── FEED ── */
 .sns-feed{border-right:1px solid var(--line);min-height:100vh;}
 .feed-header{
@@ -175,7 +246,7 @@ body{
 .feed-tab:hover{background:rgba(255,255,255,.04);color:var(--white)}
 .feed-tab.active{color:var(--white);border-bottom-color:var(--accent);font-weight:700;}
 
-/* タイトルバー（サブページ用）*/
+/* タイトルバー */
 .feed-title-bar{
   display:flex;align-items:center;gap:14px;
   padding:12px 16px;min-height:54px;
@@ -288,12 +359,17 @@ body{
 .post-avatar:hover{border-color:var(--accent)}
 .post-thread-line{width:2px;flex:1;background:var(--line);border-radius:2px;min-height:12px;}
 .post-body{flex:1;min-width:0;}
-.post-header{display:flex;align-items:center;gap:5px;margin-bottom:2px;flex-wrap:wrap;}
+
+/* 投稿ヘッダー: バッジが名前の直後に並ぶ */
+.post-header{
+  display:flex;align-items:center;gap:4px;
+  margin-bottom:2px;flex-wrap:wrap;
+}
 .post-dispname{font-weight:700;font-size:.92rem;color:var(--white);}
 .post-username{font-size:.84rem;color:var(--white3);}
 .post-dot{color:var(--white4);font-size:.7rem;}
 .post-time{font-size:.82rem;color:var(--white3);font-family:'DM Mono',monospace;}
-.post-verified{color:var(--accent);width:16px;height:16px;flex-shrink:0;}
+
 .post-menu-btn{
   margin-left:auto;width:32px;height:32px;border-radius:50%;border:none;background:none;
   color:var(--white3);cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -317,14 +393,6 @@ body{
 .post-img img{width:100%;max-height:400px;object-fit:cover;display:block;transition:opacity .15s;}
 .post-img:hover img{opacity:.9}
 
-/* 閲覧数 */
-.post-views{
-  display:flex;align-items:center;gap:4px;
-  font-size:.8rem;color:var(--white3);
-  margin-bottom:6px;font-family:'DM Mono',monospace;
-}
-.post-views svg{width:14px;height:14px;}
-
 /* アクション */
 .post-actions{display:flex;align-items:center;gap:0;margin-top:2px;}
 .post-action{
@@ -335,23 +403,23 @@ body{
   transition:all .15s;font-family:'Outfit',sans-serif;
   min-width:0;
 }
-.post-action:hover.reply{background:var(--reply-dim);color:var(--reply)}
-.post-action:hover.repost{background:var(--repost-dim);color:var(--repost)}
-.post-action:hover.like{background:var(--like-dim);color:var(--like)}
+.post-action:hover.reply   {background:var(--reply-dim);color:var(--reply)}
+.post-action:hover.repost  {background:var(--repost-dim);color:var(--repost)}
+.post-action:hover.like    {background:var(--like-dim);color:var(--like)}
 .post-action:hover.bookmark{background:var(--accent-dim);color:var(--accent)}
-.post-action:hover.share{background:rgba(255,255,255,.06);color:var(--white2)}
+.post-action:hover.share   {background:rgba(255,255,255,.06);color:var(--white2)}
 .post-action svg{width:17px;height:17px;flex-shrink:0;}
-.post-action.liked{color:var(--like);}
+.post-action.liked   {color:var(--like);}
 .post-action.liked svg{fill:var(--like);}
 .post-action.reposted{color:var(--repost)}
-.post-action.bookmarked{color:var(--accent)}
-.post-action.bookmarked svg{fill:var(--accent)}
+.post-action.bookmarked     {color:var(--accent)}
+.post-action.bookmarked svg {fill:var(--accent)}
 
-/* いいね時のハートアニメ */
+/* いいねアニメ */
 @keyframes likeHeart{
-  0%{transform:scale(1)}
-  30%{transform:scale(1.5)}
-  60%{transform:scale(.9)}
+  0%  {transform:scale(1)}
+  30% {transform:scale(1.5)}
+  60% {transform:scale(.9)}
   100%{transform:scale(1)}
 }
 .post-action.like-animate svg{animation:likeHeart .38s cubic-bezier(.36,.07,.19,.97);}
@@ -463,7 +531,7 @@ body{
   border:1px solid rgba(201,168,76,.25);white-space:nowrap;align-self:center;
 }
 
-/* ── SUGGEST USER（改善版）── */
+/* ── SUGGEST USER ── */
 .suggest-user{
   display:flex;align-items:center;gap:10px;
   padding:10px 14px;transition:background .12s;
@@ -535,10 +603,8 @@ body{
 .profile-tab:hover{background:rgba(255,255,255,.04);color:var(--white)}
 .profile-tab.active{color:var(--white);border-bottom-color:var(--accent);}
 
-/* ── HASHTAG SEARCH RESULTS ── */
-.hashtag-header{
-  padding:16px;border-bottom:1px solid var(--line);
-}
+/* ── HASHTAG VIEW ── */
+.hashtag-header{padding:16px;border-bottom:1px solid var(--line);}
 .hashtag-title{font-size:1.3rem;font-weight:700;color:var(--accent);}
 .hashtag-count{font-size:.84rem;color:var(--white3);margin-top:2px;}
 
@@ -555,10 +621,10 @@ body{
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;font-size:1.1rem;
 }
-.notif-icon.like{background:var(--like-dim);color:var(--like);}
+.notif-icon.like  {background:var(--like-dim);color:var(--like);}
 .notif-icon.repost{background:var(--repost-dim);color:var(--repost);}
 .notif-icon.follow{background:rgba(255,255,255,.08);}
-.notif-icon.reply{background:var(--reply-dim);color:var(--reply);}
+.notif-icon.reply {background:var(--reply-dim);color:var(--reply);}
 .notif-body{flex:1;min-width:0;}
 .notif-text{font-size:.9rem;color:var(--white2);line-height:1.5;}
 .notif-text strong{color:var(--white);font-weight:700;}
