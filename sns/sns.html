@@ -147,8 +147,8 @@
           </span>
           <span class="sidebar-label">プロフィール</span>
         </button>
-        <!-- HGStudy -->
-        <a class="sidebar-nav-item" href="../study/study.html">
+        <!-- HGStudy（デスクトップのみ） -->
+        <a class="sidebar-nav-item sidebar-nav-hgstudy" href="../study/study.html">
           <span class="sidebar-icon-wrap">
             <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
           </span>
@@ -179,9 +179,9 @@
           </div>
           <span class="sidebar-dots">···</span>
         </button>
-        <button class="back-home-btn" onclick="doLogout()" style="margin-top:4px;color:var(--white3)">
+        <button class="back-home-btn sidebar-logout-btn" onclick="doLogout()" style="margin-top:4px;color:var(--white3)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          ログアウト
+          <span class="sidebar-logout-text">ログアウト</span>
         </button>
       </div>
 
@@ -243,7 +243,7 @@
             <svg class="char-ring" id="composerRing" viewBox="0 0 32 32" width="28" height="28">
               <circle class="char-ring-bg" cx="16" cy="16" r="12" fill="none" stroke-width="3"/>
               <circle class="char-ring-fill" id="composerRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3"
-                stroke-dasharray="75.4" stroke-dashoffset="0" transform="rotate(-90 16 16)"/>
+                stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
             </svg>
             <span class="composer-count" id="composerCount" style="display:none">0</span>
             <div class="composer-divider"></div>
@@ -367,7 +367,6 @@
 
 <!-- ── Mobile FAB ── -->
 <button class="mobile-fab" id="mobileFab" onclick="if(session)openMobileCompose();else openAuthModal('login')" aria-label="新しい投稿">
-  <!-- Xと同じ鉛筆アイコン -->
   <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M23.6 3.94l-3.54-3.54a1.35 1.35 0 00-1.91 0L1.1 17.45l-.86 5.18a.68.68 0 00.78.78l5.18-.86L23.6 5.85a1.35 1.35 0 000-1.91zm-17.1 15.3l-3.8.63.63-3.8L17.1 2.29l3.17 3.17L6.5 19.24zm13.32-13.3l-3.17-3.17 1.63-1.63 3.17 3.17-1.63 1.63z"/></svg>
 </button>
 
