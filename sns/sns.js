@@ -1,4 +1,4 @@
-// ── HGSNS JS v3 ── views / bookmarks / notifications / improved suggestions
+// ── HGSNS JS v4 ── badges / filtered rec feed / follow feed fix / X-like scoring
 
 const FIREBASE_CONFIG_BIN = "01111011 00100010 01100001 01110000 01101001 01001011 01100101 01111001 00100010 00111010 00100010 01000001 01001001 01111010 01100001 01010011 01111001 01000011 01100110 00111000 01010000 01001010 01011001 01111000 01000011 01001010 01000011 01000110 01000011 01000100 00110001 01110000 01101000 01000100 01011111 00101101 01011000 01010110 01010101 01011010 00111001 00110010 01000100 01010011 01010110 01110101 01010010 01100001 01110101 01010101 00100010 00101100 00100010 01100001 01110101 01110100 01101000 01000100 01101111 01101101 01100001 01101001 01101110 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100001 01110000 01110000 00101110 01100011 01101111 01101101 00100010 00101100 00100010 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 01010101 01010010 01001100 00100010 00111010 00100010 01101000 01110100 01110100 01110000 01110011 00111010 00101111 00101111 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101101 01100100 01100101 01100110 01100001 01110101 01101100 01110100 00101101 01110010 01110100 01100100 01100010 00101110 01100001 01110011 01101001 01100001 00101101 01110011 01101111 01110101 01110100 01101000 01100101 01100001 01110011 01110100 00110001 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01110000 01110010 01101111 01101010 01100101 01100011 01110100 01001001 01100100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00100010 00101100 00100010 01110011 01110100 01101111 01110010 01100001 01100111 01100101 01000010 01110101 01100011 01101011 01100101 01110100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01110011 01110100 01101111 01110010 01100001 01100111 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01101101 01100101 01110011 01110011 01100001 01100111 01101001 01101110 01100111 01010011 01100101 01101110 01100100 01100101 01110010 01001001 01100100 00100010 00111010 00100010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00100010 00101100 00100010 01100001 01110000 01110000 01001001 01100100 00100010 00111010 00100010 00110001 00111010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00111010 01110111 01100101 01100010 00111010 00110110 00110011 00110010 01100010 00110010 01100010 01100100 00110110 01100110 00110000 00110100 00110100 00110001 01100001 00111000 00110011 01100100 00110111 00110100 00111001 01100101 00110010 00100010 00101100 00100010 01101101 01100101 01100001 01110011 01110101 01110010 01100101 01101101 01100101 01101110 01110100 01001001 01100100 00100010 00111010 00100010 01000111 00101101 01011001 00110000 00110101 00110110 00110001 00110001 00110110 01010010 01010001 01001101 00100010 01111101";
 
@@ -15,10 +15,13 @@ let _sheetImageBase64 = null;
 let _replyImageBase64 = null;
 let _replyContext = null;
 let _repostContext = null;
-let _feedTab = 'rec'; // 'rec' | 'follow'
+let _feedTab = 'rec';
 let _searchTab = 'users';
 let _searchResults = { users:[], posts:[], tags:[] };
 let _unreadNotifCount = 0;
+
+// ── ユーザーフラグキャッシュ（バッジ用）──
+const _userFlagsCache = {};
 
 // ── Helpers ──
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -48,6 +51,45 @@ function renderTextWithHashtags(text){
   return esc(text)
     .replace(/#([^\s#！？。、,\.&]+)/g,'<span class="hashtag" onclick="event.stopPropagation();openHashtag(\'#$1\')">#$1</span>')
     .replace(/@([a-zA-Z0-9_]{2,20})/g,'<span class="mention" onclick="event.stopPropagation();openProfile(\'$1\')">@$1</span>');
+}
+
+// ── バッジ ──
+// Firebase から isadmin / isdev / isofficial を取得してキャッシュ
+async function getUserFlags(username){
+  if(_userFlagsCache[username]!==undefined)return _userFlagsCache[username];
+  if(!db){_userFlagsCache[username]={};return{};}
+  try{
+    const snap=await db.ref(`users/${username}`).once('value');
+    const u=snap.val()||{};
+    const flags={isadmin:!!u.isadmin,isdev:!!u.isdev,isofficial:!!u.isofficial};
+    _userFlagsCache[username]=flags;
+    return flags;
+  }catch(e){_userFlagsCache[username]={};return{};}
+}
+
+// バッジHTML生成（Xと同じ: 名前の右に小さな丸バッジ）
+// size: 'sm'(投稿内) | 'lg'(プロフィール)
+function buildBadgeHtml(flags, size){
+  if(!flags)return'';
+  const cls=size==='lg'?'-lg':'';
+  let html='';
+  // 優先順: admin > official > dev（複数付く場合もある）
+  if(flags.isadmin){
+    html+=`<span class="user-badge badge-admin${cls}" title="管理者">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7l-9-5z"/></svg>
+    </span>`;
+  }
+  if(flags.isofficial){
+    html+=`<span class="user-badge badge-official${cls}" title="公式">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+    </span>`;
+  }
+  if(flags.isdev){
+    html+=`<span class="user-badge badge-dev${cls}" title="開発者">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+    </span>`;
+  }
+  return html;
 }
 
 // ── Avatar ──
@@ -234,7 +276,7 @@ function updateCharRing(len,max,ringId,countId){
   const ring=document.getElementById(ringId);
   const countEl=document.getElementById(countId);
   if(!ring)return;
-  const r=12;const circ=2*Math.PI*r; // ≈75.4
+  const r=12;const circ=2*Math.PI*r;
   const ratio=Math.min(len/max,1);
   const offset=circ*(1-ratio);
   ring.setAttribute('stroke-dashoffset',offset);
@@ -308,7 +350,6 @@ async function submitSheetPost(){
     if(_replyContext){
       post.replyTo={owner:_replyContext.owner,postId:_replyContext.postId,username:_replyContext.username,displayName:_replyContext.displayName};
       await db.ref(`posts/${_replyContext.owner}/${_replyContext.postId}/replyCount`).transaction(c=>(c||0)+1);
-      // 通知送信
       if(_replyContext.username!==session.username)
         await pushNotification(_replyContext.username,'reply',{from:session.username,fromDisplay:session.displayName||session.username,postOwner:_replyContext.owner,postId:_replyContext.postId,text:text.slice(0,60)});
     }
@@ -363,9 +404,7 @@ async function saveHashtags(text){
 // ── 閲覧数カウント ──
 async function recordView(owner,postId){
   if(!db)return;
-  try{
-    await db.ref(`posts/${owner}/${postId}/views`).transaction(c=>(c||0)+1);
-  }catch(e){}
+  try{await db.ref(`posts/${owner}/${postId}/views`).transaction(c=>(c||0)+1);}catch(e){}
 }
 
 // ── ブックマーク ──
@@ -416,9 +455,7 @@ async function loadBookmarksView(){
 // ── 通知 ──
 async function pushNotification(toUser,type,data){
   if(!db||!toUser)return;
-  try{
-    await db.ref(`notifications/${toUser}`).push({type,data,ts:Date.now(),read:false});
-  }catch(e){}
+  try{await db.ref(`notifications/${toUser}`).push({type,data,ts:Date.now(),read:false});}catch(e){}
 }
 async function loadNotifBadge(){
   if(!session||!db)return;
@@ -427,10 +464,7 @@ async function loadNotifBadge(){
     const count=snap.numChildren();
     _unreadNotifCount=count;
     const badge=document.getElementById('notifBadge');
-    if(badge){
-      badge.style.display=count>0?'flex':'none';
-      badge.textContent=count>9?'9+':String(count);
-    }
+    if(badge){badge.style.display=count>0?'flex':'none';badge.textContent=count>9?'9+':String(count);}
   }catch(e){}
 }
 async function loadNotifications(){
@@ -441,14 +475,12 @@ async function loadNotifications(){
     const snap=await db.ref(`notifications/${session.username}`).orderByChild('ts').limitToLast(50).once('value');
     const data=snap.val()||{};
     const notifs=Object.entries(data).map(([id,n])=>({id,...n})).sort((a,b)=>b.ts-a.ts);
-    // 既読にマーク
     const updates={};
     notifs.forEach(n=>{if(!n.read)updates[`notifications/${session.username}/${n.id}/read`]=true;});
     if(Object.keys(updates).length)db.ref().update(updates);
     _unreadNotifCount=0;
     const badge=document.getElementById('notifBadge');
     if(badge)badge.style.display='none';
-
     if(!notifs.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔔</span>通知はありません</div>';return;}
     el.innerHTML='';
     notifs.forEach(n=>{
@@ -456,19 +488,10 @@ async function loadNotifications(){
       item.className='notif-item'+(n.read?'':' unread');
       const d=n.data||{};
       let iconClass='',iconContent='',bodyText='';
-      if(n.type==='like'){
-        iconClass='like';iconContent='❤️';
-        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがいいねしました`;
-      }else if(n.type==='repost'){
-        iconClass='repost';iconContent='🔁';
-        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがリポストしました`;
-      }else if(n.type==='follow'){
-        iconClass='follow';iconContent='👤';
-        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがフォローしました`;
-      }else if(n.type==='reply'){
-        iconClass='reply';iconContent='💬';
-        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんが返信しました`;
-      }
+      if(n.type==='like'){iconClass='like';iconContent='❤️';bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがいいねしました`;}
+      else if(n.type==='repost'){iconClass='repost';iconContent='🔁';bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがリポストしました`;}
+      else if(n.type==='follow'){iconClass='follow';iconContent='👤';bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがフォローしました`;}
+      else if(n.type==='reply'){iconClass='reply';iconContent='💬';bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんが返信しました`;}
       item.innerHTML=`
         <div class="notif-icon ${iconClass}">${iconContent}</div>
         <div class="notif-body">
@@ -496,24 +519,63 @@ async function loadFeed(){
   }
 }
 
-// おすすめフィード（全ユーザー）
+// ── X風スコアリング ──
+// likes*3 + reposts*4 + replies*2 + views*0.01 に時間減衰をかける
+function calcEngagementScore(p){
+  const likeCount  = p.likes  ? Object.keys(p.likes).length  : 0;
+  const repostCount= p.reposts? Object.keys(p.reposts).length: 0;
+  const replyCount = p.replyCount||0;
+  const views      = p.views||0;
+  const engagement = likeCount*3 + repostCount*4 + replyCount*2 + views*0.01;
+  // 時間減衰: 投稿後の時間（時間単位）に対して指数的に減衰
+  const hoursAgo = Math.max(0.1, (Date.now()-p.ts)/(1000*60*60));
+  // Xに近い: score / (age+2)^1.8
+  return engagement / Math.pow(hoursAgo+2, 1.8);
+}
+
+// おすすめフィード（返信を除外・X風スコアリング）
 async function loadRecFeed(feedEl){
   if(!db){feedEl.innerHTML='<div class="feed-empty">DB未接続</div>';return;}
   try{
     const usersSnap=await db.ref('users').once('value');
     const users=Object.keys(usersSnap.val()||{});
     const postArrays=await Promise.all(users.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(15).once('value')
-        .then(s=>{const d=s.val()||{};return Object.entries(d).map(([id,p])=>({id,owner:u,...p}));})
+      db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
+        .then(s=>{
+          const d=s.val()||{};
+          return Object.entries(d)
+            // ── 返信を除外 ──
+            .filter(([,p])=>!p.replyTo)
+            .map(([id,p])=>({id,owner:u,...p}));
+        })
         .catch(()=>[])
     ));
-    let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,60);
-    if(!posts.length){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>まだ投稿がありません</div>';return;}
-    await renderPosts(feedEl,posts);
+
+    let posts=postArrays.flat();
+
+    // 直近72時間以内のものを優先しつつ X風スコアで並び替え
+    const now=Date.now();
+    const recent=posts.filter(p=>(now-p.ts)<72*60*60*1000);
+    const older =posts.filter(p=>(now-p.ts)>=72*60*60*1000);
+
+    // スコア順
+    recent.sort((a,b)=>calcEngagementScore(b)-calcEngagementScore(a));
+    older .sort((a,b)=>calcEngagementScore(b)-calcEngagementScore(a));
+
+    // 72h以内を先に、古いものを後に混在（Xは新旧ミックス）
+    // 上位35件の中に古い投稿も最大5件まで差し込む
+    const combined=[...recent.slice(0,30),...older.slice(0,5)]
+      .sort((a,b)=>calcEngagementScore(b)-calcEngagementScore(a))
+      .slice(0,60);
+
+    if(!combined.length){
+      feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>まだ投稿がありません</div>';return;
+    }
+    await renderPosts(feedEl,combined);
   }catch(e){feedEl.innerHTML=`<div class="feed-empty">読み込みエラー: ${esc(e.message)}</div>`;}
 }
 
-// フォロー中フィード
+// フォロー中フィード（自分+フォロー相手 / 返信も表示 / buildPostElと同一モデル）
 async function loadFollowFeed(feedEl){
   if(!session){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔒</span>ログインが必要です</div>';return;}
   try{
@@ -521,12 +583,26 @@ async function loadFollowFeed(feedEl){
     const followData=followSnap.val()||{};
     const followList=Object.keys(followData).filter(k=>followData[k]===true);
     const targets=[session.username,...followList];
+
     const postArrays=await Promise.all(targets.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
-        .then(s=>{const d=s.val()||{};return Object.entries(d).map(([id,p])=>({id,owner:u,...p}));})
+      db.ref('posts/'+u).orderByChild('ts').limitToLast(40).once('value')
+        .then(s=>{
+          const d=s.val()||{};
+          // owner を必ず付与、username が無ければ owner で補完（モデル統一）
+          return Object.entries(d).map(([id,p])=>({
+            id,
+            owner:u,
+            username:p.username||u,
+            displayName:p.displayName||p.username||u,
+            ...p
+          }));
+        })
         .catch(()=>[])
     ));
-    let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,60);
+
+    // フォロー中フィードは時系列（新しい順）
+    let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,80);
+
     if(!posts.length){
       feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>フォロー中のユーザーの投稿がありません<br><small style="margin-top:8px;display:block">誰かをフォローしてみましょう</small></div>';return;
     }
@@ -552,22 +628,37 @@ async function renderPosts(container,posts,showThreadLines){
   }
 }
 
+// ── buildPostEl（バッジ対応）──
 async function buildPostEl(p,showThreadLine){
   const el=document.createElement('div');
   el.className='post';
   el.dataset.postId=p.id;
   el.dataset.owner=p.owner||p.username;
-  const av=await getAvatarDataUrl(p.username||p.owner);
-  const avHtml=avatarImgTag(p.username||p.owner,av,44);
-  const likeCount=p.likes?Object.keys(p.likes).length:0;
+
+  const username=p.username||p.owner;
+  const owner=p.owner||p.username;
+
+  const av=await getAvatarDataUrl(username);
+  const avHtml=avatarImgTag(username,av,44);
+
+  // バッジ取得
+  const flags=await getUserFlags(username);
+  const badgeHtml=buildBadgeHtml(flags,'sm');
+
+  const likeCount  =p.likes  ?Object.keys(p.likes).length  :0;
   const repostCount=p.reposts?Object.keys(p.reposts).length:0;
   const views=p.views||0;
-  const liked=session&&p.likes&&p.likes[session.username];
+  const liked   =session&&p.likes  &&p.likes[session.username];
   const reposted=session&&p.reposts&&p.reposts[session.username];
-  const bookmarked=session?await isBookmarked(p.owner||p.username,p.id):false;
-  const isOwner=session&&session.username===(p.username||p.owner);
-  const imgHtml=p.image?`<div class="post-img" onclick="event.stopPropagation();openLightbox('${esc(p.image)}')"><img src="${esc(p.image)}" alt="投稿画像" loading="lazy"></div>`:'';
-  const replyToHtml=p.replyTo?`<div class="post-reply-to">↩ <span>@${esc(p.replyTo.displayName||p.replyTo.username)}</span> への返信</div>`:'';
+  const bookmarked=session?await isBookmarked(owner,p.id):false;
+  const isOwner=session&&session.username===username;
+
+  const imgHtml=p.image
+    ?`<div class="post-img" onclick="event.stopPropagation();openLightbox('${esc(p.image)}')"><img src="${esc(p.image)}" alt="投稿画像" loading="lazy"></div>`
+    :'';
+  const replyToHtml=p.replyTo
+    ?`<div class="post-reply-to">↩ <span>@${esc(p.replyTo.displayName||p.replyTo.username)}</span> への返信</div>`
+    :'';
   let quoteHtml='';
   if(p.quoteOf){
     quoteHtml=`<div class="post-quote-embed" onclick="event.stopPropagation();openThread('${esc(p.quoteOf.owner)}','${esc(p.quoteOf.postId)}')">
@@ -584,7 +675,7 @@ async function buildPostEl(p,showThreadLine){
         <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
       </button>
       <div class="post-dropdown" id="menu_${p.id}">
-        <button class="post-dropdown-item danger" onclick="event.stopPropagation();deletePost('${p.owner||p.username}','${p.id}')">
+        <button class="post-dropdown-item danger" onclick="event.stopPropagation();deletePost('${owner}','${p.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           削除
         </button>
@@ -598,8 +689,9 @@ async function buildPostEl(p,showThreadLine){
     </div>
     <div class="post-body">
       <div class="post-header">
-        <span class="post-dispname" onclick="event.stopPropagation();openProfile('${esc(p.username||p.owner)}')" style="cursor:pointer">${esc(p.displayName||p.username||p.owner)}</span>
-        <span class="post-username">@${esc(p.username||p.owner)}</span>
+        <span class="post-dispname" onclick="event.stopPropagation();openProfile('${esc(username)}')" style="cursor:pointer">${esc(p.displayName||username)}</span>
+        ${badgeHtml}
+        <span class="post-username">@${esc(username)}</span>
         <span class="post-dot">·</span>
         <span class="post-time">${timeAgo(p.ts)}</span>
         ${menuHtml}
@@ -609,15 +701,15 @@ async function buildPostEl(p,showThreadLine){
       ${imgHtml}
       ${quoteHtml}
       <div class="post-actions">
-        <button class="post-action reply" onclick="event.stopPropagation();openReplyModal('${esc(p.owner||p.username)}','${p.id}')">
+        <button class="post-action reply" onclick="event.stopPropagation();openReplyModal('${esc(owner)}','${p.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span>${p.replyCount||0}</span>
         </button>
-        <button class="post-action repost ${reposted?'reposted':''}" onclick="event.stopPropagation();openRepostModal('${esc(p.owner||p.username)}','${p.id}')">
+        <button class="post-action repost ${reposted?'reposted':''}" onclick="event.stopPropagation();openRepostModal('${esc(owner)}','${p.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
           <span>${repostCount}</span>
         </button>
-        <button class="post-action like ${liked?'liked':''}" id="likeBtn_${p.id}" onclick="event.stopPropagation();toggleLike(event,'${esc(p.owner||p.username)}','${p.id}',this)">
+        <button class="post-action like ${liked?'liked':''}" id="likeBtn_${p.id}" onclick="event.stopPropagation();toggleLike(event,'${esc(owner)}','${p.id}',this)">
           <svg viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
           <span>${likeCount}</span>
         </button>
@@ -625,7 +717,7 @@ async function buildPostEl(p,showThreadLine){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           <span style="font-size:.78rem;color:var(--white3)">${formatCount(views)}</span>
         </button>
-        <button class="post-action bookmark ${bookmarked?'bookmarked':''}" onclick="event.stopPropagation();toggleBookmark(event,'${esc(p.owner||p.username)}','${p.id}',this)" title="${bookmarked?'ブックマーク済み':'ブックマーク'}">
+        <button class="post-action bookmark ${bookmarked?'bookmarked':''}" onclick="event.stopPropagation();toggleBookmark(event,'${esc(owner)}','${p.id}',this)" title="${bookmarked?'ブックマーク済み':'ブックマーク'}">
           <svg viewBox="0 0 24 24" fill="${bookmarked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
         </button>
         <button class="post-action share" onclick="event.stopPropagation();sharePost(event,'${p.id}')">
@@ -634,7 +726,7 @@ async function buildPostEl(p,showThreadLine){
       </div>
     </div>`;
 
-  el.addEventListener('click',()=>openThread(p.owner||p.username,p.id));
+  el.addEventListener('click',()=>openThread(owner,p.id));
   return el;
 }
 
@@ -656,7 +748,6 @@ async function toggleLike(e,owner,postId,btn){
     await ref.remove();
   }else{
     await ref.set(true);
-    // 通知
     if(owner!==session.username){
       const postSnap=await db.ref(`posts/${owner}/${postId}`).once('value');
       const post=postSnap.val()||{};
@@ -667,7 +758,6 @@ async function toggleLike(e,owner,postId,btn){
   btn.classList.toggle('liked',!liked);
   svg.setAttribute('fill',!liked?'currentColor':'none');
   countEl.textContent=Math.max(0,(parseInt(countEl.textContent)||0)+(!liked?1:-1));
-  // アニメーション
   if(!liked){btn.classList.add('like-animate');setTimeout(()=>btn.classList.remove('like-animate'),400);}
 }
 
@@ -689,7 +779,6 @@ async function doRepost(){
   const {owner,postId,reposted}=_repostState;
   if(reposted){await doUndoRepost();return;}
   await db.ref(`posts/${owner}/${postId}/reposts/${session.username}`).set(true);
-  // 通知
   if(owner!==session.username){
     const postSnap=await db.ref(`posts/${owner}/${postId}`).once('value');
     const post=postSnap.val()||{};
@@ -832,7 +921,6 @@ async function openThread(owner,postId){
   viewHistory.push(currentView);
   currentView='thread';
   setView('thread');
-  // 閲覧数カウント（本人除く）
   if(!session||session.username!==owner)recordView(owner,postId);
   const el=document.getElementById('threadView');
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
@@ -840,14 +928,17 @@ async function openThread(owner,postId){
     const snap=await db.ref(`posts/${owner}/${postId}`).once('value');
     const post=snap.val();if(!post){el.innerHTML='<div class="feed-empty">投稿が見つかりません</div>';return;}
     post.id=postId;post.owner=owner;
-    const av=await getAvatarDataUrl(post.username||owner);
-    const likeCount=post.likes?Object.keys(post.likes).length:0;
+    const username=post.username||owner;
+    const av=await getAvatarDataUrl(username);
+    const flags=await getUserFlags(username);
+    const badgeHtml=buildBadgeHtml(flags,'lg');
+    const likeCount  =post.likes  ?Object.keys(post.likes).length  :0;
     const repostCount=post.reposts?Object.keys(post.reposts).length:0;
     const views=post.views||0;
-    const liked=session&&post.likes&&post.likes[session.username];
+    const liked   =session&&post.likes  &&post.likes[session.username];
     const reposted=session&&post.reposts&&post.reposts[session.username];
     const bookmarked=session?await isBookmarked(owner,postId):false;
-    const avHtml=avatarImgTag(post.username||owner,av,48);
+    const avHtml=avatarImgTag(username,av,48);
     const imgHtml=post.image?`<div class="post-img" onclick="openLightbox('${esc(post.image)}')" style="cursor:zoom-in"><img src="${esc(post.image)}" alt="" loading="lazy"></div>`:'';
     let quoteHtml='';
     if(post.quoteOf){
@@ -861,8 +952,11 @@ async function openThread(owner,postId){
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
           ${avHtml.replace('class="post-avatar"','class="post-avatar" style="width:48px;height:48px;"')}
           <div>
-            <div class="post-dispname" onclick="openProfile('${esc(post.username||owner)}')" style="cursor:pointer;font-size:1.05rem">${esc(post.displayName||post.username||owner)}</div>
-            <div class="post-username">@${esc(post.username||owner)}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <div class="post-dispname" onclick="openProfile('${esc(username)}')" style="cursor:pointer;font-size:1.05rem">${esc(post.displayName||username)}</div>
+              ${badgeHtml}
+            </div>
+            <div class="post-username">@${esc(username)}</div>
           </div>
         </div>
         ${post.replyTo?`<div class="post-reply-to" style="margin-bottom:8px;">↩ <span>@${esc(post.replyTo.displayName||post.replyTo.username)}</span> への返信</div>`:''}
@@ -915,12 +1009,17 @@ async function loadReplies(owner,postId){
           const d=s.val()||{};
           return Object.entries(d)
             .filter(([,p])=>p.replyTo&&p.replyTo.postId===postId&&p.replyTo.owner===owner)
-            .map(([id,p])=>({id,owner:u,...p}));
+            .map(([id,p])=>({
+              id,owner:u,
+              username:p.username||u,
+              displayName:p.displayName||p.username||u,
+              ...p
+            }));
         }).catch(()=>[])
     ));
     const replies=replyArrays.flat().sort((a,b)=>a.ts-b.ts);
     if(!replies.length){el.innerHTML='<div class="feed-empty" style="padding:30px">まだ返信がありません</div>';return;}
-    await renderPosts(el,replies);
+    await renderPosts(el,replies,true);
   }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
 }
 
@@ -932,7 +1031,7 @@ async function deletePost(owner,postId){
     showToast('削除しました');
     if(currentView==='home')loadFeed();
     else if(currentView==='profile')loadProfilePosts(viewedProfile);
-    else if(currentView==='thread'){goBack();}
+    else if(currentView==='thread')goBack();
   }catch(e){showToast('エラー: '+e.message);}
 }
 
@@ -948,9 +1047,7 @@ function openLightbox(src){
   const lb=document.getElementById('imgLightbox');
   const img=document.getElementById('lightboxImg');
   if(!lb||!img)return;
-  img.src=src;
-  lb.classList.add('open');
-  document.body.style.overflow='hidden';
+  img.src=src;lb.classList.add('open');document.body.style.overflow='hidden';
 }
 function closeLightbox(){
   const lb=document.getElementById('imgLightbox');
@@ -974,7 +1071,7 @@ async function toggleFollow(targetUsername){
   return !following;
 }
 
-// ── Profile View ──
+// ── Profile View（バッジ対応）──
 async function openProfile(username){
   viewHistory.push(currentView);
   viewedProfile=username;setView('profile');
@@ -984,11 +1081,12 @@ async function openProfile(username){
     const snap=await db.ref('users/'+username).once('value');
     const u=snap.val()||{username};
     const av=await getAvatarDataUrl(username);
+    const flags=await getUserFlags(username);
+    const badgeHtml=buildBadgeHtml(flags,'lg');
     const [followsSnap,followersSnap]=await Promise.all([db.ref('follows/'+username).once('value'),db.ref('follows').once('value')]);
     const followCount=followsSnap.val()?Object.values(followsSnap.val()).filter(v=>v===true).length:0;
     let followerCount=0;const allFollows=followersSnap.val()||{};
     for(const uid in allFollows){if(allFollows[uid][username]===true)followerCount++;}
-    // 投稿数
     const postsSnap=await db.ref('posts/'+username).once('value');
     const postCount=postsSnap.numChildren();
     const isMe=session&&session.username===username;
@@ -997,7 +1095,6 @@ async function openProfile(username){
       ?`<button class="profile-edit-btn" onclick="openEditProfile()">プロフィールを編集</button>`
       :`<button class="profile-follow-btn ${isFollowing?'following':''}" id="profileFollowBtn" onclick="onProfileFollow('${esc(username)}')">${isFollowing?'フォロー中':'フォロー'}</button>`;
     const cvId='profileAvatarCv_'+Date.now();
-    // 参加日
     const joinedDate=u.created?new Date(u.created).toLocaleDateString('ja-JP',{year:'numeric',month:'long'}):'';
     el.innerHTML=`
       <div class="profile-header">
@@ -1007,7 +1104,10 @@ async function openProfile(username){
             <canvas id="${cvId}" class="profile-avatar" width="84" height="84"></canvas>
             ${actionBtn}
           </div>
-          <div class="profile-dispname">${esc(u.displayName||username)}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+            <div class="profile-dispname" style="margin-bottom:0">${esc(u.displayName||username)}</div>
+            ${badgeHtml}
+          </div>
           <div class="profile-username">@${esc(username)}</div>
           ${u.bio?`<div class="profile-bio">${esc(u.bio)}</div>`:''}
           ${joinedDate?`<div class="profile-joined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${joinedDate} 参加</div>`:''}
@@ -1034,7 +1134,12 @@ async function loadProfilePosts(username){
   try{
     const snap=await db.ref('posts/'+username).orderByChild('ts').limitToLast(40).once('value');
     const data=snap.val()||{};
-    const posts=Object.entries(data).map(([id,p])=>({id,owner:username,...p})).sort((a,b)=>b.ts-a.ts);
+    const posts=Object.entries(data).map(([id,p])=>({
+      id,owner:username,
+      username:p.username||username,
+      displayName:p.displayName||p.username||username,
+      ...p
+    })).sort((a,b)=>b.ts-a.ts);
     if(!posts.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>まだ投稿がありません</div>';return;}
     await renderPosts(el,posts);
   }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
@@ -1062,6 +1167,8 @@ async function submitEditProfile(){
     const str=JSON.stringify(session);
     setCookie('hg_session',str,30);setCookie('hgs_sess',str,30);
     try{localStorage.setItem('hg_session_ls',str);localStorage.setItem('hgs_sess',str);}catch(e){}
+    // バッジキャッシュをリセット
+    delete _userFlagsCache[session.username];
     updateSidebarUI();closeEditProfile();showToast('プロフィールを更新しました ✓');openProfile(session.username);
   }catch(e){document.getElementById('editProfileErr').textContent='エラー: '+e.message;document.getElementById('editProfileErr').classList.add('show');}
   finally{btn.disabled=false;}
@@ -1081,9 +1188,14 @@ async function openFollowList(username,type){
     for(const u of users){
       const uSnap=await db.ref('users/'+u).once('value');const ud=uSnap.val()||{username:u};
       const av=await getAvatarDataUrl(u);const cvId='flav_'+u;
+      const flags=await getUserFlags(u);
+      const badgeHtml=buildBadgeHtml(flags,'sm');
       const item=document.createElement('div');item.className='follow-user-item';
       item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info"><div class="suggest-name">${esc(ud.displayName||u)}</div><div class="suggest-uname">@${esc(u)}</div></div>`;
+        <div class="suggest-info">
+          <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(ud.displayName||u)}${badgeHtml}</div>
+          <div class="suggest-uname">@${esc(u)}</div>
+        </div>`;
       item.onclick=()=>{closeFollowList();openProfile(u);};
       body.appendChild(item);
       drawAvatarCanvas(document.getElementById(cvId),u,av,40);
@@ -1104,7 +1216,12 @@ async function openHashtag(tag){
     const users=Object.keys(usersSnap.val()||{});
     const postArrays=await Promise.all(users.map(u=>
       db.ref('posts/'+u).orderByChild('ts').limitToLast(50).once('value')
-        .then(s=>{const d=s.val()||{};return Object.entries(d).filter(([,p])=>p.text&&extractHashtags(p.text).includes(normalTag)).map(([id,p])=>({id,owner:u,...p}));})
+        .then(s=>{
+          const d=s.val()||{};
+          return Object.entries(d)
+            .filter(([,p])=>p.text&&extractHashtags(p.text).includes(normalTag))
+            .map(([id,p])=>({id,owner:u,username:p.username||u,...p}));
+        })
         .catch(()=>[])
     ));
     const posts=postArrays.flat().sort((a,b)=>b.ts-a.ts);
@@ -1191,19 +1308,16 @@ async function doSearch(){
   try{
     const usersSnap=await db.ref('users').once('value');
     const usersData=usersSnap.val()||{};
-    // ユーザー検索
     _searchResults.users=Object.entries(usersData).filter(([k,v])=>
       k.toLowerCase().includes(q)||(v.displayName||'').toLowerCase().includes(q)
     );
-    // 投稿検索
     const allUsers=Object.keys(usersData);
     const postArrays=await Promise.all(allUsers.map(u=>
       db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
-        .then(s=>{const d=s.val()||{};return Object.entries(d).filter(([,p])=>p.text&&p.text.toLowerCase().includes(q)).map(([id,p])=>({id,owner:u,...p}));})
+        .then(s=>{const d=s.val()||{};return Object.entries(d).filter(([,p])=>p.text&&p.text.toLowerCase().includes(q)).map(([id,p])=>({id,owner:u,username:p.username||u,...p}));})
         .catch(()=>[])
     ));
     _searchResults.posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,30);
-    // タグ検索
     const tagsSnap=await db.ref('hashtags').once('value');
     const tagsData=tagsSnap.val()||{};
     _searchResults.tags=Object.entries(tagsData)
@@ -1228,9 +1342,15 @@ async function renderSearchTab(tab){
     if(!matched.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">👤</span>ユーザーが見つかりません</div>';return;}
     for(const [uname,u] of matched){
       const av=await getAvatarDataUrl(uname);const cvId='srav_'+uname;
+      const flags=await getUserFlags(uname);
+      const badgeHtml=buildBadgeHtml(flags,'sm');
       const item=document.createElement('div');item.className='follow-user-item';
       item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info"><div class="suggest-name">${esc(u.displayName||uname)}</div><div class="suggest-uname">@${esc(uname)}</div>${u.bio?`<div class="suggest-bio">${esc(u.bio.slice(0,60))}</div>`:''}</div>`;
+        <div class="suggest-info">
+          <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(u.displayName||uname)}${badgeHtml}</div>
+          <div class="suggest-uname">@${esc(uname)}</div>
+          ${u.bio?`<div class="suggest-bio">${esc(u.bio.slice(0,60))}</div>`:''}
+        </div>`;
       item.onclick=()=>openProfile(uname);
       el.appendChild(item);
       drawAvatarCanvas(document.getElementById(cvId),uname,av,40);
@@ -1269,16 +1389,13 @@ function onSearchInput(e){
     _searchDebounce=setTimeout(()=>{if(e.target.value.trim().length>=2)doSearch();},400);
   }
 }
-function onRightSearchInput(inp){
-  inp.style.setProperty('--val',inp.value);
-}
+function onRightSearchInput(inp){inp.style.setProperty('--val',inp.value);}
 function copySearchAndGo(val){
   const el=document.getElementById('searchInput');if(el)el.value=val;
   doSearch();
 }
 
-// ── おすすめユーザー（改善版）──
-// アルゴリズム: フォロワー数 + 投稿数 + 最近の活動 + 相互フォロー + 未フォローを優先
+// ── おすすめユーザー（バッジ対応 + X風スコアリング）──
 async function loadSuggestUsers(){
   const el=document.getElementById('suggestUsers');if(!el)return;
   try{
@@ -1287,7 +1404,6 @@ async function loadSuggestUsers(){
     const allUsers=Object.keys(usersData).filter(u=>u!==(session?.username));
     if(!allUsers.length){el.innerHTML='<div style="padding:12px 16px;font-size:.84rem;color:var(--white3)">他のユーザーがいません</div>';return;}
 
-    // フォロー情報取得
     let myFollows={},myFollowers={};
     const followsAllSnap=await db.ref('follows').once('value');
     const followsAll=followsAllSnap.val()||{};
@@ -1296,13 +1412,10 @@ async function loadSuggestUsers(){
       for(const uid in followsAll){if(followsAll[uid][session.username]===true)myFollowers[uid]=true;}
     }
 
-    // スコア計算
     const scored=await Promise.all(allUsers.map(async u=>{
       const uData=usersData[u]||{};
-      // フォロワー数
       let followerCount=0;
       for(const uid in followsAll){if(followsAll[uid][u]===true)followerCount++;}
-      // 投稿数・最近の活動
       let postCount=0,lastActive=0;
       try{
         const postsSnap=await db.ref('posts/'+u).orderByChild('ts').limitToLast(5).once('value');
@@ -1310,30 +1423,29 @@ async function loadSuggestUsers(){
         postCount=postsSnap.numChildren();
         Object.values(postsData).forEach(p=>{if(p.ts>lastActive)lastActive=p.ts;});
       }catch(e){}
-      // 既にフォロー中は除外
       const alreadyFollowing=myFollows[u]===true;
-      // 相互フォロー候補（自分をフォローしているが自分がフォローしていない）
       const mutualPending=myFollowers[u]&&!alreadyFollowing;
       const now=Date.now();
       const daysSinceActive=lastActive?Math.max(0.1,(now-lastActive)/(1000*60*60*24)):30;
       let score=followerCount*2+postCount*0.5+(mutualPending?20:0)+(1/daysSinceActive)*5;
-      return{u,uData,followerCount,postCount,alreadyFollowing,mutualPending,score,lastActive};
+      return{u,uData,followerCount,postCount,alreadyFollowing,mutualPending,score};
     }));
 
-    // フォロー済みを下に、未フォローを上に、スコア順
     const notFollowing=scored.filter(s=>!s.alreadyFollowing).sort((a,b)=>b.score-a.score);
-    const following=scored.filter(s=>s.alreadyFollowing).sort((a,b)=>b.score-a.score);
+    const following   =scored.filter(s=>s.alreadyFollowing ).sort((a,b)=>b.score-a.score);
     const ordered=[...notFollowing.slice(0,4),...following.slice(0,1)].slice(0,4);
 
     el.innerHTML='';
     for(const {u,uData,followerCount,mutualPending,alreadyFollowing} of ordered){
       const av=await getAvatarDataUrl(u);const cvId='sgav_'+u;
+      const flags=await getUserFlags(u);
+      const badgeHtml=buildBadgeHtml(flags,'sm');
       const item=document.createElement('div');item.className='suggest-user';
-      const mutualHint=mutualPending?`<div class="suggest-mutual"><span>フォローされています</span></div>`:'';
+      const mutualHint  =mutualPending?`<div class="suggest-mutual"><span>フォローされています</span></div>`:'';
       const followerHint=followerCount>0?`<div class="suggest-mutual">${formatCount(followerCount)} フォロワー</div>`:'';
       item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
         <div class="suggest-info" onclick="openProfile('${esc(u)}')">
-          <div class="suggest-name">${esc(uData.displayName||u)}</div>
+          <div class="suggest-name" style="display:flex;align-items:center;gap:4px;">${esc(uData.displayName||u)}${badgeHtml}</div>
           <div class="suggest-uname">@${esc(u)}</div>
           ${uData.bio?`<div class="suggest-bio">${esc(uData.bio.slice(0,40))}</div>`:mutualPending?mutualHint:followerHint}
         </div>
@@ -1347,17 +1459,14 @@ async function onSuggestFollow(username){
   const following=await toggleFollow(username);
   const btn=document.getElementById('sfbtn_'+username);
   if(btn){btn.textContent=following?'フォロー中':'フォロー';btn.className='follow-btn '+(following?'following':'');}
-  // おすすめ更新
   setTimeout(loadSuggestUsers,500);
 }
 
 // ── View Management ──
 function setView(view){
   currentView=view;
-  // サイドバーのアクティブ
   document.querySelectorAll('.sidebar-nav-item[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
 
-  // ビューパネルの表示切替
   const panels={
     home:'homeView',profile:'profileViewWrap',search:'searchViewWrap',
     trend:'trendViewWrap',hashtag:'hashtagViewWrap',thread:'threadViewWrap',
@@ -1368,7 +1477,6 @@ function setView(view){
     if(el)el.style.display=v===view?'block':'none';
   });
 
-  // ヘッダー切替
   const homeTabs=document.getElementById('homeFeedTabs');
   const titleBar=document.getElementById('feedTitleBar');
   const titleText=document.getElementById('feedTitleText');
@@ -1385,11 +1493,9 @@ function setView(view){
     if(titleText)titleText.textContent=titles[view]||'HGSNS';
   }
 
-  // フィードのスクロールをトップへ
   const feedEl=document.querySelector('.sns-feed');
   if(feedEl)feedEl.scrollTop=0;
 
-  // 遅延ロード
   if(view==='trend')loadTrendView();
   if(view==='bookmarks')loadBookmarksView();
 }
@@ -1415,6 +1521,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   setView('home');
   updateComposerCount();
   if(session)loadNotifBadge();
-  // 定期的に通知バッジを更新（60秒ごと）
   setInterval(()=>{if(session)loadNotifBadge();},60000);
 });
