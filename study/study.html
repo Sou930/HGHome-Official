@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HGStudy</title>
-  <meta name="description" content="HGStudy — フラッシュカードと解説ブログで学習">
+  <meta name="description" content="HGStudy — フラッシュカードで学習">
   <meta name="theme-color" content="#0D1120">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -18,7 +18,6 @@
   <a href="../index.html" class="nav-logo"><span class="accent">←</span> HGHome</a>
   <div class="nav-tabs" id="navTabsWrap">
     <button class="nav-tab on" id="tabStudy"   onclick="switchTab('study')">学習</button>
-    <button class="nav-tab"   id="tabBlog"     onclick="switchTab('blog')">解説ブログ</button>
     <button class="nav-tab"   id="tabHistory"  onclick="switchTab('history')">学習履歴</button>
     <button class="nav-tab"   id="tabRanking"  onclick="switchTab('ranking')">🏆 ランキング</button>
   </div>
@@ -39,7 +38,6 @@
           </div>
         </div>
         <button class="acct-menu-item" onclick="openMyProfile();closeAcctMenu()">👤 プロフィール</button>
-        <button class="acct-menu-item" onclick="switchTab('blog');closeAcctMenu()">✏️ ブログを書く</button>
         <button class="acct-menu-item danger" onclick="handleLogout();closeAcctMenu()">→ ログアウト</button>
       </div>
     </div>
@@ -256,114 +254,6 @@
   </div><!-- /studySession -->
 
 </div><!-- /pageStudy -->
-
-
-<!-- ════════════════════════════════════════════════════
-     PAGE: 解説ブログ
-════════════════════════════════════════════════════ -->
-<div id="pageBlog" class="page-view">
-
-  <!-- ブログ一覧 -->
-  <div id="blogList">
-    <div class="blog-hero">
-      <div class="blog-hero-inner">
-        <span class="blog-hero-badge">解説ブログ</span>
-        <h1 class="blog-hero-title">学習の<span class="grad-text">解説記事</span></h1>
-        <p class="blog-hero-sub">フラッシュカードを補完する詳しい解説ノート</p>
-      </div>
-      <div id="blogHeroCount" class="blog-hero-count">0</div>
-    </div>
-
-    <div class="blog-toolbar">
-      <div class="sort-bar">
-        <span class="sort-lbl">並び替え</span>
-        <button class="sort-btn on" id="sortBlogNew" onclick="setBlogSort('new')">新しい順</button>
-        <button class="sort-btn"    id="sortBlogOld" onclick="setBlogSort('old')">古い順</button>
-      </div>
-      <div style="flex:1"></div>
-      <button class="btn btn-blog" id="newPostBtn" onclick="openBlogEdit(null)" style="display:none">✏️ 記事を書く</button>
-    </div>
-
-    <div class="blog-grid-wrap">
-      <div id="blogPostsGrid" class="blog-posts-grid">
-        <div style="padding:60px;text-align:center"><div class="spinner"></div></div>
-      </div>
-    </div>
-  </div><!-- /blogList -->
-
-  <!-- 記事詳細 -->
-  <div id="blogPost" style="display:none">
-    <div class="blog-post-bar">
-      <button class="back-btn" onclick="showBlogList()">← 一覧に戻る</button>
-      <div style="flex:1"></div>
-      <button class="btn btn-blog btn-sm"   id="editPostBtn"   onclick="openBlogEdit(currentPostId)"  style="display:none">編集</button>
-      <button class="btn btn-danger btn-sm" id="deletePostBtn" onclick="deletePost(currentPostId)"    style="display:none">削除</button>
-    </div>
-    <div class="blog-post-body">
-      <div class="blog-post-header">
-        <span class="blog-post-tag" id="postTag"></span>
-        <h1 class="blog-post-title" id="postTitle"></h1>
-        <div class="blog-post-meta"><span id="postAuthor"></span><span>·</span><span id="postDate"></span></div>
-      </div>
-      <div class="blog-post-divider"></div>
-      <div class="md-body" id="postBody"></div>
-      <div class="blog-post-divider" style="margin-top:40px"></div>
-      <div class="comments-wrap" style="padding:0;margin-top:24px">
-        <div class="comments-title">コメント <span class="comments-title-cnt" id="commentCount">0</span></div>
-        <div id="commentFormWrap">
-          <div class="comment-form">
-            <div class="comment-form-row">
-              <textarea class="comment-input" id="commentInput" placeholder="コメントを入力..." rows="2"></textarea>
-              <button class="comment-submit" onclick="submitComment()">送信</button>
-            </div>
-          </div>
-        </div>
-        <div id="commentLoginPrompt" class="comment-login-prompt" style="display:none">
-          <a onclick="openAuthModal('login')">ログイン</a>してコメントできます
-        </div>
-        <div class="comment-list" id="commentList"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 記事編集 -->
-  <div id="blogEdit" style="display:none">
-    <div class="blog-edit-bar">
-      <button class="back-btn" onclick="cancelBlogEdit()">← キャンセル</button>
-      <div style="flex:1"></div>
-      <div class="blog-preview-toggle">
-        <button class="blog-preview-btn on" id="editModeBtn"    onclick="setBlogEditMode('edit')">編集</button>
-        <button class="blog-preview-btn"    id="previewModeBtn" onclick="setBlogEditMode('preview')">プレビュー</button>
-      </div>
-      <button class="btn btn-blog" onclick="savePost()">💾 保存</button>
-    </div>
-    <div class="blog-edit-body">
-      <div id="editPane">
-        <div class="blog-edit-row">
-          <div class="blog-edit-lbl">タイトル</div>
-          <input class="blog-edit-inp" id="editTitle" type="text" placeholder="記事タイトルを入力...">
-        </div>
-        <div class="blog-edit-row">
-          <div class="blog-edit-lbl">タグ</div>
-          <div class="tag-sel-grid" id="tagSelGrid"></div>
-        </div>
-        <div class="blog-edit-row">
-          <div class="blog-edit-lbl">本文（Markdown）</div>
-          <div class="blog-edit-hint">**太字**, *イタリック*, `コード`, ## 見出し, &gt; 引用, ||スポイラー|| に対応</div>
-          <textarea class="blog-edit-textarea" id="editBody" placeholder="# はじめに&#10;&#10;ここに本文を書いてください..."></textarea>
-        </div>
-      </div>
-      <div id="previewPane" style="display:none">
-        <div class="blog-post-header" style="margin-bottom:20px">
-          <span class="blog-post-tag" id="previewTag"></span>
-          <h1 class="blog-post-title" id="previewTitle" style="font-size:28px"></h1>
-        </div>
-        <div class="md-body" id="previewBody"></div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /pageBlog -->
 
 
 <!-- ════════════════════════════════════════════════════
