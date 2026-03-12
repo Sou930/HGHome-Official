@@ -1,4 +1,4 @@
-// ── HGSNSの js ── (v2: repost / reply / hashtag / trend / mobile)
+// ── HGSNS JS v3 ── views / bookmarks / notifications / improved suggestions
 
 const FIREBASE_CONFIG_BIN = "01111011 00100010 01100001 01110000 01101001 01001011 01100101 01111001 00100010 00111010 00100010 01000001 01001001 01111010 01100001 01010011 01111001 01000011 01100110 00111000 01010000 01001010 01011001 01111000 01000011 01001010 01000011 01000110 01000011 01000100 00110001 01110000 01101000 01000100 01011111 00101101 01011000 01010110 01010101 01011010 00111001 00110010 01000100 01010011 01010110 01110101 01010010 01100001 01110101 01010101 00100010 00101100 00100010 01100001 01110101 01110100 01101000 01000100 01101111 01101101 01100001 01101001 01101110 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100001 01110000 01110000 00101110 01100011 01101111 01101101 00100010 00101100 00100010 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 01010101 01010010 01001100 00100010 00111010 00100010 01101000 01110100 01110100 01110000 01110011 00111010 00101111 00101111 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101101 01100100 01100101 01100110 01100001 01110101 01101100 01110100 00101101 01110010 01110100 01100100 01100010 00101110 01100001 01110011 01101001 01100001 00101101 01110011 01101111 01110101 01110100 01101000 01100101 01100001 01110011 01110100 00110001 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01100100 01100001 01110100 01100001 01100010 01100001 01110011 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01110000 01110010 01101111 01101010 01100101 01100011 01110100 01001001 01100100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00100010 00101100 00100010 01110011 01110100 01101111 01110010 01100001 01100111 01100101 01000010 01110101 01100011 01101011 01100101 01110100 00100010 00111010 00100010 01101000 01100111 01110011 01110100 01110101 01100100 01111001 00101101 00110001 00111000 01100101 00110010 00110011 00101110 01100110 01101001 01110010 01100101 01100010 01100001 01110011 01100101 01110011 01110100 01101111 01110010 01100001 01100111 01100101 00101110 01100001 01110000 01110000 00100010 00101100 00100010 01101101 01100101 01110011 01110011 01100001 01100111 01101001 01101110 01100111 01010011 01100101 01101110 01100100 01100101 01110010 01001001 01100100 00100010 00111010 00100010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00100010 00101100 00100010 01100001 01110000 01110000 01001001 01100100 00100010 00111010 00100010 00110001 00111010 00110111 00110010 00110000 00110001 00110101 00110000 00110111 00110001 00110010 00110111 00110111 00110101 00111010 01110111 01100101 01100010 00111010 00110110 00110011 00110010 01100010 00110010 01100010 01100100 00110110 01100110 00110000 00110100 00110100 00110001 01100001 00111000 00110011 01100100 00110111 00110100 00111001 01100101 00110010 00100010 00101100 00100010 01101101 01100101 01100001 01110011 01110101 01110010 01100101 01101101 01100101 01101110 01110100 01001001 01100100 00100010 00111010 00100010 01000111 00101101 01011001 00110000 00110101 00110110 00110001 00110001 00110110 01010010 01010001 01001101 00100010 01111101";
 
@@ -8,14 +8,17 @@ function bin2str(b){const c=b.replace(/[^01]/g,'');if(!c)return'';return c.match
 let db = null;
 let session = null;
 let currentView = 'home';
+let viewHistory = [];
 let viewedProfile = null;
 let _postImageBase64 = null;
 let _sheetImageBase64 = null;
 let _replyImageBase64 = null;
-// Reply context
-let _replyContext = null; // { owner, postId, username, displayName, text }
-// Repost context
-let _repostContext = null; // { owner, postId, post }
+let _replyContext = null;
+let _repostContext = null;
+let _feedTab = 'rec'; // 'rec' | 'follow'
+let _searchTab = 'users';
+let _searchResults = { users:[], posts:[], tags:[] };
+let _unreadNotifCount = 0;
 
 // ── Helpers ──
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -27,23 +30,28 @@ function timeAgo(ts){
   const d=Math.floor(h/24);if(d<7)return d+'日';
   return new Date(ts).toLocaleDateString('ja-JP',{month:'short',day:'numeric'});
 }
+function formatCount(n){
+  if(n>=10000)return (n/10000).toFixed(1).replace(/\.0$/,'')+'万';
+  if(n>=1000)return (n/1000).toFixed(1).replace(/\.0$/,'')+'K';
+  return String(n);
+}
 function setCookie(name,value,days){try{const exp=days?'; expires='+new Date(Date.now()+days*864e5).toUTCString():'';const secure=location.protocol==='https:'?'; Secure':'';document.cookie=name+'='+encodeURIComponent(value)+exp+'; path=/; SameSite=Lax'+secure;}catch(e){}}
 function getCookie(name){try{const m=document.cookie.split('; ').find(r=>r.startsWith(name+'='));return m?decodeURIComponent(m.split('=').slice(1).join('=')):null;}catch(e){return null;}}
 function deleteCookie(name){document.cookie=name+'=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax';}
 
-// Parse hashtags from text
 function extractHashtags(text){
   const matches=text.match(/#[^\s#！？。、,\.]+/g);
   return matches?[...new Set(matches.map(t=>t.toLowerCase()))]:[];
 }
-// Render text with clickable hashtags
 function renderTextWithHashtags(text){
   if(!text)return '';
-  return esc(text).replace(/#([^\s#！？。、,\.&]+)/g,'<span class="hashtag" onclick="event.stopPropagation();openHashtag(\'#$1\')">#$1</span>');
+  return esc(text)
+    .replace(/#([^\s#！？。、,\.&]+)/g,'<span class="hashtag" onclick="event.stopPropagation();openHashtag(\'#$1\')">#$1</span>')
+    .replace(/@([a-zA-Z0-9_]{2,20})/g,'<span class="mention" onclick="event.stopPropagation();openProfile(\'$1\')">@$1</span>');
 }
 
 // ── Avatar ──
-const AVATAR_COLORS=[['#7B6CF6','#B06EF6'],['#F5835B','#F6C344'],['#52C4A3','#3B82F6'],['#E65B9A','#F5835B'],['#4B8DEA','#52C4A3'],['#A068F5','#F5835B']];
+const AVATAR_COLORS=[['#7B6CF6','#B06EF6'],['#F5835B','#F6C344'],['#52C4A3','#3B82F6'],['#E65B9A','#F5835B'],['#4B8DEA','#52C4A3'],['#A068F5','#F5835B'],['#F6C344','#52C4A3'],['#3B82F6','#E65B9A']];
 function avatarColorForName(name){let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffff;return AVATAR_COLORS[h%AVATAR_COLORS.length];}
 function drawAvatarCanvas(canvas,username,imageData,size){
   if(!canvas)return;
@@ -59,12 +67,13 @@ function avatarImgTag(username,imageData,size){
   return`<img class="post-avatar" src="${cv.toDataURL()}" alt="${esc(username)}" onclick="openProfile('${esc(username)}')">`;
 }
 async function getAvatarDataUrl(username){
-  let av=localStorage.getItem('fm_avatar_'+username);
-  if(!av&&db){try{const snap=await db.ref(`users/${username}/avatar`).once('value');av=snap.val()||null;if(av)localStorage.setItem('fm_avatar_'+username,av);}catch(e){}}
+  let av=null;
+  try{av=localStorage.getItem('fm_avatar_'+username);}catch(e){}
+  if(!av&&db){try{const snap=await db.ref(`users/${username}/avatar`).once('value');av=snap.val()||null;if(av)try{localStorage.setItem('fm_avatar_'+username,av);}catch(e){}}catch(e){}}
   return av;
 }
 
-// Toast
+// ── Toast ──
 let _toastTimer=null;
 function showToast(msg){const t=document.getElementById('snsToast');if(!t)return;t.textContent=msg;t.classList.add('show');if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
 
@@ -87,7 +96,6 @@ function loadSession(){
   updateSidebarUI();
   if(!session)openAuthModal('login');
 }
-
 function updateSidebarUI(){
   const guest=document.getElementById('sidebarGuest');
   const auth=document.getElementById('sidebarAuth');
@@ -96,22 +104,33 @@ function updateSidebarUI(){
     if(auth)auth.style.display='flex';
     document.getElementById('sidebarDispname').textContent=session.displayName||session.username;
     document.getElementById('sidebarUname').textContent='@'+session.username;
-    const av=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;
-    drawAvatarCanvas(document.getElementById('sidebarAvatarCanvas'),session.username,av,40);
-    drawAvatarCanvas(document.getElementById('composerAvatarCanvas'),session.username,av,44);
-    drawAvatarCanvas(document.getElementById('sheetAvatarCanvas'),session.username,av,40);
+    const av=session._avatar||null;
+    try{const cached=localStorage.getItem('fm_avatar_'+session.username);if(cached&&!av)session._avatar=cached;}catch(e){}
+    const avData=session._avatar||null;
+    drawAvatarCanvas(document.getElementById('sidebarAvatarCanvas'),session.username,avData,40);
+    drawAvatarCanvas(document.getElementById('composerAvatarCanvas'),session.username,avData,44);
+    drawAvatarCanvas(document.getElementById('sheetAvatarCanvas'),session.username,avData,40);
     document.getElementById('feedComposer').style.display='flex';
-  } else {
+  }else{
     if(guest)guest.style.display='flex';
     if(auth)auth.style.display='none';
     document.getElementById('feedComposer').style.display='none';
   }
 }
-
 function doLogout(){
   session=null;deleteCookie('hg_session');deleteCookie('hgs_sess');
   try{localStorage.removeItem('hg_session_ls');localStorage.removeItem('hgs_sess');}catch(e){}
   updateSidebarUI();showToast('ログアウトしました');loadFeed();openAuthModal('login');
+}
+
+// ── パスワード表示切替 ──
+function togglePassVis(inputId,btn){
+  const input=document.getElementById(inputId);if(!input)return;
+  const isPass=input.type==='password';
+  input.type=isPass?'text':'password';
+  btn.innerHTML=isPass
+    ?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+    :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 }
 
 // ── Auth Modal ──
@@ -152,7 +171,7 @@ async function authSubmit(){
   if(!/^[a-zA-Z0-9_]{2,20}$/.test(username)){showAuthErr('ユーザー名は英数字・アンダースコア 2〜20文字');return;}
   if(pass.length<6){showAuthErr('パスワードは6文字以上');return;}
   if(_authMode==='reg'){const c=document.getElementById('authPassConfirm').value;if(pass!==c){showAuthErr('パスワードが一致しません');return;}await doRegister(username,pass);}
-  else{await doLogin(username,pass);}
+  else await doLogin(username,pass);
 }
 async function doRegister(username,pass){
   const btn=document.getElementById('authSubmitBtn');btn.textContent='登録中...';btn.disabled=true;
@@ -182,7 +201,7 @@ async function doLogin(username,pass){
     const str=JSON.stringify(session);
     setCookie('hg_session',str,30);setCookie('hgs_sess',str,30);
     try{localStorage.setItem('hg_session_ls',str);localStorage.setItem('hgs_sess',str);}catch(e){}
-    updateSidebarUI();document.getElementById('authOverlay').classList.remove('open');showToast('ログインしました！');loadFeed();
+    updateSidebarUI();document.getElementById('authOverlay').classList.remove('open');showToast('ログインしました！');loadFeed();loadNotifBadge();
   }catch(e){showAuthErr('エラー: '+e.message);}
   finally{btn.textContent='ログイン';btn.disabled=false;}
 }
@@ -210,14 +229,36 @@ function clearSheetImage(){_sheetImageBase64=null;document.getElementById('sheet
 function handleReplyImgSelect(e){const f=e.target.files[0];if(!f)return;readFileAsDataUrl(f,raw=>compressImage(raw,d=>{_replyImageBase64=d;document.getElementById('replyImgPreviewImg').src=d;document.getElementById('replyImgPreview').classList.add('show');}));}
 function clearReplyImage(){_replyImageBase64=null;document.getElementById('replyImgPreview').classList.remove('show');document.getElementById('replyImgPreviewImg').src='';document.getElementById('replyImgInput').value='';}
 
-// ── Composer (Desktop) ──
+// ── 文字数リング ──
+function updateCharRing(len,max,ringId,countId){
+  const ring=document.getElementById(ringId);
+  const countEl=document.getElementById(countId);
+  if(!ring)return;
+  const r=12;const circ=2*Math.PI*r; // ≈75.4
+  const ratio=Math.min(len/max,1);
+  const offset=circ*(1-ratio);
+  ring.setAttribute('stroke-dashoffset',offset);
+  const isWarn=len>max*0.85;
+  const isOver=len>max;
+  ring.className.baseVal='char-ring-fill'+(isOver?' over':isWarn?' warn':'');
+  if(countEl){
+    if(len>max-20){
+      countEl.style.display='';
+      countEl.textContent=max-len;
+      countEl.className='composer-count'+(isOver?' over':isWarn?' warn':'');
+    }else{
+      countEl.style.display='none';
+    }
+  }
+  return !isOver&&len>0;
+}
+
+// ── Desktop Composer ──
 function updateComposerCount(){
   const ta=document.getElementById('composerText');
   const len=ta.value.length;const max=280;
-  const el=document.getElementById('composerCount');
-  el.textContent=max-len;
-  el.className='composer-count'+(len>max?' over':len>max*.9?' warn':'');
-  document.getElementById('composerSubmitBtn').disabled=len===0||len>max;
+  const valid=updateCharRing(len,max,'composerRingFill','composerCount');
+  document.getElementById('composerSubmitBtn').disabled=!valid;
 }
 function clearReplyContext(){
   _replyContext=null;
@@ -235,15 +276,14 @@ function openMobileCompose(replyCtx){
     sheetTitle.textContent='返信';
     sheetReplyBanner.style.display='block';
     sheetReplyName.textContent='@'+(replyCtx.displayName||replyCtx.username);
-  } else {
+  }else{
     sheetTitle.textContent='新しい投稿';
     sheetReplyBanner.style.display='none';
   }
   document.getElementById('sheetQuotePreview').style.display='none';
   document.getElementById('sheetTextarea').value='';
-  updateSheetCount();
-  clearSheetImage();
-  const av=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;
+  updateSheetCount();clearSheetImage();
+  const av=session._avatar||null;
   drawAvatarCanvas(document.getElementById('sheetAvatarCanvas'),session.username,av,40);
   document.getElementById('mobileComposeOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('sheetTextarea').focus(),100);
@@ -263,15 +303,14 @@ async function submitSheetPost(){
   if(text.length>280){showToast('280文字以内にしてください');return;}
   const btn=document.getElementById('sheetSubmitBtn');btn.disabled=true;
   try{
-    const post={
-      text,username:session.username,displayName:session.displayName||session.username,
-      ts:Date.now(),likes:{},reposts:{},replyCount:0
-    };
+    const post={text,username:session.username,displayName:session.displayName||session.username,ts:Date.now(),likes:{},reposts:{},replyCount:0,views:0};
     if(_sheetImageBase64)post.image=_sheetImageBase64;
     if(_replyContext){
       post.replyTo={owner:_replyContext.owner,postId:_replyContext.postId,username:_replyContext.username,displayName:_replyContext.displayName};
-      // Increment replyCount on parent
       await db.ref(`posts/${_replyContext.owner}/${_replyContext.postId}/replyCount`).transaction(c=>(c||0)+1);
+      // 通知送信
+      if(_replyContext.username!==session.username)
+        await pushNotification(_replyContext.username,'reply',{from:session.username,fromDisplay:session.displayName||session.username,postOwner:_replyContext.owner,postId:_replyContext.postId,text:text.slice(0,60)});
     }
     await db.ref('posts/'+session.username).push(post);
     await saveHashtags(text);
@@ -290,11 +329,13 @@ async function submitPost(){
   if(text.length>280){showToast('280文字以内にしてください');return;}
   const btn=document.getElementById('composerSubmitBtn');btn.disabled=true;
   try{
-    const post={text,username:session.username,displayName:session.displayName||session.username,ts:Date.now(),likes:{},reposts:{},replyCount:0};
+    const post={text,username:session.username,displayName:session.displayName||session.username,ts:Date.now(),likes:{},reposts:{},replyCount:0,views:0};
     if(_postImageBase64)post.image=_postImageBase64;
     if(_replyContext){
       post.replyTo={owner:_replyContext.owner,postId:_replyContext.postId,username:_replyContext.username,displayName:_replyContext.displayName};
       await db.ref(`posts/${_replyContext.owner}/${_replyContext.postId}/replyCount`).transaction(c=>(c||0)+1);
+      if(_replyContext.username!==session.username)
+        await pushNotification(_replyContext.username,'reply',{from:session.username,fromDisplay:session.displayName||session.username,postOwner:_replyContext.owner,postId:_replyContext.postId,text:text.slice(0,60)});
     }
     await db.ref('posts/'+session.username).push(post);
     await saveHashtags(text);
@@ -307,7 +348,7 @@ async function submitPost(){
 
 // ── Hashtag index ──
 async function saveHashtags(text){
-  if(!db)return;
+  if(!db||!text)return;
   const tags=extractHashtags(text);
   const now=Date.now();
   await Promise.all(tags.map(tag=>{
@@ -319,13 +360,162 @@ async function saveHashtags(text){
   }));
 }
 
+// ── 閲覧数カウント ──
+async function recordView(owner,postId){
+  if(!db)return;
+  try{
+    await db.ref(`posts/${owner}/${postId}/views`).transaction(c=>(c||0)+1);
+  }catch(e){}
+}
+
+// ── ブックマーク ──
+async function toggleBookmark(e,owner,postId,btn){
+  e.stopPropagation();
+  if(!session){showToast('ログインが必要です');return;}
+  const ref=db.ref(`bookmarks/${session.username}/${owner}_${postId}`);
+  const snap=await ref.once('value');
+  const bookmarked=snap.val()!==null;
+  if(bookmarked){
+    await ref.remove();
+    if(btn){btn.classList.remove('bookmarked');btn.title='ブックマーク';}
+    showToast('ブックマークを解除しました');
+  }else{
+    await ref.set({owner,postId,ts:Date.now()});
+    if(btn){btn.classList.add('bookmarked');btn.title='ブックマーク済み';}
+    showToast('ブックマークしました');
+  }
+}
+async function isBookmarked(owner,postId){
+  if(!session||!db)return false;
+  try{const snap=await db.ref(`bookmarks/${session.username}/${owner}_${postId}`).once('value');return snap.val()!==null;}
+  catch(e){return false;}
+}
+async function loadBookmarksView(){
+  const el=document.getElementById('bookmarksView');if(!el)return;
+  if(!session){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔒</span>ログインが必要です</div>';return;}
+  el.innerHTML=`<div class="bookmarks-header">ブックマーク<div class="bookmarks-sub">@${esc(session.username)} のブックマーク</div></div><div class="spinner"><div class="spin"></div>読み込み中...</div>`;
+  try{
+    const snap=await db.ref(`bookmarks/${session.username}`).orderByChild('ts').once('value');
+    const data=snap.val()||{};
+    const entries=Object.values(data).sort((a,b)=>b.ts-a.ts);
+    const postsEl=document.createElement('div');
+    el.innerHTML=`<div class="bookmarks-header">ブックマーク<div class="bookmarks-sub">@${esc(session.username)} のブックマーク</div></div>`;
+    if(!entries.length){
+      el.innerHTML+='<div class="feed-empty"><span class="feed-empty-icon">🔖</span>まだブックマークがありません</div>';return;
+    }
+    el.appendChild(postsEl);
+    const posts=await Promise.all(entries.map(async e=>{
+      try{const s=await db.ref(`posts/${e.owner}/${e.postId}`).once('value');const p=s.val();if(!p)return null;return{id:e.postId,owner:e.owner,...p};}catch(err){return null;}
+    }));
+    const valid=posts.filter(Boolean);
+    if(!valid.length){postsEl.innerHTML='<div class="feed-empty">投稿が見つかりません</div>';return;}
+    await renderPosts(postsEl,valid);
+  }catch(e){el.innerHTML+=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
+}
+
+// ── 通知 ──
+async function pushNotification(toUser,type,data){
+  if(!db||!toUser)return;
+  try{
+    await db.ref(`notifications/${toUser}`).push({type,data,ts:Date.now(),read:false});
+  }catch(e){}
+}
+async function loadNotifBadge(){
+  if(!session||!db)return;
+  try{
+    const snap=await db.ref(`notifications/${session.username}`).orderByChild('read').equalTo(false).once('value');
+    const count=snap.numChildren();
+    _unreadNotifCount=count;
+    const badge=document.getElementById('notifBadge');
+    if(badge){
+      badge.style.display=count>0?'flex':'none';
+      badge.textContent=count>9?'9+':String(count);
+    }
+  }catch(e){}
+}
+async function loadNotifications(){
+  const el=document.getElementById('notificationsView');if(!el)return;
+  if(!session){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔒</span>ログインが必要です</div>';return;}
+  el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
+  try{
+    const snap=await db.ref(`notifications/${session.username}`).orderByChild('ts').limitToLast(50).once('value');
+    const data=snap.val()||{};
+    const notifs=Object.entries(data).map(([id,n])=>({id,...n})).sort((a,b)=>b.ts-a.ts);
+    // 既読にマーク
+    const updates={};
+    notifs.forEach(n=>{if(!n.read)updates[`notifications/${session.username}/${n.id}/read`]=true;});
+    if(Object.keys(updates).length)db.ref().update(updates);
+    _unreadNotifCount=0;
+    const badge=document.getElementById('notifBadge');
+    if(badge)badge.style.display='none';
+
+    if(!notifs.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔔</span>通知はありません</div>';return;}
+    el.innerHTML='';
+    notifs.forEach(n=>{
+      const item=document.createElement('div');
+      item.className='notif-item'+(n.read?'':' unread');
+      const d=n.data||{};
+      let iconClass='',iconContent='',bodyText='';
+      if(n.type==='like'){
+        iconClass='like';iconContent='❤️';
+        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがいいねしました`;
+      }else if(n.type==='repost'){
+        iconClass='repost';iconContent='🔁';
+        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがリポストしました`;
+      }else if(n.type==='follow'){
+        iconClass='follow';iconContent='👤';
+        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんがフォローしました`;
+      }else if(n.type==='reply'){
+        iconClass='reply';iconContent='💬';
+        bodyText=`<strong>${esc(d.fromDisplay||d.from)}</strong> さんが返信しました`;
+      }
+      item.innerHTML=`
+        <div class="notif-icon ${iconClass}">${iconContent}</div>
+        <div class="notif-body">
+          <div class="notif-text">${bodyText}</div>
+          ${d.text?`<div class="notif-post-preview">${esc(d.text)}</div>`:''}
+          <div class="notif-time">${timeAgo(n.ts)}</div>
+        </div>`;
+      if(n.type==='follow'&&d.from)item.onclick=()=>openProfile(d.from);
+      else if(d.postOwner&&d.postId)item.onclick=()=>openThread(d.postOwner,d.postId);
+      el.appendChild(item);
+    });
+  }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
+}
+
 // ── Feed ──
 async function loadFeed(){
   if(currentView!=='home')return;
   const feedEl=document.getElementById('feedPosts');
   feedEl.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
   if(!db){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">⚠️</span>Firebase 未初期化</div>';return;}
-  if(!session){await loadAllPosts(feedEl);return;}
+  if(_feedTab==='follow'&&session){
+    await loadFollowFeed(feedEl);
+  }else{
+    await loadRecFeed(feedEl);
+  }
+}
+
+// おすすめフィード（全ユーザー）
+async function loadRecFeed(feedEl){
+  if(!db){feedEl.innerHTML='<div class="feed-empty">DB未接続</div>';return;}
+  try{
+    const usersSnap=await db.ref('users').once('value');
+    const users=Object.keys(usersSnap.val()||{});
+    const postArrays=await Promise.all(users.map(u=>
+      db.ref('posts/'+u).orderByChild('ts').limitToLast(15).once('value')
+        .then(s=>{const d=s.val()||{};return Object.entries(d).map(([id,p])=>({id,owner:u,...p}));})
+        .catch(()=>[])
+    ));
+    let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,60);
+    if(!posts.length){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>まだ投稿がありません</div>';return;}
+    await renderPosts(feedEl,posts);
+  }catch(e){feedEl.innerHTML=`<div class="feed-empty">読み込みエラー: ${esc(e.message)}</div>`;}
+}
+
+// フォロー中フィード
+async function loadFollowFeed(feedEl){
+  if(!session){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔒</span>ログインが必要です</div>';return;}
   try{
     const followSnap=await db.ref('follows/'+session.username).once('value');
     const followData=followSnap.val()||{};
@@ -337,24 +527,21 @@ async function loadFeed(){
         .catch(()=>[])
     ));
     let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,60);
-    if(!posts.length){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>まだ投稿がありません<br><small style="margin-top:8px;display:block">誰かをフォローしてみましょう</small></div>';return;}
+    if(!posts.length){
+      feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>フォロー中のユーザーの投稿がありません<br><small style="margin-top:8px;display:block">誰かをフォローしてみましょう</small></div>';return;
+    }
     await renderPosts(feedEl,posts);
   }catch(e){feedEl.innerHTML=`<div class="feed-empty">読み込みエラー: ${esc(e.message)}</div>`;}
 }
-async function loadAllPosts(feedEl){
-  try{
-    const usersSnap=await db.ref('users').once('value');
-    const users=Object.keys(usersSnap.val()||{});
-    const postArrays=await Promise.all(users.map(u=>
-      db.ref('posts/'+u).orderByChild('ts').limitToLast(10).once('value')
-        .then(s=>{const d=s.val()||{};return Object.entries(d).map(([id,p])=>({id,owner:u,...p}));})
-        .catch(()=>[])
-    ));
-    let posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,40);
-    if(!posts.length){feedEl.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🐦</span>まだ投稿がありません</div>';return;}
-    await renderPosts(feedEl,posts);
-  }catch(e){feedEl.innerHTML=`<div class="feed-empty">読み込みエラー: ${esc(e.message)}</div>`;}
+
+// フィードタブ切替
+function switchFeedTab(tab){
+  _feedTab=tab;
+  document.getElementById('feedTabRec')?.classList.toggle('active',tab==='rec');
+  document.getElementById('feedTabFollow')?.classList.toggle('active',tab==='follow');
+  if(currentView==='home')loadFeed();
 }
+
 async function renderPosts(container,posts,showThreadLines){
   container.innerHTML='';
   for(let i=0;i<posts.length;i++){
@@ -374,12 +561,13 @@ async function buildPostEl(p,showThreadLine){
   const avHtml=avatarImgTag(p.username||p.owner,av,44);
   const likeCount=p.likes?Object.keys(p.likes).length:0;
   const repostCount=p.reposts?Object.keys(p.reposts).length:0;
+  const views=p.views||0;
   const liked=session&&p.likes&&p.likes[session.username];
   const reposted=session&&p.reposts&&p.reposts[session.username];
+  const bookmarked=session?await isBookmarked(p.owner||p.username,p.id):false;
   const isOwner=session&&session.username===(p.username||p.owner);
-  const imgHtml=p.image?`<div class="post-img"><img src="${esc(p.image)}" alt="投稿画像" loading="lazy"></div>`:'';
+  const imgHtml=p.image?`<div class="post-img" onclick="event.stopPropagation();openLightbox('${esc(p.image)}')"><img src="${esc(p.image)}" alt="投稿画像" loading="lazy"></div>`:'';
   const replyToHtml=p.replyTo?`<div class="post-reply-to">↩ <span>@${esc(p.replyTo.displayName||p.replyTo.username)}</span> への返信</div>`:'';
-  // Quote embed
   let quoteHtml='';
   if(p.quoteOf){
     quoteHtml=`<div class="post-quote-embed" onclick="event.stopPropagation();openThread('${esc(p.quoteOf.owner)}','${esc(p.quoteOf.postId)}')">
@@ -396,12 +584,12 @@ async function buildPostEl(p,showThreadLine){
         <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
       </button>
       <div class="post-dropdown" id="menu_${p.id}">
-        <button class="post-dropdown-item danger" onclick="deletePost('${p.owner||p.username}','${p.id}')">
+        <button class="post-dropdown-item danger" onclick="event.stopPropagation();deletePost('${p.owner||p.username}','${p.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           削除
         </button>
       </div>
-    </div>`:'<button class="post-menu-btn" style="opacity:0;pointer-events:none">　</button>';
+    </div>`:'<span style="margin-left:auto;width:30px"></span>';
 
   el.innerHTML=`
     <div class="post-avatar-col">
@@ -429,9 +617,16 @@ async function buildPostEl(p,showThreadLine){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
           <span>${repostCount}</span>
         </button>
-        <button class="post-action like ${liked?'liked':''}" onclick="event.stopPropagation();toggleLike(event,'${esc(p.owner||p.username)}','${p.id}',this)">
+        <button class="post-action like ${liked?'liked':''}" id="likeBtn_${p.id}" onclick="event.stopPropagation();toggleLike(event,'${esc(p.owner||p.username)}','${p.id}',this)">
           <svg viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
           <span>${likeCount}</span>
+        </button>
+        <button class="post-action" style="gap:4px;padding:7px 8px;" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span style="font-size:.78rem;color:var(--white3)">${formatCount(views)}</span>
+        </button>
+        <button class="post-action bookmark ${bookmarked?'bookmarked':''}" onclick="event.stopPropagation();toggleBookmark(event,'${esc(p.owner||p.username)}','${p.id}',this)" title="${bookmarked?'ブックマーク済み':'ブックマーク'}">
+          <svg viewBox="0 0 24 24" fill="${bookmarked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
         </button>
         <button class="post-action share" onclick="event.stopPropagation();sharePost(event,'${p.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
@@ -439,7 +634,6 @@ async function buildPostEl(p,showThreadLine){
       </div>
     </div>`;
 
-  // Click post body → open thread
   el.addEventListener('click',()=>openThread(p.owner||p.username,p.id));
   return el;
 }
@@ -458,10 +652,23 @@ async function toggleLike(e,owner,postId,btn){
   if(!session){showToast('ログインが必要です');return;}
   const ref=db.ref(`posts/${owner}/${postId}/likes/${session.username}`);
   const snap=await ref.once('value');const liked=snap.val()===true;
-  if(liked)await ref.remove();else await ref.set(true);
+  if(liked){
+    await ref.remove();
+  }else{
+    await ref.set(true);
+    // 通知
+    if(owner!==session.username){
+      const postSnap=await db.ref(`posts/${owner}/${postId}`).once('value');
+      const post=postSnap.val()||{};
+      await pushNotification(owner,'like',{from:session.username,fromDisplay:session.displayName||session.username,postOwner:owner,postId,text:(post.text||'').slice(0,60)});
+    }
+  }
   const countEl=btn.querySelector('span');const svg=btn.querySelector('svg');
-  btn.classList.toggle('liked',!liked);svg.setAttribute('fill',!liked?'currentColor':'none');
+  btn.classList.toggle('liked',!liked);
+  svg.setAttribute('fill',!liked?'currentColor':'none');
   countEl.textContent=Math.max(0,(parseInt(countEl.textContent)||0)+(!liked?1:-1));
+  // アニメーション
+  if(!liked){btn.classList.add('like-animate');setTimeout(()=>btn.classList.remove('like-animate'),400);}
 }
 
 // ── Repost Modal ──
@@ -469,7 +676,6 @@ let _repostState={owner:'',postId:'',reposted:false};
 function openRepostModal(owner,postId){
   if(!session){showToast('ログインが必要です');return;}
   _repostState={owner,postId,reposted:false};
-  // Check if already reposted
   db.ref(`posts/${owner}/${postId}/reposts/${session.username}`).once('value').then(snap=>{
     const alreadyReposted=snap.val()===true;
     _repostState.reposted=alreadyReposted;
@@ -482,26 +688,28 @@ function closeRepostModal(){document.getElementById('repostOverlay').classList.r
 async function doRepost(){
   const {owner,postId,reposted}=_repostState;
   if(reposted){await doUndoRepost();return;}
-  const ref=db.ref(`posts/${owner}/${postId}/reposts/${session.username}`);
-  await ref.set(true);
+  await db.ref(`posts/${owner}/${postId}/reposts/${session.username}`).set(true);
+  // 通知
+  if(owner!==session.username){
+    const postSnap=await db.ref(`posts/${owner}/${postId}`).once('value');
+    const post=postSnap.val()||{};
+    await pushNotification(owner,'repost',{from:session.username,fromDisplay:session.displayName||session.username,postOwner:owner,postId,text:(post.text||'').slice(0,60)});
+  }
   closeRepostModal();showToast('リポストしました');
-  // Refresh post in feed
   await refreshPostInFeed(owner,postId);
 }
 async function doUndoRepost(){
   const {owner,postId}=_repostState;
-  const ref=db.ref(`posts/${owner}/${postId}/reposts/${session.username}`);
-  await ref.remove();
+  await db.ref(`posts/${owner}/${postId}/reposts/${session.username}`).remove();
   closeRepostModal();showToast('リポストを取り消しました');
   await refreshPostInFeed(owner,postId);
 }
 async function refreshPostInFeed(owner,postId){
-  // Update repost button counts in current feed view without full reload
   const btns=document.querySelectorAll(`.post[data-post-id="${postId}"] .post-action.repost`);
   if(!btns.length)return;
   const snap=await db.ref(`posts/${owner}/${postId}/reposts`).once('value');
   const count=snap.val()?Object.keys(snap.val()).length:0;
-  const reposted=snap.val()&&snap.val()[session.username]===true;
+  const reposted=snap.val()&&snap.val()[session?.username]===true;
   btns.forEach(btn=>{
     btn.classList.toggle('reposted',reposted);
     const span=btn.querySelector('span');if(span)span.textContent=count;
@@ -512,12 +720,9 @@ async function refreshPostInFeed(owner,postId){
 async function openQuoteRepost(){
   closeRepostModal();
   const {owner,postId}=_repostState;
-  // Load original post
   const snap=await db.ref(`posts/${owner}/${postId}`).once('value');
-  const post=snap.val();
-  if(!post){showToast('投稿が見つかりません');return;}
+  const post=snap.val();if(!post){showToast('投稿が見つかりません');return;}
   _repostContext={owner,postId,post};
-  // Fill quote preview
   const previewEl=document.getElementById('quotePreviewEmbed');
   if(previewEl){
     previewEl.innerHTML=`
@@ -528,7 +733,7 @@ async function openQuoteRepost(){
       <div class="qe-text">${esc((post.text||'').slice(0,120))}${(post.text||'').length>120?'…':''}</div>`;
   }
   document.getElementById('quoteTextarea').value='';updateQuoteCount();
-  const av=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;
+  const av=session._avatar||null;
   drawAvatarCanvas(document.getElementById('quoteAvatarCanvas'),session.username,av,40);
   document.getElementById('quoteOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('quoteTextarea').focus(),100);
@@ -547,7 +752,7 @@ async function submitQuoteRepost(){
     const {owner,postId,post}=_repostContext;
     const newPost={
       text,username:session.username,displayName:session.displayName||session.username,
-      ts:Date.now(),likes:{},reposts:{},replyCount:0,
+      ts:Date.now(),likes:{},reposts:{},replyCount:0,views:0,
       quoteOf:{owner,postId,username:post.username,displayName:post.displayName||post.username,text:post.text||''}
     };
     await db.ref('posts/'+session.username).push(newPost);
@@ -560,20 +765,16 @@ async function submitQuoteRepost(){
 
 // ── Reply Modal ──
 let _replyModalCtx=null;
-let _replyImgB64=null;
 async function openReplyModal(owner,postId){
   if(!session){showToast('ログインが必要です');return;}
-  // Load the post
   const snap=await db.ref(`posts/${owner}/${postId}`).once('value');
   const post=snap.val();if(!post){showToast('投稿が見つかりません');return;}
   _replyModalCtx={owner,postId,post};
-  // Check if mobile
   const isMobile=window.innerWidth<=800;
   if(isMobile){
     openMobileCompose({owner,postId,username:post.username,displayName:post.displayName||post.username,text:post.text||''});
     return;
   }
-  // Desktop reply modal
   const ctx=document.getElementById('replyModalContext');
   const av=await getAvatarDataUrl(post.username||owner);
   const avHtml=avatarImgTag(post.username||owner,av,40);
@@ -588,7 +789,7 @@ async function openReplyModal(owner,postId){
     </div>`;
   document.getElementById('replyTextarea').value='';
   updateReplyCount();clearReplyImage();
-  const myAv=session._avatar||localStorage.getItem('fm_avatar_'+session.username)||null;
+  const myAv=session._avatar||null;
   drawAvatarCanvas(document.getElementById('replyAvatarCanvas'),session.username,myAv,40);
   document.getElementById('replyOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('replyTextarea').focus(),100);
@@ -609,14 +810,15 @@ async function submitReply(){
     const {owner,postId,post}=_replyModalCtx;
     const newPost={
       text,username:session.username,displayName:session.displayName||session.username,
-      ts:Date.now(),likes:{},reposts:{},replyCount:0,
+      ts:Date.now(),likes:{},reposts:{},replyCount:0,views:0,
       replyTo:{owner,postId,username:post.username||owner,displayName:post.displayName||post.username||owner}
     };
     if(_replyImageBase64)newPost.image=_replyImageBase64;
     await db.ref('posts/'+session.username).push(newPost);
     await db.ref(`posts/${owner}/${postId}/replyCount`).transaction(c=>(c||0)+1);
     if(text)await saveHashtags(text);
-    // Update replyCount in UI
+    if((post.username||owner)!==session.username)
+      await pushNotification(post.username||owner,'reply',{from:session.username,fromDisplay:session.displayName||session.username,postOwner:owner,postId,text:text.slice(0,60)});
     document.querySelectorAll(`.post[data-post-id="${postId}"] .post-action.reply span`).forEach(el=>{el.textContent=(parseInt(el.textContent)||0)+1;});
     closeReplyModal();showToast('返信しました');
     if(currentView==='thread')openThread(owner,postId);
@@ -627,8 +829,11 @@ async function submitReply(){
 
 // ── Thread View ──
 async function openThread(owner,postId){
+  viewHistory.push(currentView);
   currentView='thread';
   setView('thread');
+  // 閲覧数カウント（本人除く）
+  if(!session||session.username!==owner)recordView(owner,postId);
   const el=document.getElementById('threadView');
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
   try{
@@ -638,10 +843,12 @@ async function openThread(owner,postId){
     const av=await getAvatarDataUrl(post.username||owner);
     const likeCount=post.likes?Object.keys(post.likes).length:0;
     const repostCount=post.reposts?Object.keys(post.reposts).length:0;
+    const views=post.views||0;
     const liked=session&&post.likes&&post.likes[session.username];
     const reposted=session&&post.reposts&&post.reposts[session.username];
+    const bookmarked=session?await isBookmarked(owner,postId):false;
     const avHtml=avatarImgTag(post.username||owner,av,48);
-    const imgHtml=post.image?`<div class="post-img"><img src="${esc(post.image)}" alt="" loading="lazy"></div>`:'';
+    const imgHtml=post.image?`<div class="post-img" onclick="openLightbox('${esc(post.image)}')" style="cursor:zoom-in"><img src="${esc(post.image)}" alt="" loading="lazy"></div>`:'';
     let quoteHtml='';
     if(post.quoteOf){
       quoteHtml=`<div class="post-quote-embed" onclick="openThread('${esc(post.quoteOf.owner)}','${esc(post.quoteOf.postId)}')">
@@ -650,26 +857,26 @@ async function openThread(owner,postId){
       </div>`;
     }
     el.innerHTML=`
-      <div style="padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--white3);" onclick="history.back()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-        <span style="font-size:.9rem;">戻る</span>
-      </div>
       <div class="post-detail">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
           ${avHtml.replace('class="post-avatar"','class="post-avatar" style="width:48px;height:48px;"')}
           <div>
-            <div class="post-dispname" onclick="openProfile('${esc(post.username||owner)}')" style="cursor:pointer">${esc(post.displayName||post.username||owner)}</div>
+            <div class="post-dispname" onclick="openProfile('${esc(post.username||owner)}')" style="cursor:pointer;font-size:1.05rem">${esc(post.displayName||post.username||owner)}</div>
             <div class="post-username">@${esc(post.username||owner)}</div>
           </div>
         </div>
-        ${post.replyTo?`<div class="post-reply-to">↩ <span>@${esc(post.replyTo.displayName||post.replyTo.username)}</span> への返信</div>`:''}
+        ${post.replyTo?`<div class="post-reply-to" style="margin-bottom:8px;">↩ <span>@${esc(post.replyTo.displayName||post.replyTo.username)}</span> への返信</div>`:''}
         ${post.text?`<div class="post-text" style="font-size:1.15rem;margin-bottom:12px;">${renderTextWithHashtags(post.text)}</div>`:''}
         ${imgHtml}
         ${quoteHtml}
-        <div style="font-size:.85rem;color:var(--white3);margin-bottom:8px;">${new Date(post.ts).toLocaleString('ja-JP')}</div>
+        <div style="font-size:.84rem;color:var(--white3);margin:8px 0;">${new Date(post.ts).toLocaleString('ja-JP',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
         <div class="post-detail-meta">
-          <span><strong>${repostCount}</strong> リポスト</span>
-          <span><strong>${likeCount}</strong> いいね</span>
+          <span><strong>${formatCount(repostCount)}</strong> リポスト</span>
+          <span><strong>${formatCount(likeCount)}</strong> いいね</span>
+          <span style="display:flex;align-items:center;gap:4px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <strong>${formatCount(views)}</strong> 件の表示
+          </span>
         </div>
         <div class="post-detail-actions">
           <button class="post-action reply" onclick="openReplyModal('${esc(owner)}','${postId}')">
@@ -680,15 +887,20 @@ async function openThread(owner,postId){
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
             <span>${repostCount}</span>
           </button>
-          <button class="post-action like ${liked?'liked':''}" onclick="toggleLike(event,'${esc(owner)}','${postId}',this)">
+          <button class="post-action like ${liked?'liked':''}" id="likeBtn_detail_${postId}" onclick="toggleLike(event,'${esc(owner)}','${postId}',this)">
             <svg viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             <span>${likeCount}</span>
+          </button>
+          <button class="post-action bookmark ${bookmarked?'bookmarked':''}" onclick="toggleBookmark(event,'${esc(owner)}','${postId}',this)">
+            <svg viewBox="0 0 24 24" fill="${bookmarked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          </button>
+          <button class="post-action share" onclick="sharePost(event,'${postId}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           </button>
         </div>
       </div>
       <div class="thread-replies-head">返信</div>
       <div id="threadReplies"><div class="spinner"><div class="spin"></div></div></div>`;
-    // Load replies
     loadReplies(owner,postId);
   }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
 }
@@ -720,15 +932,31 @@ async function deletePost(owner,postId){
     showToast('削除しました');
     if(currentView==='home')loadFeed();
     else if(currentView==='profile')loadProfilePosts(viewedProfile);
-    else if(currentView==='thread'){setView('home');loadFeed();}
+    else if(currentView==='thread'){goBack();}
   }catch(e){showToast('エラー: '+e.message);}
 }
 
 function sharePost(e,postId){
-  e.stopPropagation();
-  if(navigator.share)navigator.share({title:'HGSNS',url:location.href});
-  else{navigator.clipboard?.writeText(location.href);showToast('URLをコピーしました');}
+  if(e)e.stopPropagation();
+  const url=location.href.split('?')[0]+'?post='+postId;
+  if(navigator.share)navigator.share({title:'HGSNS',url});
+  else{navigator.clipboard?.writeText(url);showToast('URLをコピーしました');}
 }
+
+// ── Lightbox ──
+function openLightbox(src){
+  const lb=document.getElementById('imgLightbox');
+  const img=document.getElementById('lightboxImg');
+  if(!lb||!img)return;
+  img.src=src;
+  lb.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(){
+  const lb=document.getElementById('imgLightbox');
+  if(lb){lb.classList.remove('open');document.body.style.overflow='';}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
 
 // ── Follow ──
 async function toggleFollow(targetUsername){
@@ -736,13 +964,19 @@ async function toggleFollow(targetUsername){
   if(targetUsername===session.username){showToast('自分はフォローできません');return;}
   const ref=db.ref(`follows/${session.username}/${targetUsername}`);
   const snap=await ref.once('value');const following=snap.val()===true;
-  if(following)await ref.remove();else await ref.set(true);
+  if(following){
+    await ref.remove();
+  }else{
+    await ref.set(true);
+    await pushNotification(targetUsername,'follow',{from:session.username,fromDisplay:session.displayName||session.username});
+  }
   showToast(following?`@${targetUsername} のフォローを解除しました`:`@${targetUsername} をフォローしました`);
   return !following;
 }
 
 // ── Profile View ──
 async function openProfile(username){
+  viewHistory.push(currentView);
   viewedProfile=username;setView('profile');
   const el=document.getElementById('profileView');
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
@@ -754,12 +988,17 @@ async function openProfile(username){
     const followCount=followsSnap.val()?Object.values(followsSnap.val()).filter(v=>v===true).length:0;
     let followerCount=0;const allFollows=followersSnap.val()||{};
     for(const uid in allFollows){if(allFollows[uid][username]===true)followerCount++;}
+    // 投稿数
+    const postsSnap=await db.ref('posts/'+username).once('value');
+    const postCount=postsSnap.numChildren();
     const isMe=session&&session.username===username;
     const isFollowing=session&&(await db.ref(`follows/${session.username}/${username}`).once('value')).val()===true;
     const actionBtn=isMe
       ?`<button class="profile-edit-btn" onclick="openEditProfile()">プロフィールを編集</button>`
       :`<button class="profile-follow-btn ${isFollowing?'following':''}" id="profileFollowBtn" onclick="onProfileFollow('${esc(username)}')">${isFollowing?'フォロー中':'フォロー'}</button>`;
     const cvId='profileAvatarCv_'+Date.now();
+    // 参加日
+    const joinedDate=u.created?new Date(u.created).toLocaleDateString('ja-JP',{year:'numeric',month:'long'}):'';
     el.innerHTML=`
       <div class="profile-header">
         <div class="profile-banner" style="background:linear-gradient(135deg,#0D1B2A,#1E2C3E,#C9A84C22)"></div>
@@ -771,9 +1010,11 @@ async function openProfile(username){
           <div class="profile-dispname">${esc(u.displayName||username)}</div>
           <div class="profile-username">@${esc(username)}</div>
           ${u.bio?`<div class="profile-bio">${esc(u.bio)}</div>`:''}
+          ${joinedDate?`<div class="profile-joined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${joinedDate} 参加</div>`:''}
           <div class="profile-stats">
             <div class="profile-stat"><a onclick="openFollowList('${esc(username)}','follows')" style="cursor:pointer"><strong>${followCount}</strong> <span>フォロー中</span></a></div>
             <div class="profile-stat"><a onclick="openFollowList('${esc(username)}','followers')" style="cursor:pointer"><strong>${followerCount}</strong> <span>フォロワー</span></a></div>
+            <div class="profile-stat"><span><strong>${postCount}</strong> <span>投稿</span></span></div>
           </div>
         </div>
       </div>
@@ -853,6 +1094,7 @@ function closeFollowList(){document.getElementById('followListOverlay').classLis
 
 // ── Hashtag View ──
 async function openHashtag(tag){
+  viewHistory.push(currentView);
   setView('hashtag');
   const el=document.getElementById('hashtagView');
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
@@ -867,14 +1109,9 @@ async function openHashtag(tag){
     ));
     const posts=postArrays.flat().sort((a,b)=>b.ts-a.ts);
     el.innerHTML=`
-      <div style="padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--white3);" onclick="history.back()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-      </div>
       <div class="hashtag-header">
-        <div>
-          <div class="hashtag-title">${esc(tag)}</div>
-          <div class="hashtag-count">${posts.length} 件の投稿</div>
-        </div>
+        <div class="hashtag-title">${esc(tag)}</div>
+        <div class="hashtag-count">${posts.length} 件の投稿</div>
       </div>
       <div id="hashtagPosts"></div>`;
     if(!posts.length){document.getElementById('hashtagPosts').innerHTML='<div class="feed-empty">このハッシュタグの投稿はまだありません</div>';return;}
@@ -887,11 +1124,10 @@ async function loadTrends(){
   try{
     const snap=await db.ref('hashtags').once('value');
     const data=snap.val()||{};
-    // Sort by recent activity (lastUsed + count weighted)
     const now=Date.now();
     const trends=Object.entries(data)
       .map(([key,v])=>{
-        const age=Math.max(1,(now-v.lastUsed)/(1000*60*60)); // hours
+        const age=Math.max(1,(now-v.lastUsed)/(1000*60*60));
         const score=v.count/Math.sqrt(age);
         return{tag:v.tag||('#'+key),count:v.count||0,score,lastUsed:v.lastUsed};
       })
@@ -900,27 +1136,24 @@ async function loadTrends(){
     return trends;
   }catch(e){return[];}
 }
-
 async function loadRightTrends(){
   const el=document.getElementById('rightTrends');if(!el)return;
   const trends=await loadTrends();
-  if(!trends.length){el.innerHTML='<div style="padding:12px 16px;font-size:.85rem;color:var(--white3)">まだトレンドがありません</div>';return;}
+  if(!trends.length){el.innerHTML='<div style="padding:12px 16px;font-size:.84rem;color:var(--white3)">まだトレンドがありません</div>';return;}
   el.innerHTML='';
   trends.slice(0,5).forEach((t,i)=>{
     const item=document.createElement('div');item.className='trend-item';
     item.innerHTML=`<span class="trend-rank">${i+1}</span>
       <div class="trend-info">
         <div class="trend-tag">${esc(t.tag)}</div>
-        <div class="trend-count">${t.count} 件の投稿</div>
+        <div class="trend-count">${formatCount(t.count)} 件</div>
       </div>`;
     item.onclick=()=>openHashtag(t.tag);
     el.appendChild(item);
   });
 }
-
 async function loadTrendView(){
-  const el=document.getElementById('trendView');
-  if(!el)return;
+  const el=document.getElementById('trendView');if(!el)return;
   el.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';
   const trends=await loadTrends();
   if(!trends.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">📈</span>まだトレンドがありません</div>';return;}
@@ -931,7 +1164,7 @@ async function loadTrendView(){
     item.innerHTML=`<span class="trend-rank">${i+1}</span>
       <div class="trend-info">
         <div class="trend-tag" style="font-size:1rem">${esc(t.tag)}</div>
-        <div class="trend-count">${t.count} 件の投稿</div>
+        <div class="trend-count">${formatCount(t.count)} 件の投稿</div>
       </div>
       <span class="trend-badge">トレンド</span>`;
     item.onclick=()=>openHashtag(t.tag);
@@ -940,85 +1173,236 @@ async function loadTrendView(){
 }
 
 // ── Search ──
+let _searchDebounce=null;
 async function doSearch(){
-  const q=(document.getElementById('searchInput')?.value||document.getElementById('rightSearchInput')?.value||'').trim().toLowerCase();
+  const q=(document.getElementById('searchInput')?.value||'').trim().toLowerCase();
   setView('search');
+  const clearBtn=document.getElementById('searchClearBtn');
+  if(clearBtn)clearBtn.style.display=q?'flex':'none';
+  const tabsEl=document.getElementById('searchTabs');
   const el=document.getElementById('searchView');
-  if(!q){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>';return;}
-  // Hashtag search
+  if(!q){
+    if(tabsEl)tabsEl.style.display='none';
+    el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>';return;
+  }
   if(q.startsWith('#')){openHashtag(q);return;}
+  if(tabsEl)tabsEl.style.display='flex';
   el.innerHTML='<div class="spinner"><div class="spin"></div></div>';
   try{
-    const snap=await db.ref('users').once('value');
-    const users=snap.val()||{};
-    const matched=Object.entries(users).filter(([k,v])=>k.toLowerCase().includes(q)||(v.displayName||'').toLowerCase().includes(q));
-    if(!matched.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔍</span>ユーザーが見つかりませんでした</div>';return;}
-    el.innerHTML='<div style="padding:16px;font-weight:700;font-size:.9rem;color:var(--white3);border-bottom:1px solid var(--line)">ユーザー検索結果</div>';
+    const usersSnap=await db.ref('users').once('value');
+    const usersData=usersSnap.val()||{};
+    // ユーザー検索
+    _searchResults.users=Object.entries(usersData).filter(([k,v])=>
+      k.toLowerCase().includes(q)||(v.displayName||'').toLowerCase().includes(q)
+    );
+    // 投稿検索
+    const allUsers=Object.keys(usersData);
+    const postArrays=await Promise.all(allUsers.map(u=>
+      db.ref('posts/'+u).orderByChild('ts').limitToLast(30).once('value')
+        .then(s=>{const d=s.val()||{};return Object.entries(d).filter(([,p])=>p.text&&p.text.toLowerCase().includes(q)).map(([id,p])=>({id,owner:u,...p}));})
+        .catch(()=>[])
+    ));
+    _searchResults.posts=postArrays.flat().sort((a,b)=>b.ts-a.ts).slice(0,30);
+    // タグ検索
+    const tagsSnap=await db.ref('hashtags').once('value');
+    const tagsData=tagsSnap.val()||{};
+    _searchResults.tags=Object.entries(tagsData)
+      .filter(([k,v])=>(v.tag||k).toLowerCase().includes(q.replace('#','')))
+      .sort((a,b)=>(b[1].count||0)-(a[1].count||0))
+      .slice(0,15);
+    renderSearchTab(_searchTab);
+  }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
+}
+function switchSearchTab(tab){
+  _searchTab=tab;
+  ['users','posts','tags'].forEach(t=>{
+    document.getElementById('sTab'+t.charAt(0).toUpperCase()+t.slice(1))?.classList.toggle('active',t===tab);
+  });
+  renderSearchTab(tab);
+}
+async function renderSearchTab(tab){
+  const el=document.getElementById('searchView');if(!el)return;
+  el.innerHTML='';
+  if(tab==='users'){
+    const matched=_searchResults.users;
+    if(!matched.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">👤</span>ユーザーが見つかりません</div>';return;}
     for(const [uname,u] of matched){
       const av=await getAvatarDataUrl(uname);const cvId='srav_'+uname;
       const item=document.createElement('div');item.className='follow-user-item';
       item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info"><div class="suggest-name">${esc(u.displayName||uname)}</div><div class="suggest-uname">@${esc(uname)}</div></div>`;
+        <div class="suggest-info"><div class="suggest-name">${esc(u.displayName||uname)}</div><div class="suggest-uname">@${esc(uname)}</div>${u.bio?`<div class="suggest-bio">${esc(u.bio.slice(0,60))}</div>`:''}</div>`;
       item.onclick=()=>openProfile(uname);
       el.appendChild(item);
       drawAvatarCanvas(document.getElementById(cvId),uname,av,40);
     }
-  }catch(e){el.innerHTML=`<div class="feed-empty">エラー: ${esc(e.message)}</div>`;}
+  }else if(tab==='posts'){
+    const posts=_searchResults.posts;
+    if(!posts.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">📄</span>投稿が見つかりません</div>';return;}
+    await renderPosts(el,posts);
+  }else if(tab==='tags'){
+    const tags=_searchResults.tags;
+    if(!tags.length){el.innerHTML='<div class="feed-empty"><span class="feed-empty-icon">#</span>タグが見つかりません</div>';return;}
+    tags.forEach(([key,v])=>{
+      const item=document.createElement('div');item.className='trend-item';item.style.padding='14px 16px';
+      item.innerHTML=`<div class="trend-info"><div class="trend-tag">${esc(v.tag||'#'+key)}</div><div class="trend-count">${formatCount(v.count||0)} 件の投稿</div></div>`;
+      item.onclick=()=>openHashtag(v.tag||'#'+key);
+      el.appendChild(item);
+    });
+  }
 }
-function onSearchInput(e){if(e.key==='Enter')doSearch();}
+function clearSearch(){
+  const inp=document.getElementById('searchInput');
+  if(inp)inp.value='';
+  const clearBtn=document.getElementById('searchClearBtn');
+  if(clearBtn)clearBtn.style.display='none';
+  const tabsEl=document.getElementById('searchTabs');
+  if(tabsEl)tabsEl.style.display='none';
+  document.getElementById('searchView').innerHTML='<div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>';
+  inp?.focus();
+}
+function onSearchInput(e){
+  const clearBtn=document.getElementById('searchClearBtn');
+  if(clearBtn)clearBtn.style.display=e.target.value?'flex':'none';
+  if(e.key==='Enter')doSearch();
+  else{
+    clearTimeout(_searchDebounce);
+    _searchDebounce=setTimeout(()=>{if(e.target.value.trim().length>=2)doSearch();},400);
+  }
+}
+function onRightSearchInput(inp){
+  inp.style.setProperty('--val',inp.value);
+}
 function copySearchAndGo(val){
   const el=document.getElementById('searchInput');if(el)el.value=val;
   doSearch();
 }
 
-// ── View Management ──
-const ALL_VIEWS=['home','profile','search','trend','hashtag','thread'];
-function setView(view){
-  currentView=view;
-  document.querySelectorAll('.sidebar-nav-item[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
-  // Show/hide panels
-  document.getElementById('homeView').style.display=view==='home'?'block':'none';
-  document.getElementById('profileViewWrap').style.display=view==='profile'?'block':'none';
-  document.getElementById('searchViewWrap').style.display=view==='search'?'block':'none';
-  document.getElementById('trendViewWrap').style.display=view==='trend'?'block':'none';
-  document.getElementById('hashtagViewWrap').style.display=view==='hashtag'?'block':'none';
-  document.getElementById('threadViewWrap').style.display=view==='thread'?'block':'none';
-  const titles={home:'ホーム',profile:'プロフィール',search:'検索',trend:'トレンド',hashtag:'ハッシュタグ',thread:'投稿'};
-  document.getElementById('feedHeaderTitle').textContent=titles[view]||'HGSNS';
-  document.querySelector('.sns-feed').scrollTop=0;
-  // Lazy load trend view
-  if(view==='trend')loadTrendView();
-}
-function onFeedTabClick(){
-  if(currentView==='home')loadFeed();
-  else{setView('home');loadFeed();}
-}
-
-// ── Right Panel: Suggest Users ──
+// ── おすすめユーザー（改善版）──
+// アルゴリズム: フォロワー数 + 投稿数 + 最近の活動 + 相互フォロー + 未フォローを優先
 async function loadSuggestUsers(){
   const el=document.getElementById('suggestUsers');if(!el)return;
   try{
-    const snap=await db.ref('users').once('value');
-    const users=snap.val()||{};
-    const keys=Object.keys(users).filter(u=>u!==(session?.username)).slice(0,4);
+    const usersSnap=await db.ref('users').once('value');
+    const usersData=usersSnap.val()||{};
+    const allUsers=Object.keys(usersData).filter(u=>u!==(session?.username));
+    if(!allUsers.length){el.innerHTML='<div style="padding:12px 16px;font-size:.84rem;color:var(--white3)">他のユーザーがいません</div>';return;}
+
+    // フォロー情報取得
+    let myFollows={},myFollowers={};
+    const followsAllSnap=await db.ref('follows').once('value');
+    const followsAll=followsAllSnap.val()||{};
+    if(session){
+      myFollows=followsAll[session.username]||{};
+      for(const uid in followsAll){if(followsAll[uid][session.username]===true)myFollowers[uid]=true;}
+    }
+
+    // スコア計算
+    const scored=await Promise.all(allUsers.map(async u=>{
+      const uData=usersData[u]||{};
+      // フォロワー数
+      let followerCount=0;
+      for(const uid in followsAll){if(followsAll[uid][u]===true)followerCount++;}
+      // 投稿数・最近の活動
+      let postCount=0,lastActive=0;
+      try{
+        const postsSnap=await db.ref('posts/'+u).orderByChild('ts').limitToLast(5).once('value');
+        const postsData=postsSnap.val()||{};
+        postCount=postsSnap.numChildren();
+        Object.values(postsData).forEach(p=>{if(p.ts>lastActive)lastActive=p.ts;});
+      }catch(e){}
+      // 既にフォロー中は除外
+      const alreadyFollowing=myFollows[u]===true;
+      // 相互フォロー候補（自分をフォローしているが自分がフォローしていない）
+      const mutualPending=myFollowers[u]&&!alreadyFollowing;
+      const now=Date.now();
+      const daysSinceActive=lastActive?Math.max(0.1,(now-lastActive)/(1000*60*60*24)):30;
+      let score=followerCount*2+postCount*0.5+(mutualPending?20:0)+(1/daysSinceActive)*5;
+      return{u,uData,followerCount,postCount,alreadyFollowing,mutualPending,score,lastActive};
+    }));
+
+    // フォロー済みを下に、未フォローを上に、スコア順
+    const notFollowing=scored.filter(s=>!s.alreadyFollowing).sort((a,b)=>b.score-a.score);
+    const following=scored.filter(s=>s.alreadyFollowing).sort((a,b)=>b.score-a.score);
+    const ordered=[...notFollowing.slice(0,4),...following.slice(0,1)].slice(0,4);
+
     el.innerHTML='';
-    for(const u of keys){
-      const ud=users[u];const av=await getAvatarDataUrl(u);const cvId='sgav_'+u;
-      const followSnap=session?await db.ref(`follows/${session.username}/${u}`).once('value'):null;
-      const isFollowing=followSnap?.val()===true;
+    for(const {u,uData,followerCount,mutualPending,alreadyFollowing} of ordered){
+      const av=await getAvatarDataUrl(u);const cvId='sgav_'+u;
       const item=document.createElement('div');item.className='suggest-user';
+      const mutualHint=mutualPending?`<div class="suggest-mutual"><span>フォローされています</span></div>`:'';
+      const followerHint=followerCount>0?`<div class="suggest-mutual">${formatCount(followerCount)} フォロワー</div>`:'';
       item.innerHTML=`<canvas id="${cvId}" class="suggest-avatar" width="40" height="40"></canvas>
-        <div class="suggest-info" onclick="openProfile('${esc(u)}')"><div class="suggest-name">${esc(ud.displayName||u)}</div><div class="suggest-uname">@${esc(u)}</div></div>
-        <button class="follow-btn ${isFollowing?'following':''}" id="sfbtn_${u}" onclick="onSuggestFollow('${esc(u)}')">${isFollowing?'フォロー中':'フォロー'}</button>`;
+        <div class="suggest-info" onclick="openProfile('${esc(u)}')">
+          <div class="suggest-name">${esc(uData.displayName||u)}</div>
+          <div class="suggest-uname">@${esc(u)}</div>
+          ${uData.bio?`<div class="suggest-bio">${esc(uData.bio.slice(0,40))}</div>`:mutualPending?mutualHint:followerHint}
+        </div>
+        <button class="follow-btn ${alreadyFollowing?'following':''}" id="sfbtn_${u}" onclick="onSuggestFollow('${esc(u)}')">${alreadyFollowing?'フォロー中':'フォロー'}</button>`;
       el.appendChild(item);
       drawAvatarCanvas(document.getElementById(cvId),u,av,40);
     }
-  }catch(e){}
+  }catch(e){el.innerHTML=`<div style="padding:12px 16px;font-size:.83rem;color:var(--white3)">読み込みエラー</div>`;}
 }
 async function onSuggestFollow(username){
   const following=await toggleFollow(username);
   const btn=document.getElementById('sfbtn_'+username);
   if(btn){btn.textContent=following?'フォロー中':'フォロー';btn.className='follow-btn '+(following?'following':'');}
+  // おすすめ更新
+  setTimeout(loadSuggestUsers,500);
+}
+
+// ── View Management ──
+function setView(view){
+  currentView=view;
+  // サイドバーのアクティブ
+  document.querySelectorAll('.sidebar-nav-item[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
+
+  // ビューパネルの表示切替
+  const panels={
+    home:'homeView',profile:'profileViewWrap',search:'searchViewWrap',
+    trend:'trendViewWrap',hashtag:'hashtagViewWrap',thread:'threadViewWrap',
+    notifications:'notificationsViewWrap',bookmarks:'bookmarksViewWrap'
+  };
+  Object.entries(panels).forEach(([v,id])=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=v===view?'block':'none';
+  });
+
+  // ヘッダー切替
+  const homeTabs=document.getElementById('homeFeedTabs');
+  const titleBar=document.getElementById('feedTitleBar');
+  const titleText=document.getElementById('feedTitleText');
+  const titles={
+    profile:'プロフィール',search:'検索',trend:'トレンド',
+    hashtag:'ハッシュタグ',thread:'投稿',notifications:'通知',bookmarks:'ブックマーク'
+  };
+  if(view==='home'){
+    if(homeTabs)homeTabs.style.display='flex';
+    if(titleBar)titleBar.style.display='none';
+  }else{
+    if(homeTabs)homeTabs.style.display='none';
+    if(titleBar)titleBar.style.display='flex';
+    if(titleText)titleText.textContent=titles[view]||'HGSNS';
+  }
+
+  // フィードのスクロールをトップへ
+  const feedEl=document.querySelector('.sns-feed');
+  if(feedEl)feedEl.scrollTop=0;
+
+  // 遅延ロード
+  if(view==='trend')loadTrendView();
+  if(view==='bookmarks')loadBookmarksView();
+}
+
+function goBack(){
+  const prev=viewHistory.pop();
+  if(prev&&prev!==currentView){
+    if(prev==='home'){setView('home');loadFeed();}
+    else if(prev==='profile'&&viewedProfile){openProfile(viewedProfile);}
+    else{setView(prev);}
+  }else{
+    setView('home');loadFeed();
+  }
 }
 
 // ── Boot ──
@@ -1030,4 +1414,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadRightTrends();
   setView('home');
   updateComposerCount();
+  if(session)loadNotifBadge();
+  // 定期的に通知バッジを更新（60秒ごと）
+  setInterval(()=>{if(session)loadNotifBadge();},60000);
 });
