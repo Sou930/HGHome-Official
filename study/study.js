@@ -835,8 +835,24 @@ function _launchStudy(deckId){
   if(studyMode==='4choice'){
     if(flashArea)flashArea.style.display='none';
     if(quizArea)quizArea.style.display='';
-    buildQuizQueue();
-    renderQuizCard();
+    const dk2=decks[deckId]||allPublicDecks[deckId];
+    const cardCount=dk2&&dk2.cards?Object.keys(dk2.cards).length:0;
+    if(cardCount===0){
+      // カードデータ未ロードの場合はFirebaseから取得
+      db.ref(`cards/${deckId}`).once('value').then(snap=>{
+        const raw=snap.val()||{};
+        if(!decks[deckId])decks[deckId]={...allPublicDecks[deckId]};
+        decks[deckId].cards={};
+        for(const[cid,card]of Object.entries(raw)){
+          if(!card||typeof card!=='object')continue;
+          decks[deckId].cards[cid]={front:card.f||card.front||'',back:card.b||card.back||'',deckId,
+            due:card.due||Date.now(),interval:card.interval||0,ease:card.ease||2.5,reps:card.reps||0};
+        }
+        buildQuizQueue();renderQuizCard();
+      }).catch(()=>{buildQuizQueue();renderQuizCard();});
+    }else{
+      buildQuizQueue();renderQuizCard();
+    }
   }else{
     if(flashArea)flashArea.style.display='';
     if(quizArea)quizArea.style.display='none';
@@ -895,16 +911,27 @@ function showSessionComplete(){
   }else{
     ge('sessionComplete').classList.add('active');ge('cardsListView').classList.remove('active');
     ge('sessionComplete').querySelector('.complete-stats').innerHTML=
-      `総数: <strong>${sessionStats.total}</strong> &nbsp;|&nbsp; もう一度: <strong>${sessionStats.again}</strong> &nbsp;|&nbsp; Good: <strong>${sessionStats.good}</strong> &nbsp;|&nbsp; Easy: <strong>${sessionStats.easy}</strong>`;
+      `完了: <strong>${sessionStats.total}</strong>枚`;
   }
 }
 
-window.flipCard=function(){if(cardFlipped)return;cardFlipped=true;ge('cardBackArea').style.display='flex';document.querySelectorAll('.ctrl-btn').forEach(b=>b.disabled=false);};
-window.rateCard=async function(rating){
+window.flipCard=function(){
+  if(cardFlipped)return;
+  cardFlipped=true;
+  ge('cardBackArea').style.display='flex';
+  document.querySelectorAll('.ctrl-btn').forEach(b=>b.disabled=false);
+};
+window.rateCard=async function(rating,dir){
+  const fc=ge('flashcard');
   const cardId=studyQueue[currentCardIdx];
-  if(rating===1)sessionStats.again++;else if(rating===2)sessionStats.good++;else sessionStats.easy++;
-  await updateCardSRS(cardId,rating);
-  if(rating===1){const r=Math.min(currentCardIdx+3,studyQueue.length);studyQueue.splice(r,0,cardId);}
+  sessionStats.good++;
+  // スワイプアニメーション
+  if(fc&&dir){
+    fc.classList.add(dir==='right'?'swiping-right':'swiping-left');
+    await new Promise(r=>setTimeout(r,200));
+    fc.classList.remove('swiping-right','swiping-left');
+  }
+  await updateCardSRS(cardId,2);
   currentCardIdx++;renderFlashcard();
 };
 window.restartSession=function(){
@@ -976,15 +1003,25 @@ window.deleteCardSession=async function(cardId){
 // ══════════════════════════════════════════════════════
 
 function buildQuizQueue(){
-  const d=decks[currentDeckId];
-  if(!d||!d.cards){quizQueue=[];return;}
-  quizQueue=Object.keys(d.cards).sort(()=>Math.random()-.5);
+  const d=decks[currentDeckId]||allPublicDecks[currentDeckId];
+  if(!d){quizQueue=[];return;}
+  // cardsが未ロードの場合は再取得
+  if(!d.cards||Object.keys(d.cards).length===0){quizQueue=[];return;}
+  decks[currentDeckId]=d;
+  quizQueue=Object.keys(d.cards).filter(k=>d.cards[k]&&d.cards[k].front).sort(()=>Math.random()-.5);
   quizIdx=0;quizAnswered=false;quizStats={correct:0,wrong:0,total:quizQueue.length};
 }
 
 function renderQuizCard(){
-  const d=decks[currentDeckId];
-  if(!d)return;
+  const d=decks[currentDeckId]||allPublicDecks[currentDeckId];
+  if(!d){showToast('デッキが見つかりません','error');return;}
+
+  if(quizQueue.length===0){
+    // カードが読み込まれていない可能性があるので再ビルド
+    buildQuizQueue();
+    if(quizQueue.length===0){showSessionComplete();return;}
+  }
+
   if(quizIdx>=quizQueue.length){showSessionComplete();return;}
 
   const cardId=quizQueue[quizIdx];
@@ -993,7 +1030,7 @@ function renderQuizCard(){
 
   quizAnswered=false;
 
-  const allCards=Object.values(d.cards);
+  const allCards=Object.values(d.cards).filter(c=>c&&c.front&&c.back);
   const wrongCards=allCards.filter(c=>c!==card).sort(()=>Math.random()-.5).slice(0,3);
   const choices=[card,...wrongCards].sort(()=>Math.random()-.5);
   currentQuizChoices=choices;
@@ -1359,6 +1396,32 @@ document.addEventListener('DOMContentLoaded',()=>{
   ge('deckModal')?.addEventListener('click',e=>{if(e.target===ge('deckModal'))closeDeckModal();});
   ge('studyModeModal')?.addEventListener('click',e=>{if(e.target===ge('studyModeModal'))closeStudyModeModal();});
   ge('flashcard')?.addEventListener('click',()=>window.flipCard());
+
+  // スワイプでカードをめくる
+  (function(){
+    const fc=ge('flashcard');if(!fc)return;
+    let sx=0,sy=0;
+    fc.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+    fc.addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-sx;
+      const dy=e.changedTouches[0].clientY-sy;
+      if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){
+        if(!cardFlipped){window.flipCard();}
+        else{window.rateCard(2,dx>0?'right':'left');}
+      }
+    },{passive:true});
+    // マウスドラッグも対応
+    let mx=0,dragging=false;
+    fc.addEventListener('mousedown',e=>{mx=e.clientX;dragging=true;});
+    fc.addEventListener('mouseup',e=>{
+      if(!dragging)return;dragging=false;
+      const dx=e.clientX-mx;
+      if(Math.abs(dx)>60){
+        if(!cardFlipped){window.flipCard();}
+        else{window.rateCard(2,dx>0?'right':'left');}
+      }
+    });
+  })();
   ge('welcomeScreen').style.display='none';
   ge('deckBrowser').style.display='none';
   ge('studySession').style.display='none';
