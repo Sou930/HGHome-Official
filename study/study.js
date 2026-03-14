@@ -941,7 +941,7 @@ function _launchStudy(deckId) {
     if (allPublicDecks[deckId]) allPublicDecks[deckId].cards = decks[deckId].cards;
     if (studyMode === '4choice') {
       if (flashArea) flashArea.style.display = 'none';
-      if (quizArea)  quizArea.style.display = '';
+      if (quizArea)  quizArea.style.display = 'block';
       buildQuizQueue(); renderQuizCard();
     } else {
       if (flashArea) flashArea.style.display = '';
@@ -1061,7 +1061,7 @@ window.restartSession = function() {
   const flashArea = ge('flashcardArea'), quizArea = ge('quizArea');
   if (studyMode === '4choice') {
     if (flashArea) flashArea.style.display = 'none';
-    if (quizArea)  quizArea.style.display = '';
+    if (quizArea)  quizArea.style.display = 'block';
     buildQuizQueue(); renderQuizCard();
   } else {
     if (flashArea) flashArea.style.display = '';
