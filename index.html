@@ -41,12 +41,14 @@
   --c-sns:      #1a6b6b;
   --c-hgscript: #4a3d7a;
   --c-blog:     #8a4f1e;
+  --c-coder:    #2a6b8a;
   --c-info-bg:    #eef4fa;
   --c-study-bg:   #edf7f1;
   --c-homebot-bg: #f3eef9;
   --c-sns-bg:     #edf7f7;
   --c-hgscript-bg:#eeedf7;
   --c-blog-bg:    #fdf3ea;
+  --c-coder-bg:   #eaf4f8;
   --border:  #e0d9cf;
   --border2: #cec7bc;
   --r:    6px;
@@ -408,6 +410,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
 .news-item-bar.sns     {background:linear-gradient(180deg,var(--c-sns),rgba(26,107,107,.4));}
 .news-item-bar.hgscript{background:linear-gradient(180deg,var(--c-hgscript),rgba(74,61,122,.4));}
 .news-item-bar.blog    {background:linear-gradient(180deg,var(--c-blog),rgba(138,79,30,.4));}
+.news-item-bar.coder   {background:linear-gradient(180deg,var(--c-coder),rgba(42,107,138,.4));}
 .news-item-inner{padding:18px 22px 16px 26px;}
 .news-item-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
 .news-badge{
@@ -430,6 +433,8 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
 .news-badge.hgscript::before{background:var(--c-hgscript);}
 .news-badge.blog    {background:var(--c-blog-bg);    color:var(--c-blog);    border:1px solid rgba(138,79,30,.14);}
 .news-badge.blog::before    {background:var(--c-blog);}
+.news-badge.coder   {background:var(--c-coder-bg);   color:var(--c-coder);   border:1px solid rgba(42,107,138,.14);}
+.news-badge.coder::before   {background:var(--c-coder);}
 .news-date{
   font-family:'DM Mono',monospace;
   font-size:.66rem;color:var(--ink5);
@@ -521,6 +526,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
 .project-item.sns::before     {background:var(--c-sns);}
 .project-item.hgscript::before{background:var(--c-hgscript);}
 .project-item.blog::before    {background:var(--c-blog);}
+.project-item.coder::before   {background:var(--c-coder);}
 .project-item:hover{
   background:#fff;
   border-color:var(--border);
@@ -539,6 +545,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
 .project-item.sns      .project-icon{background:var(--c-sns-bg);}
 .project-item.hgscript .project-icon{background:var(--c-hgscript-bg);}
 .project-item.blog     .project-icon{background:var(--c-blog-bg);}
+.project-item.coder    .project-icon{background:var(--c-coder-bg);}
 .project-info{flex:1;min-width:0;}
 .project-name{font-weight:700;font-size:.84rem;color:var(--ink);line-height:1.2;margin-bottom:2px;}
 .project-desc{font-size:.71rem;color:var(--ink5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -890,6 +897,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
       <a href="study/study.html" class="nav-link">HGStudy</a>
       <a href="sns/sns.html" class="nav-link">HGSNS</a>
       <a href="hgblog/blog.html" class="nav-link">HGBlog</a>
+      <a href="other/hgcoder.html" class="nav-link">HGCoder</a>
       <div class="nav-sep"></div>
       <button class="btn-hdr btn-login" id="hdrLoginBtn" onclick="openAuthModal('login')">ログイン</button>
       <button class="btn-hdr btn-reg" id="hdrRegBtn" onclick="openAuthModal('reg')">登録</button>
@@ -944,6 +952,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
         </a>
         <a href="sns/sns.html" class="hero-cta-sub">HGSNS →</a>
         <a href="hgblog/blog.html" class="hero-cta-sub">HGBlog →</a>
+        <a href="other/hgcoder.html" class="hero-cta-sub">HGCoder →</a>
       </div>
     </div>
     <div class="hero-emblem" aria-hidden="true">
@@ -1003,6 +1012,14 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
             </div>
             <span class="project-arr">→</span>
           </a>
+          <a href="other/hgcoder.html" class="project-item coder">
+            <div class="project-icon">⚡</div>
+            <div class="project-info">
+              <div class="project-name">HGCoder</div>
+              <div class="project-desc">ブラウザ内コード実行 IDE</div>
+            </div>
+            <span class="project-arr">→</span>
+          </a>
         </div>
       </div>
     </div>
@@ -1028,6 +1045,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
       <a href="sns/sns.html">HGSNS</a>
       <a href="hgblog/blog.html">HGBlog</a>
       <a href="hgscript/hg.html">HGScript</a>
+      <a href="other/hgcoder.html">HGCoder</a>
     </div>
     <div class="footer-copy">&copy; HGHome</div>
   </div>
@@ -1101,6 +1119,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
           <option value="sns">💬 HGSNS アップデート</option>
           <option value="hgscript">🔧 HGScript アップデート</option>
           <option value="blog">✍️ HGBlog アップデート</option>
+          <option value="coder">⚡ HGCoder アップデート</option>
         </select>
       </div>
       <div class="form-group">
@@ -1223,7 +1242,7 @@ function handleDrop(e){e.preventDefault();document.getElementById('imgUploadArea
 function handleImgSelect(e){const file=e.target.files[0];if(file)processImgFile(file);}
 function processImgFile(file){const reader=new FileReader();reader.onload=function(ev){const img=new Image();img.onload=function(){let w=img.width,h=img.height;if(w>MAX_IMG_SIZE||h>MAX_IMG_SIZE){if(w>h){h=Math.round(h*MAX_IMG_SIZE/w);w=MAX_IMG_SIZE;}else{w=Math.round(w*MAX_IMG_SIZE/h);h=MAX_IMG_SIZE;}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);let quality=0.82;let dataUrl=canvas.toDataURL('image/jpeg',quality);while(dataUrl.length>MAX_IMG_KB*1024*4/3&&quality>0.3){quality-=0.08;dataUrl=canvas.toDataURL('image/jpeg',quality);}const kb=Math.round(dataUrl.length*3/4/1024);_newsImageBase64=dataUrl;document.getElementById('imgPreviewImg').src=dataUrl;document.getElementById('imgPreview').classList.add('show');document.getElementById('imgSizeNote').textContent=`${w}×${h}px / 約${kb}KB`;};img.src=ev.target.result;};reader.readAsDataURL(file);}
 function clearNewsImage(){_newsImageBase64=null;document.getElementById('imgPreview').classList.remove('show');document.getElementById('imgPreviewImg').src='';document.getElementById('newsImgInput').value='';document.getElementById('imgSizeNote').textContent='';}
-async function loadNews(){const list=document.getElementById('newsList');list.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';try{if(!db){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">⚠️</span><p>Firebase が初期化されていません</p></div>';return;}const snap=await db.ref('news').orderByChild('ts').limitToLast(50).once('value');const data=snap.val()||{};const entries=Object.entries(data).sort((a,b)=>b[1].ts-a[1].ts);document.getElementById('newsCount').textContent=entries.length?entries.length+' 件':'';if(!entries.length){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">📭</span><p>現在お知らせはありません</p></div>';return;}list.innerHTML='';const nl=document.createElement('div');nl.className='news-list';entries.forEach(([id,n])=>{const el=document.createElement('div');el.className='news-item';const ts=n.ts?new Date(n.ts):null;const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'}):'';const cat=n.cat||'info';const catLabel={info:'INFO',study:'HGSTUDY',homebot:'HOMEBOT',sns:'HGSNS',hgscript:'HGSCRIPT',blog:'HGBLOG'}[cat]||'INFO';const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';el.innerHTML=`<div class="news-item-bar ${esc(cat)}"></div><div class="news-item-inner"><div class="news-item-top"><span class="news-badge ${esc(cat)}">${catLabel}</span><span class="news-date">${esc(dateStr)}</span></div><div class="news-title">${esc(n.title||'（無題）')}</div><div class="news-body">${esc(n.content||'')}</div>${imgHTML}<div class="news-meta"><span class="news-author">${esc(n.author||'管理者')}</span>${actionsHTML}</div></div>`;nl.appendChild(el);});list.appendChild(nl);}catch(e){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">⚠️</span><p>読み込みに失敗しました</p></div>';}}
+async function loadNews(){const list=document.getElementById('newsList');list.innerHTML='<div class="spinner"><div class="spin"></div>読み込み中...</div>';try{if(!db){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">⚠️</span><p>Firebase が初期化されていません</p></div>';return;}const snap=await db.ref('news').orderByChild('ts').limitToLast(50).once('value');const data=snap.val()||{};const entries=Object.entries(data).sort((a,b)=>b[1].ts-a[1].ts);document.getElementById('newsCount').textContent=entries.length?entries.length+' 件':'';if(!entries.length){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">📭</span><p>現在お知らせはありません</p></div>';return;}list.innerHTML='';const nl=document.createElement('div');nl.className='news-list';entries.forEach(([id,n])=>{const el=document.createElement('div');el.className='news-item';const ts=n.ts?new Date(n.ts):null;const dateStr=ts?ts.toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'}):'';const cat=n.cat||'info';const catLabel={info:'INFO',study:'HGSTUDY',homebot:'HOMEBOT',sns:'HGSNS',hgscript:'HGSCRIPT',blog:'HGBLOG',coder:'HGCODER'}[cat]||'INFO';const imgHTML=n.image?`<div class="news-image"><img src="${esc(n.image)}" alt="添付画像" loading="lazy"></div>`:'';const actionsHTML=isAdmin?`<div class="news-actions"><button class="news-act-btn" onclick="editNews('${id}')">編集</button><button class="news-act-btn del" onclick="deleteNews('${id}')">削除</button></div>`:'';el.innerHTML=`<div class="news-item-bar ${esc(cat)}"></div><div class="news-item-inner"><div class="news-item-top"><span class="news-badge ${esc(cat)}">${catLabel}</span><span class="news-date">${esc(dateStr)}</span></div><div class="news-title">${esc(n.title||'（無題）')}</div><div class="news-body">${esc(n.content||'')}</div>${imgHTML}<div class="news-meta"><span class="news-author">${esc(n.author||'管理者')}</span>${actionsHTML}</div></div>`;nl.appendChild(el);});list.appendChild(nl);}catch(e){list.innerHTML='<div class="news-empty"><span class="news-empty-icon">⚠️</span><p>読み込みに失敗しました</p></div>';}}
 function openNewsModal(editId){editingNewsId=editId||null;document.getElementById('newsModalTitle').textContent=editId?'お知らせを編集':'お知らせを投稿';document.getElementById('newsSubmitBtn').textContent=editId?'更新する':'投稿する';document.getElementById('newsErr').classList.remove('show');if(!editId){document.getElementById('newsTitle').value='';document.getElementById('newsCat').value='info';document.getElementById('newsContent').value='';clearNewsImage();}document.getElementById('newsOverlay').classList.add('open');setTimeout(()=>document.getElementById('newsTitle').focus(),80);}
 function closeNewsModal(){document.getElementById('newsOverlay').classList.remove('open');editingNewsId=null;}
 async function editNews(id){if(!isAdmin){showToast('管理者権限が必要です');return;}try{const snap=await db.ref('news/'+id).once('value');const n=snap.val();if(!n)return;document.getElementById('newsTitle').value=n.title||'';document.getElementById('newsCat').value=n.cat||'info';document.getElementById('newsContent').value=n.content||'';if(n.image){_newsImageBase64=n.image;document.getElementById('imgPreviewImg').src=n.image;document.getElementById('imgPreview').classList.add('show');document.getElementById('imgSizeNote').textContent='（既存の画像）';}else{clearNewsImage();}openNewsModal(id);}catch(e){showToast('エラー: '+e.message);}}
