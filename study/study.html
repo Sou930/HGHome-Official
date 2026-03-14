@@ -207,19 +207,51 @@
         <!-- 4択クイズエリア -->
         <div id="quizArea" style="display:none">
           <div class="quiz-card-wrap">
-            <div class="quiz-progress-wrap">
-              <div class="quiz-progress-bar-outer">
-                <div class="quiz-progress-bar-inner" id="quizProgressBar" style="width:0%"></div>
+
+            <!-- ヘッダー: 進捗 + スコア + コンボ -->
+            <div class="quiz-header">
+              <div class="quiz-header-left">
+                <div class="quiz-progress-text" id="quizProgress">1 / 0</div>
+                <div class="quiz-progress-bar-outer">
+                  <div class="quiz-progress-bar-inner" id="quizProgressBar" style="width:0%"></div>
+                </div>
               </div>
-              <div class="quiz-progress-text" id="quizProgress">1 / 0</div>
+              <div class="quiz-header-right">
+                <div class="quiz-score-box" id="quizScoreBox">
+                  <span class="quiz-score-num" id="quizScoreNum">0</span>
+                  <span class="quiz-score-lbl">正解</span>
+                </div>
+                <div class="quiz-combo-box" id="quizComboBox" style="display:none">
+                  <span class="quiz-combo-num" id="quizComboNum">0</span>
+                  <span class="quiz-combo-lbl">連続</span>
+                </div>
+              </div>
             </div>
-            <div class="quiz-question-card">
-              <div class="quiz-q-label">問題</div>
+
+            <!-- 問題方向トグル -->
+            <div class="quiz-dir-row">
+              <button class="quiz-dir-btn on" id="quizDirFB" onclick="setQuizDir('fb')">表 → 裏</button>
+              <button class="quiz-dir-btn"    id="quizDirBF" onclick="setQuizDir('bf')">裏 → 表</button>
+              <span class="quiz-dir-hint">キーボード: 1〜4 で選択　Enter で次へ</span>
+            </div>
+
+            <!-- 問題カード -->
+            <div class="quiz-question-card" id="quizQuestionCard">
+              <div class="quiz-q-label" id="quizQLabel">問題</div>
               <div class="quiz-question-text" id="quizQuestion"></div>
             </div>
+
+            <!-- 選択肢 -->
             <div class="quiz-choices" id="quizChoices"></div>
+
+            <!-- 結果 -->
             <div class="quiz-result" id="quizResult"></div>
-            <button class="quiz-next-btn" id="quizNextBtn" onclick="nextQuizCard()" style="display:none">次の問題 →</button>
+
+            <!-- 次へボタン -->
+            <button class="quiz-next-btn" id="quizNextBtn" onclick="nextQuizCard()" style="display:none">
+              次の問題 <span class="quiz-next-key">Enter</span>
+            </button>
+
           </div>
         </div><!-- /quizArea -->
 
