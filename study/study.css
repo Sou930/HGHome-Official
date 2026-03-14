@@ -974,6 +974,94 @@ nav {
 }
 .ep-add-btn:hover { background:var(--primary-d); }
 .ep-empty { font-size:13px; color:var(--text3); text-align:center; padding:24px 0; font-weight:300; }
+
+/* ── デッキ検索バー ─────────────────────────────── */
+.deck-search-wrap {
+  display:flex; align-items:center; gap:0;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:0 12px;
+  margin:10px 18px 0; transition:border-color .15s;
+}
+.deck-search-wrap:focus-within { border-color:var(--primary); background:var(--surface); }
+.deck-search-icon { font-size:13px; flex-shrink:0; opacity:.5; }
+.deck-search-input {
+  flex:1; background:transparent; border:none; outline:none;
+  font-family:var(--Fb); font-size:13px; color:var(--text);
+  padding:9px 8px; min-width:0;
+}
+.deck-search-input::placeholder { color:var(--text3); }
+.deck-search-clear {
+  background:none; border:none; color:var(--text3); font-size:13px;
+  cursor:pointer; padding:0 2px; line-height:1;
+  transition:color .12s;
+}
+.deck-search-clear:hover { color:var(--text); }
+
+/* ── 進捗バー ──────────────────────────────────── */
+.dc-progress-wrap { padding:0 0 8px; }
+.dc-progress-bar {
+  display:flex; height:4px; border-radius:2px; overflow:hidden;
+  background:var(--surface2); margin-bottom:4px; gap:1px;
+}
+.dc-progress-seg { height:100%; transition:width .3s; }
+.dc-progress-seg.mastered { background:#5E8C6A; }
+.dc-progress-seg.learning { background:#9E7D47; }
+.dc-progress-seg.fresh    { background:var(--surface2); border:1px solid var(--border); }
+.dc-progress-legend {
+  display:flex; align-items:center; gap:5px;
+  font-family:var(--Fm); font-size:10px; color:var(--text3);
+}
+.dc-prog-dot {
+  width:6px; height:6px; border-radius:50%; flex-shrink:0;
+}
+.dc-prog-dot.mastered { background:#5E8C6A; }
+.dc-prog-dot.learning { background:#9E7D47; }
+.dc-prog-dot.fresh    { background:var(--border); }
+
+/* ── ドラッグ並び替え ──────────────────────────── */
+.ep-card-item { cursor:default; }
+.ep-card-item[draggable="true"] { cursor:grab; }
+.ep-card-item.dragging { opacity:.45; border-style:dashed; }
+.ep-card-item.drag-over { border-color:var(--primary); background:var(--primary-l); }
+.ep-drag-handle {
+  padding:0 10px; color:var(--text3); font-size:16px;
+  cursor:grab; line-height:1; display:flex; align-items:center;
+  user-select:none; flex-shrink:0; letter-spacing:-.5px;
+}
+.ep-card-display { display:flex; align-items:center; gap:0; padding:12px 14px 12px 0; }
+
+/* ── 画像添付 ──────────────────────────────────── */
+.ep-add-img-row {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:8px;
+}
+.ep-img-label {
+  cursor:pointer; padding:5px 10px; border-radius:var(--r-xl);
+  border:1px dashed var(--border); background:transparent;
+  font-size:11px; font-weight:600; color:var(--text3);
+  transition:all .15s; white-space:nowrap;
+}
+.ep-img-label:hover { border-color:var(--primary); color:var(--primary); }
+.ep-add-img-hint { font-size:10px; color:var(--text3); font-family:var(--Fm); }
+.ep-editor-img-row {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding-top:4px;
+}
+.ep-img-clear {
+  padding:4px 10px; border-radius:var(--r-xl);
+  border:1px solid rgba(180,60,40,.3); background:transparent;
+  color:rgba(180,70,50,.7); font-size:11px; font-weight:600;
+  cursor:pointer; transition:all .15s;
+}
+.ep-img-clear:hover { background:rgba(180,60,40,.08); }
+.ep-card-img {
+  max-height:56px; max-width:100px; object-fit:contain;
+  border-radius:4px; border:1px solid var(--border); flex-shrink:0;
+}
+.flashcard-img {
+  max-width:100%; max-height:160px; object-fit:contain;
+  border-radius:var(--r-sm); margin-bottom:10px; display:block;
+}
 .ep-danger-zone { margin-top:8px; }
 .ep-danger-btn {
   width:100%; padding:10px; border:1px solid rgba(180,60,40,.2);
