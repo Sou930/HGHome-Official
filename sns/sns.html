@@ -8,78 +8,6 @@
 <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
 <link rel="apple-touch-icon" href="../icons/icon-192.png">
 <link rel="stylesheet" href="sns.css">
-
-<!-- ── バッジ定義（X風）── -->
-<style>
-/* ── USER BADGES ── */
-.user-badge {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:17px; height:17px;
-  border-radius:50%;
-  flex-shrink:0;
-  vertical-align:middle;
-  margin-left:2px;
-}
-/* 管理者バッジ: 赤 */
-.badge-admin {
-  background:#e0245e;
-  color:#fff;
-  title:"管理者";
-}
-/* 開発者バッジ: 緑 */
-.badge-dev {
-  background:#17bf63;
-  color:#fff;
-  title:"開発者";
-}
-/* 公式バッジ: 青 */
-.badge-official {
-  background:#1d9bf0;
-  color:#fff;
-  title:"公式";
-}
-.user-badge svg {
-  width:10px; height:10px;
-}
-
-/* プロフィールページ用大バッジ */
-.badge-admin-lg, .badge-dev-lg, .badge-official-lg {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:22px; height:22px;
-  border-radius:50%;
-  flex-shrink:0;
-  margin-left:4px;
-  vertical-align:middle;
-}
-.badge-admin-lg  { background:#e0245e; color:#fff; }
-.badge-dev-lg    { background:#17bf63; color:#fff; }
-.badge-official-lg { background:#1d9bf0; color:#fff; }
-.badge-admin-lg svg, .badge-dev-lg svg, .badge-official-lg svg {
-  width:13px; height:13px;
-}
-
-/* 投稿内バッジラベル（ホバー時ツールチップ代わり） */
-.user-badge[title]:hover::after {
-  content: attr(title);
-  position:absolute;
-  bottom:calc(100% + 4px);
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,.85);
-  color:#fff;
-  font-size:.7rem;
-  padding:3px 8px;
-  border-radius:4px;
-  white-space:nowrap;
-  pointer-events:none;
-  z-index:999;
-}
-.user-badge { position:relative; }
-</style>
 </head>
 <body>
 
@@ -128,6 +56,15 @@
           </span>
           <span class="sidebar-label">通知</span>
         </button>
+        <!-- DM -->
+        <button class="sidebar-nav-item" data-view="dm" onclick="if(session)setView('dm');else openAuthModal('login')">
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span class="sidebar-badge" id="dmBadge" style="display:none">0</span>
+          </span>
+          <span class="sidebar-label">メッセージ</span>
+        </button>
         <!-- ブックマーク -->
         <button class="sidebar-nav-item" data-view="bookmarks" onclick="if(session)setView('bookmarks');else openAuthModal('login')">
           <span class="sidebar-icon-wrap">
@@ -141,13 +78,19 @@
           <span class="sidebar-icon-wrap" id="navProfileIconWrap">
             <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-            <!-- ログイン後はアバターcanvas -->
-            <canvas id="navAvatarCanvas" width="26" height="26"
-              style="border-radius:50%;display:none;border:2px solid var(--accent);"></canvas>
+            <canvas id="navAvatarCanvas" width="26" height="26" style="border-radius:50%;display:none;border:2px solid var(--accent);"></canvas>
           </span>
           <span class="sidebar-label">プロフィール</span>
         </button>
-        <!-- HGStudy（デスクトップのみ） -->
+        <!-- 管理者（isadmin時のみ表示） -->
+        <button class="sidebar-nav-item" data-view="admin" id="adminNavBtn" style="display:none" onclick="setView('admin');loadAdminDashboard()">
+          <span class="sidebar-icon-wrap">
+            <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7l-9-5z"/></svg>
+            <svg class="nav-icon-fill" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          </span>
+          <span class="sidebar-label">管理</span>
+        </button>
+        <!-- HGStudy -->
         <a class="sidebar-nav-item sidebar-nav-hgstudy" href="../study/study.html">
           <span class="sidebar-icon-wrap">
             <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
@@ -163,13 +106,11 @@
 
       <div class="sidebar-sep"></div>
 
-      <!-- ゲスト表示 -->
       <div id="sidebarGuest" style="display:none;flex-direction:column;gap:6px;padding:4px 0;">
         <button class="btn btn-primary" style="width:100%;border-radius:var(--r-xl)" onclick="openAuthModal('login')">ログイン</button>
         <button class="btn btn-ghost" style="width:100%;border-radius:var(--r-xl)" onclick="openAuthModal('reg')">アカウント作成</button>
       </div>
 
-      <!-- ログイン済み表示 -->
       <div id="sidebarAuth" style="display:none">
         <button class="sidebar-profile" onclick="openProfile(session.username)">
           <canvas id="sidebarAvatarCanvas" class="sidebar-avatar" width="40" height="40"></canvas>
@@ -191,16 +132,13 @@
   <!-- ── FEED ── -->
   <main class="sns-feed">
     <div class="feed-header">
-      <!-- ホーム用タブ（おすすめ / フォロー中） -->
       <div class="feed-tabs" id="homeFeedTabs">
-        <!-- モバイル用ロゴ（中央）→ CSSで desktop非表示 -->
         <div class="mobile-header-logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="var(--accent)" width="22" height="22"><path d="M23.954 4.569a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.691 8.094 4.066 6.13 1.64 3.161a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.061a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.937 4.937 0 004.604 3.417 9.868 9.868 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63a9.936 9.936 0 002.46-2.548l-.047-.02z"/></svg>
         </div>
-        <button class="feed-tab active" id="feedTabRec"    onclick="switchFeedTab('rec')">おすすめ</button>
-        <button class="feed-tab"        id="feedTabFollow" onclick="switchFeedTab('follow')">フォロー中</button>
+        <button class="feed-tab active" id="feedTabRec" onclick="switchFeedTab('rec')">おすすめ</button>
+        <button class="feed-tab" id="feedTabFollow" onclick="switchFeedTab('follow')">フォロー中</button>
       </div>
-      <!-- サブページ用タイトルバー -->
       <div class="feed-title-bar" id="feedTitleBar" style="display:none">
         <button class="feed-back-btn" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -211,25 +149,40 @@
 
     <!-- Desktop Composer -->
     <div class="feed-composer" id="feedComposer" style="display:none">
-      <canvas id="composerAvatarCanvas" class="composer-avatar" width="44" height="44"
-        onclick="if(session)openProfile(session.username)"></canvas>
+      <canvas id="composerAvatarCanvas" class="composer-avatar" width="44" height="44" onclick="if(session)openProfile(session.username)"></canvas>
       <div class="composer-body">
         <div class="composer-reply-to" id="composerReplyBanner" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span>返信先: <span class="reply-to-name" id="composerReplyName"></span></span>
           <button class="composer-reply-to-close" onclick="clearReplyContext()">✕</button>
         </div>
-        <textarea
-          class="composer-textarea"
-          id="composerText"
-          placeholder="いまどうしてる？"
-          maxlength="280"
-          oninput="updateComposerCount()"
-          onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitPost()"
-        ></textarea>
+        <textarea class="composer-textarea" id="composerText" placeholder="いまどうしてる？" maxlength="280" oninput="updateComposerCount()" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitPost()"></textarea>
         <div class="composer-img-preview" id="composerImgPreview">
           <img id="composerImgPreviewImg" src="" alt="">
           <button class="composer-img-del" onclick="clearPostImage()">✕</button>
+        </div>
+        <!-- Poll Composer -->
+        <div class="poll-composer" id="desktopPollComposer">
+          <div class="poll-composer-head">
+            <span>アンケート</span>
+            <button onclick="toggleDesktopPoll(false)" style="background:none;border:none;color:var(--white3);cursor:pointer;font-size:.82rem;">✕ 削除</button>
+          </div>
+          <div id="desktopPollOptions">
+            <div class="poll-option-row"><input type="text" placeholder="選択肢 1" maxlength="40" oninput="updateDesktopPollSubmit()"><button class="poll-remove-btn" onclick="removeDesktopPollOption(this)" style="display:none"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
+            <div class="poll-option-row"><input type="text" placeholder="選択肢 2" maxlength="40" oninput="updateDesktopPollSubmit()"><button class="poll-remove-btn" onclick="removeDesktopPollOption(this)" style="display:none"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
+          </div>
+          <button class="poll-add-btn" id="desktopPollAddBtn" onclick="addDesktopPollOption()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            選択肢を追加
+          </button>
+          <div class="poll-duration-row">
+            <span>投票期間:</span>
+            <select id="desktopPollDuration">
+              <option value="86400000">1日</option>
+              <option value="259200000">3日</option>
+              <option value="604800000" selected>7日</option>
+            </select>
+          </div>
         </div>
         <div class="composer-toolbar">
           <div class="composer-tools">
@@ -237,13 +190,17 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </button>
             <input type="file" id="postImgInput" class="img-input" accept="image/*" onchange="handlePostImgSelect(event)">
+            <button class="composer-tool-btn" title="アンケート" onclick="toggleDesktopPoll(true)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="12" height="4" rx="1"/><rect x="3" y="17" width="15" height="4" rx="1"/></svg>
+            </button>
+            <button class="composer-tool-btn" title="予約投稿" onclick="openScheduleModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
           </div>
           <div class="composer-right">
-            <!-- 文字数リング -->
             <svg class="char-ring" id="composerRing" viewBox="0 0 32 32" width="28" height="28">
               <circle class="char-ring-bg" cx="16" cy="16" r="12" fill="none" stroke-width="3"/>
-              <circle class="char-ring-fill" id="composerRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3"
-                stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
+              <circle class="char-ring-fill" id="composerRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3" stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
             </svg>
             <span class="composer-count" id="composerCount" style="display:none">0</span>
             <div class="composer-divider"></div>
@@ -256,62 +213,54 @@
     <!-- ── VIEW: ホーム ── -->
     <div id="homeView">
       <div id="feedPosts"></div>
+      <div class="feed-sentinel" id="feedSentinel"></div>
     </div>
 
     <!-- ── VIEW: プロフィール ── -->
-    <div id="profileViewWrap" style="display:none">
-      <div id="profileView"></div>
-    </div>
+    <div id="profileViewWrap" style="display:none"><div id="profileView"></div></div>
 
     <!-- ── VIEW: 検索 ── -->
     <div id="searchViewWrap" style="display:none">
       <div style="padding:12px 16px;border-bottom:1px solid var(--line);">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="search-input" id="searchInput"
-            placeholder="ユーザーまたは#タグを検索"
-            onkeydown="if(event.key==='Enter')doSearch()"
-            oninput="onSearchInput(event)">
+          <input type="text" class="search-input" id="searchInput" placeholder="ユーザーまたは#タグを検索" onkeydown="if(event.key==='Enter')doSearch()" oninput="onSearchInput(event)">
           <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" style="display:none">
             <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
         </div>
       </div>
-      <!-- 検索タブ -->
       <div class="search-tabs" id="searchTabs" style="display:none">
         <button class="feed-tab active" id="sTabUsers" onclick="switchSearchTab('users')">ユーザー</button>
-        <button class="feed-tab"        id="sTabPosts" onclick="switchSearchTab('posts')">投稿</button>
-        <button class="feed-tab"        id="sTabTags"  onclick="switchSearchTab('tags')">タグ</button>
+        <button class="feed-tab" id="sTabPosts" onclick="switchSearchTab('posts')">投稿</button>
+        <button class="feed-tab" id="sTabTags" onclick="switchSearchTab('tags')">タグ</button>
       </div>
-      <div id="searchView">
-        <div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div>
-      </div>
+      <div id="searchView"><div class="feed-empty"><span class="feed-empty-icon">🔍</span>キーワードを入力してください</div></div>
     </div>
 
     <!-- ── VIEW: トレンド ── -->
-    <div id="trendViewWrap" style="display:none">
-      <div id="trendView"></div>
-    </div>
+    <div id="trendViewWrap" style="display:none"><div id="trendView"></div></div>
 
     <!-- ── VIEW: ハッシュタグ ── -->
-    <div id="hashtagViewWrap" style="display:none">
-      <div id="hashtagView"></div>
-    </div>
+    <div id="hashtagViewWrap" style="display:none"><div id="hashtagView"></div></div>
 
-    <!-- ── VIEW: スレッド / 投稿詳細 ── -->
-    <div id="threadViewWrap" style="display:none">
-      <div id="threadView"></div>
-    </div>
+    <!-- ── VIEW: スレッド ── -->
+    <div id="threadViewWrap" style="display:none"><div id="threadView"></div></div>
 
     <!-- ── VIEW: 通知 ── -->
-    <div id="notificationsViewWrap" style="display:none">
-      <div id="notificationsView"></div>
-    </div>
+    <div id="notificationsViewWrap" style="display:none"><div id="notificationsView"></div></div>
 
     <!-- ── VIEW: ブックマーク ── -->
-    <div id="bookmarksViewWrap" style="display:none">
-      <div id="bookmarksView"></div>
-    </div>
+    <div id="bookmarksViewWrap" style="display:none"><div id="bookmarksView"></div></div>
+
+    <!-- ── VIEW: DM ── -->
+    <div id="dmViewWrap" style="display:none"><div id="dmView"></div></div>
+
+    <!-- ── VIEW: 管理者 ── -->
+    <div id="adminViewWrap" style="display:none"><div id="adminView"></div></div>
+
+    <!-- ── VIEW: 予約投稿 ── -->
+    <div id="scheduledViewWrap" style="display:none"><div id="scheduledView"></div></div>
 
   </main>
 
@@ -320,46 +269,33 @@
     <div class="right-search">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="search-input" id="rightSearchInput"
-          placeholder="HGSNS を検索"
-          onkeydown="if(event.key==='Enter'){copySearchAndGo(this.value);}"
-          oninput="onRightSearchInput(this)">
+        <input type="text" class="search-input" id="rightSearchInput" placeholder="HGSNS を検索" onkeydown="if(event.key==='Enter'){copySearchAndGo(this.value);}" oninput="onRightSearchInput(this)">
       </div>
     </div>
-
-    <!-- トレンド -->
     <div class="right-card">
       <div class="right-card-head">🔥 いまトレンド</div>
       <div id="rightTrends"></div>
       <div class="right-card-foot" onclick="setView('trend')">すべて見る →</div>
     </div>
-
-    <!-- おすすめユーザー -->
     <div class="right-card">
       <div class="right-card-head">おすすめユーザー</div>
       <div id="suggestUsers"></div>
       <div class="right-card-foot" onclick="setView('search')">もっと見る →</div>
     </div>
-
-    <!-- HGHome リンク -->
     <div class="right-card">
       <div class="right-card-head">🏠 HGHome</div>
       <div style="padding:12px 16px;">
         <a href="../index.html" class="back-home-btn" style="padding:8px 0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          HGHome に戻る
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>HGHome に戻る
         </a>
         <a href="../study/study.html" class="back-home-btn" style="padding:8px 0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-          HGStudy を開く
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>HGStudy を開く
         </a>
       </div>
     </div>
-
     <div style="padding:8px 0;font-size:.75rem;color:var(--white3);line-height:1.8">
       <a href="../index.html" style="color:var(--white3);text-decoration:none;margin-right:12px">HGHome</a>
-      <a href="../study/study.html" style="color:var(--white3);text-decoration:none">HGStudy</a>
-      <br>© HGHome · HGSNS
+      <a href="../study/study.html" style="color:var(--white3);text-decoration:none">HGStudy</a><br>© HGHome · HGSNS
     </div>
   </aside>
 
@@ -373,36 +309,30 @@
 <!-- ── TOAST ── -->
 <div class="toast" id="snsToast"></div>
 
-<!-- ── MOBILE COMPOSE (X風・全画面) ── -->
+<!-- ── MOBILE COMPOSE ── -->
 <div class="mobile-compose-overlay" id="mobileComposeOverlay">
   <div class="mobile-compose-sheet">
-    <!-- ヘッダー: キャンセル | タイトル | 投稿 -->
     <div class="sheet-header">
       <button class="sheet-cancel-btn" onclick="closeMobileCompose()">キャンセル</button>
       <span class="sheet-title" id="sheetTitle">新しいポスト</span>
       <button class="composer-submit sheet-post-btn" id="sheetSubmitBtn" onclick="submitSheetPost()" disabled>投稿</button>
     </div>
-    <!-- 返信バナー -->
     <div class="sheet-reply-to" id="sheetReplyBanner" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       返信先: <span class="reply-name" id="sheetReplyName"></span>
     </div>
-    <!-- 入力エリア -->
+    <!-- Quote preview in sheet -->
+    <div class="sheet-quote-preview" id="sheetQuotePreview" style="display:none;margin:8px 14px 0;"></div>
     <div class="sheet-compose-row">
-      <canvas id="sheetAvatarCanvas" width="40" height="40"
-        style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;margin-top:2px;"></canvas>
+      <canvas id="sheetAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;margin-top:2px;"></canvas>
       <div style="flex:1;min-width:0;">
-        <textarea class="sheet-textarea" id="sheetTextarea"
-          placeholder="いまどうしてる？" maxlength="280"
-          oninput="updateSheetCount()"></textarea>
-        <div id="sheetQuotePreview" style="display:none"></div>
+        <textarea class="sheet-textarea" id="sheetTextarea" placeholder="いまどうしてる？" maxlength="280" oninput="updateSheetCount()"></textarea>
         <div class="composer-img-preview" id="sheetImgPreview">
           <img id="sheetImgPreviewImg" src="" alt="">
           <button class="composer-img-del" onclick="clearSheetImage()">✕</button>
         </div>
       </div>
     </div>
-    <!-- ツールバー -->
     <div class="sheet-toolbar">
       <div class="sheet-tools">
         <button class="composer-tool-btn" onclick="document.getElementById('sheetImgInput').click()" title="画像">
@@ -410,37 +340,26 @@
         </button>
         <input type="file" id="sheetImgInput" class="img-input" accept="image/*" onchange="handleSheetImgSelect(event)">
       </div>
-      <!-- 文字数リング -->
       <div style="display:flex;align-items:center;gap:10px;">
         <svg class="char-ring" id="sheetRing" viewBox="0 0 32 32" width="24" height="24">
           <circle class="char-ring-bg" cx="16" cy="16" r="12" fill="none" stroke-width="3"/>
-          <circle class="char-ring-fill" id="sheetRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3"
-            stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
+          <circle class="char-ring-fill" id="sheetRingFill" cx="16" cy="16" r="12" fill="none" stroke-width="3" stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
         </svg>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── REPLY MODAL (desktop) ── -->
+<!-- ── REPLY MODAL ── -->
 <div class="overlay" id="replyOverlay" onclick="if(event.target===this)closeReplyModal()">
   <div class="modal">
-    <div class="modal-head">
-      <h3 class="modal-title">返信</h3>
-      <button class="modal-close" onclick="closeReplyModal()">✕</button>
-    </div>
+    <div class="modal-head"><h3 class="modal-title">返信</h3><button class="modal-close" onclick="closeReplyModal()">✕</button></div>
     <div class="modal-body">
       <div class="reply-modal-context" id="replyModalContext"></div>
       <div class="reply-modal-compose">
-        <canvas id="replyAvatarCanvas" width="40" height="40"
-          style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+        <canvas id="replyAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
         <div class="reply-compose-body">
-          <textarea class="reply-compose-textarea" id="replyTextarea"
-            placeholder="返信を入力..."
-            maxlength="280"
-            oninput="updateReplyCount()"
-            onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitReply()">
-          </textarea>
+          <textarea class="reply-compose-textarea" id="replyTextarea" placeholder="返信を入力..." maxlength="280" oninput="updateReplyCount()" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitReply()"></textarea>
           <div class="reply-compose-toolbar">
             <div style="display:flex;gap:4px;">
               <button class="composer-tool-btn" onclick="document.getElementById('replyImgInput').click()">
@@ -463,22 +382,17 @@
   </div>
 </div>
 
-<!-- ── REPOST OPTIONS MODAL ── -->
+<!-- ── REPOST MODAL ── -->
 <div class="overlay" id="repostOverlay" onclick="if(event.target===this)closeRepostModal()">
   <div class="modal" style="max-width:360px">
-    <div class="modal-head">
-      <h3 class="modal-title">リポスト</h3>
-      <button class="modal-close" onclick="closeRepostModal()">✕</button>
-    </div>
+    <div class="modal-head"><h3 class="modal-title">リポスト</h3><button class="modal-close" onclick="closeRepostModal()">✕</button></div>
     <div class="modal-body" style="padding:8px 12px;">
       <div class="repost-options">
         <button class="repost-option" onclick="doRepost()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-          リポスト
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>リポスト
         </button>
         <button class="repost-option" onclick="openQuoteRepost()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          引用リポスト
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>引用リポスト
         </button>
         <button class="repost-option" id="undoRepostBtn" style="display:none" onclick="doUndoRepost()">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--like)" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
@@ -492,21 +406,12 @@
 <!-- ── QUOTE REPOST MODAL ── -->
 <div class="overlay" id="quoteOverlay" onclick="if(event.target===this)closeQuoteModal()">
   <div class="modal">
-    <div class="modal-head">
-      <h3 class="modal-title">引用リポスト</h3>
-      <button class="modal-close" onclick="closeQuoteModal()">✕</button>
-    </div>
+    <div class="modal-head"><h3 class="modal-title">引用リポスト</h3><button class="modal-close" onclick="closeQuoteModal()">✕</button></div>
     <div class="modal-body">
       <div class="reply-modal-compose" style="margin-bottom:12px;">
-        <canvas id="quoteAvatarCanvas" width="40" height="40"
-          style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
+        <canvas id="quoteAvatarCanvas" width="40" height="40" style="border-radius:50%;border:2px solid var(--accent);flex-shrink:0;"></canvas>
         <div class="reply-compose-body">
-          <textarea class="reply-compose-textarea" id="quoteTextarea"
-            placeholder="コメントを追加..."
-            maxlength="280"
-            oninput="updateQuoteCount()"
-            onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitQuoteRepost()">
-          </textarea>
+          <textarea class="reply-compose-textarea" id="quoteTextarea" placeholder="コメントを追加..." maxlength="280" oninput="updateQuoteCount()" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')submitQuoteRepost()"></textarea>
           <div class="reply-compose-toolbar">
             <div></div>
             <div style="display:flex;align-items:center;gap:12px;">
@@ -524,66 +429,38 @@
 <!-- ── AUTH MODAL ── -->
 <div class="overlay" id="authOverlay" onclick="if(event.target===this&&session)closeAuthModal()">
   <div class="modal">
-    <div class="modal-head">
-      <h3 class="modal-title">HGSNS にサインイン</h3>
-      <button class="modal-close" onclick="if(session)closeAuthModal()">✕</button>
-    </div>
+    <div class="modal-head"><h3 class="modal-title">HGSNS にサインイン</h3><button class="modal-close" onclick="if(session)closeAuthModal()">✕</button></div>
     <div class="modal-body">
       <div class="auth-tabs">
         <button class="auth-tab on" id="authTabLogin" onclick="switchAuthTab('login')">ログイン</button>
-        <button class="auth-tab"    id="authTabReg"   onclick="switchAuthTab('reg')">アカウント作成</button>
+        <button class="auth-tab" id="authTabReg" onclick="switchAuthTab('reg')">アカウント作成</button>
       </div>
       <div class="form-err" id="authErr"></div>
-      <div class="form-group">
-        <label class="form-label">ユーザー名</label>
-        <input class="form-input" id="authUser" type="text"
-          placeholder="英数字・アンダースコア"
-          autocomplete="username"
-          onkeydown="if(event.key==='Enter')authSubmit()">
-      </div>
-      <div class="form-group">
-        <label class="form-label">パスワード</label>
+      <div class="form-group"><label class="form-label">ユーザー名</label><input class="form-input" id="authUser" type="text" placeholder="英数字・アンダースコア" autocomplete="username" onkeydown="if(event.key==='Enter')authSubmit()"></div>
+      <div class="form-group"><label class="form-label">パスワード</label>
         <div class="pass-wrap">
-          <input class="form-input" id="authPass" type="password"
-            autocomplete="current-password"
-            onkeydown="if(event.key==='Enter')authSubmit()">
+          <input class="form-input" id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
           <button class="pass-toggle" type="button" onclick="togglePassVis('authPass',this)" tabindex="-1">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
       <div id="authRegExtra" style="display:none">
-        <div class="form-group">
-          <label class="form-label">パスワード確認</label>
-          <input class="form-input" id="authPassConfirm" type="password"
-            onkeydown="if(event.key==='Enter')authSubmit()">
-        </div>
+        <div class="form-group"><label class="form-label">パスワード確認</label><input class="form-input" id="authPassConfirm" type="password" onkeydown="if(event.key==='Enter')authSubmit()"></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary" id="authSubmitBtn" onclick="authSubmit()" style="width:100%">ログイン</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-primary" id="authSubmitBtn" onclick="authSubmit()" style="width:100%">ログイン</button></div>
   </div>
 </div>
 
 <!-- ── EDIT PROFILE MODAL ── -->
 <div class="overlay" id="editProfileOverlay" onclick="if(event.target===this)closeEditProfile()">
   <div class="modal">
-    <div class="modal-head">
-      <h3 class="modal-title">プロフィールを編集</h3>
-      <button class="modal-close" onclick="closeEditProfile()">✕</button>
-    </div>
+    <div class="modal-head"><h3 class="modal-title">プロフィールを編集</h3><button class="modal-close" onclick="closeEditProfile()">✕</button></div>
     <div class="modal-body">
       <div class="form-err" id="editProfileErr"></div>
-      <div class="form-group">
-        <label class="form-label">表示名</label>
-        <input class="form-input" id="editDispName" type="text" maxlength="30" placeholder="表示名">
-      </div>
-      <div class="form-group">
-        <label class="form-label">自己紹介</label>
-        <textarea class="form-textarea" id="editBio" maxlength="160"
-          placeholder="自己紹介（160文字以内）"></textarea>
-      </div>
+      <div class="form-group"><label class="form-label">表示名</label><input class="form-input" id="editDispName" type="text" maxlength="30" placeholder="表示名"></div>
+      <div class="form-group"><label class="form-label">自己紹介</label><textarea class="form-textarea" id="editBio" maxlength="160" placeholder="自己紹介（160文字以内）"></textarea></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeEditProfile()">キャンセル</button>
@@ -592,13 +469,61 @@
   </div>
 </div>
 
+<!-- ── EDIT POST MODAL ── -->
+<div class="overlay" id="editPostOverlay" onclick="if(event.target===this)closeEditPostModal()">
+  <div class="modal">
+    <div class="modal-head"><h3 class="modal-title">投稿を編集</h3><button class="modal-close" onclick="closeEditPostModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-err" id="editPostErr"></div>
+      <div class="form-group">
+        <textarea class="form-textarea" id="editPostText" maxlength="280" style="min-height:120px;font-size:1rem;line-height:1.6;" placeholder="内容を編集..."></textarea>
+      </div>
+      <div style="font-size:.8rem;color:var(--white3);">⏱ 投稿から5分以内のみ編集可能です</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditPostModal()">キャンセル</button>
+      <button class="btn btn-primary" id="editPostSubmitBtn" onclick="submitEditPost()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCHEDULE MODAL ── -->
+<div class="overlay" id="scheduleOverlay" onclick="if(event.target===this)closeScheduleModal()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3 class="modal-title">予約投稿</h3><button class="modal-close" onclick="closeScheduleModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">投稿日時</label>
+        <input class="form-input" id="scheduleDateTime" type="datetime-local">
+      </div>
+      <div style="font-size:.82rem;color:var(--white3);line-height:1.6;">
+        ⚠️ 予約投稿はアプリを開いているときに自動公開されます。指定時刻にオフラインの場合、次回起動時に公開されます。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeScheduleModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitScheduledPost()">予約する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DM NEW CHAT MODAL ── -->
+<div class="overlay" id="dmNewOverlay" onclick="if(event.target===this)closeDmNew()">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3 class="modal-title">新しいメッセージ</h3><button class="modal-close" onclick="closeDmNew()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <input class="form-input dm-user-search-input" id="dmUserSearchInput" type="text" placeholder="ユーザー名で検索..." oninput="searchDmUsers(this.value)">
+      </div>
+      <div id="dmUserSearchResults" style="max-height:280px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ── FOLLOW LIST MODAL ── -->
 <div class="overlay" id="followListOverlay" onclick="if(event.target===this)closeFollowList()">
   <div class="modal" style="max-width:400px">
-    <div class="modal-head">
-      <h3 class="modal-title" id="followListTitle">フォロー中</h3>
-      <button class="modal-close" onclick="closeFollowList()">✕</button>
-    </div>
+    <div class="modal-head"><h3 class="modal-title" id="followListTitle">フォロー中</h3><button class="modal-close" onclick="closeFollowList()">✕</button></div>
     <div class="modal-body" style="padding:0;max-height:420px;overflow-y:auto" id="followListBody"></div>
   </div>
 </div>
@@ -612,6 +537,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 <script src="sns.js"></script>
 </body>
 </html>
