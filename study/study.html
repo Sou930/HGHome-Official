@@ -153,6 +153,11 @@
       <div id="deckHeroCount" class="deck-hero-count">0</div>
     </div>
     <div class="deck-toolbar">
+      <div class="deck-search-wrap">
+        <span class="deck-search-icon">🔍</span>
+        <input class="deck-search-input" id="deckSearchInput" type="search" placeholder="デッキを検索…" oninput="onDeckSearch(this.value)" autocomplete="off">
+        <button class="deck-search-clear" id="deckSearchClear" onclick="clearDeckSearch()" style="display:none">✕</button>
+      </div>
       <div class="cat-scroll" id="catScroll"></div>
       <div class="deck-toolbar-bar">
         <div class="sort-bar">
@@ -388,6 +393,17 @@
           <input class="ep-add-input" id="epAddFront" placeholder="表面（問題）">
           <input class="ep-add-input" id="epAddBack"  placeholder="裏面（答え）">
           <button class="ep-add-btn" onclick="addEditPageCard()">追加</button>
+        </div>
+        <div class="ep-add-img-row">
+          <label class="ep-img-label">
+            <span id="epAddImgFrontLbl">🖼 表面に画像</span>
+            <input type="file" accept="image/*" id="epAddImgFront" style="display:none" onchange="previewAddImg('front',this)">
+          </label>
+          <label class="ep-img-label">
+            <span id="epAddImgBackLbl">🖼 裏面に画像</span>
+            <input type="file" accept="image/*" id="epAddImgBack" style="display:none" onchange="previewAddImg('back',this)">
+          </label>
+          <span class="ep-add-img-hint">※ 各512KB以下推奨</span>
         </div>
       </div>
     </div>
