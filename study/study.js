@@ -102,6 +102,9 @@ let sessionStats = {total:0, again:0, good:0, easy:0};
 let quizQueue = [], quizIdx = 0, quizAnswered = false, quizCorrectIdx = -1;
 let quizStats = {correct:0, wrong:0, total:0};
 let currentQuizChoices = [];
+let quizDir = 'fb'; // 'fb' = front→back, 'bf' = back→front
+let quizCombo = 0, quizMaxCombo = 0;
+let quizWrongLog = []; // [{question, correct, chosen}]
 let navReturn = {page:'pageStudy', subStudy:'deckBrowser'};
 let currentProfileUser = null;
 let editingDeckIdPage = null;
@@ -1002,7 +1005,29 @@ function showSessionComplete() {
   const statsEl = ge('sessionComplete').querySelector('.complete-stats');
   if (studyMode === '4choice') {
     ge('quizArea').style.display = 'none';
-    statsEl.innerHTML = `正解: <strong>${quizStats.correct}</strong> &nbsp;|&nbsp; 不正解: <strong>${quizStats.wrong}</strong> &nbsp;|&nbsp; 正答率: <strong>${Math.round(quizStats.correct/Math.max(1,quizStats.total)*100)}%</strong>`;
+    const acc = Math.round(quizStats.correct / Math.max(1, quizStats.total) * 100);
+    let wrongReview = '';
+    if (quizWrongLog.length > 0) {
+      wrongReview = `<div class="quiz-wrong-review">
+        <div class="quiz-wrong-review-title">間違えた問題（${quizWrongLog.length}問）</div>
+        ${quizWrongLog.map(w => `
+          <div class="quiz-wrong-item">
+            <div class="quiz-wrong-q">${esc(w.question)}</div>
+            <div class="quiz-wrong-detail">
+              <span class="quiz-wrong-correct">✓ ${esc(w.correct)}</span>
+              <span class="quiz-wrong-chosen">✗ ${esc(w.chosen)}</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
+    statsEl.innerHTML = `
+      <div class="quiz-final-stats">
+        <div class="quiz-final-item"><span class="quiz-final-num green">${quizStats.correct}</span><span class="quiz-final-lbl">正解</span></div>
+        <div class="quiz-final-item"><span class="quiz-final-num red">${quizStats.wrong}</span><span class="quiz-final-lbl">不正解</span></div>
+        <div class="quiz-final-item"><span class="quiz-final-num">${acc}%</span><span class="quiz-final-lbl">正答率</span></div>
+        <div class="quiz-final-item"><span class="quiz-final-num yellow">${quizMaxCombo}</span><span class="quiz-final-lbl">最大コンボ</span></div>
+      </div>
+      ${wrongReview}`;
   } else {
     statsEl.innerHTML = `完了: <strong>${sessionStats.total}</strong>枚`;
   }
@@ -1119,6 +1144,12 @@ window.deleteCardSession = async function(cardId) {
 // ══════════════════════════════════════════════════════
 //  4択クイズ
 // ══════════════════════════════════════════════════════
+window.setQuizDir = function(dir) {
+  quizDir = dir;
+  ge('quizDirFB')?.classList.toggle('on', dir === 'fb');
+  ge('quizDirBF')?.classList.toggle('on', dir === 'bf');
+};
+
 function buildQuizQueue() {
   const d = decks[currentDeckId] || allPublicDecks[currentDeckId];
   if (!d?.cards) { quizQueue = []; return; }
@@ -1126,7 +1157,24 @@ function buildQuizQueue() {
   quizQueue = shuffle(ids);
   quizIdx = 0; quizAnswered = false;
   quizStats = { correct:0, wrong:0, total:quizQueue.length };
+  quizCombo = 0; quizMaxCombo = 0; quizWrongLog = [];
   decks[currentDeckId] = d;
+  _updateQuizScoreUI();
+}
+
+function _updateQuizScoreUI() {
+  const scoreNum = ge('quizScoreNum');
+  if (scoreNum) scoreNum.textContent = quizStats.correct;
+  const comboBox = ge('quizComboBox');
+  const comboNum = ge('quizComboNum');
+  if (comboBox && comboNum) {
+    if (quizCombo >= 2) {
+      comboBox.style.display = '';
+      comboNum.textContent = quizCombo;
+    } else {
+      comboBox.style.display = 'none';
+    }
+  }
 }
 
 function renderQuizCard() {
@@ -1137,45 +1185,117 @@ function renderQuizCard() {
   const cardId = quizQueue[quizIdx], card = d.cards[cardId];
   if (!card) { quizIdx++; renderQuizCard(); return; }
   quizAnswered = false;
-  const wrongChoices = shuffle([...Object.values(d.cards).filter(c => c?.front && c?.back && c !== card)]).slice(0, 3);
+
+  // 問題文と選択肢の方向
+  const qText   = quizDir === 'fb' ? card.front  : card.back;
+  const ansText = quizDir === 'fb' ? card.back   : card.front;
+  const qLabel  = quizDir === 'fb' ? '問題（表）' : '問題（裏）';
+
+  const allCards = Object.values(d.cards).filter(c => c?.front && c?.back && c !== card);
+  const wrongChoices = shuffle(allCards).slice(0, 3);
   const choices = shuffle([card, ...wrongChoices]);
   currentQuizChoices = choices;
   quizCorrectIdx = choices.indexOf(card);
 
+  // progress
   const pct = (quizIdx / quizQueue.length) * 100;
-  ge('quizProgressBar')?.style.setProperty('width', pct + '%');
+  const pb = ge('quizProgressBar');
+  if (pb) { pb.style.transition = 'none'; pb.style.width = pct + '%'; requestAnimationFrame(() => { pb.style.transition = 'width .4s ease'; }); }
   if (ge('quizProgress')) ge('quizProgress').textContent = `${quizIdx+1} / ${quizQueue.length}`;
-  if (ge('quizQuestion')) ge('quizQuestion').textContent = card.front;
+  if (ge('quizQLabel'))   ge('quizQLabel').textContent   = qLabel;
 
+  // question card entrance animation
+  const qCard = ge('quizQuestionCard');
+  if (qCard) { qCard.classList.remove('quiz-card-enter'); void qCard.offsetWidth; qCard.classList.add('quiz-card-enter'); }
+  if (ge('quizQuestion')) ge('quizQuestion').textContent = qText;
+
+  // reset result & next
   const resultEl = ge('quizResult'), nextBtn = ge('quizNextBtn');
-  if (resultEl) { resultEl.textContent = ''; resultEl.className = 'quiz-result'; }
+  if (resultEl) { resultEl.innerHTML = ''; resultEl.className = 'quiz-result'; }
   if (nextBtn)  nextBtn.style.display = 'none';
 
+  // render choices with entrance animation
   const choicesEl = ge('quizChoices');
   if (choicesEl) {
-    choicesEl.innerHTML = choices.map((c, i) => `<button class="quiz-choice" onclick="selectQuizAnswer(${i})">${esc(c.back)}</button>`).join('');
+    choicesEl.innerHTML = choices.map((c, i) => {
+      const label = quizDir === 'fb' ? c.back : c.front;
+      return `<button class="quiz-choice quiz-choice-enter" style="animation-delay:${i*55}ms" onclick="selectQuizAnswer(${i})">
+        <span class="quiz-choice-key">${i+1}</span>${esc(label)}
+      </button>`;
+    }).join('');
   }
+  _updateQuizScoreUI();
 }
 
 window.selectQuizAnswer = function(choiceIdx) {
   if (quizAnswered) return;
   quizAnswered = true;
   const isCorrect = choiceIdx === quizCorrectIdx;
+  const d = decks[currentDeckId] || allPublicDecks[currentDeckId];
+  const cardId = quizQueue[quizIdx];
+  const card = d?.cards?.[cardId];
+
   document.querySelectorAll('.quiz-choice').forEach((btn, i) => {
     btn.disabled = true;
+    btn.querySelector('.quiz-choice-key')?.remove();
     if (i === quizCorrectIdx) btn.classList.add('correct');
     if (i === choiceIdx && !isCorrect) btn.classList.add('wrong');
   });
+
   const result = ge('quizResult');
-  if (result) {
-    if (isCorrect) { quizStats.correct++; result.textContent = '✓ 正解！'; result.className = 'quiz-result correct-msg'; }
-    else           { quizStats.wrong++;   result.textContent = `✗ 不正解　正解: ${currentQuizChoices[quizCorrectIdx]?.back||''}`; result.className = 'quiz-result wrong-msg'; }
+  if (isCorrect) {
+    quizStats.correct++;
+    quizCombo++;
+    if (quizCombo > quizMaxCombo) quizMaxCombo = quizCombo;
+    if (result) {
+      const combo = quizCombo >= 3 ? ` <span class="quiz-combo-badge">${quizCombo}連続！🔥</span>` : '';
+      result.innerHTML = `✓ 正解！${combo}`;
+      result.className = 'quiz-result correct-msg';
+    }
+    // 問題カードに正解エフェクト
+    ge('quizQuestionCard')?.classList.add('quiz-card-correct');
+    setTimeout(() => ge('quizQuestionCard')?.classList.remove('quiz-card-correct'), 500);
+  } else {
+    quizStats.wrong++;
+    quizCombo = 0;
+    const correctLabel = quizDir === 'fb'
+      ? currentQuizChoices[quizCorrectIdx]?.back
+      : currentQuizChoices[quizCorrectIdx]?.front;
+    const chosenLabel = quizDir === 'fb'
+      ? currentQuizChoices[choiceIdx]?.back
+      : currentQuizChoices[choiceIdx]?.front;
+    if (result) {
+      result.innerHTML = `✗ 不正解 &nbsp;<span class="quiz-wrong-ans">正解: ${esc(correctLabel||'')}</span>`;
+      result.className = 'quiz-result wrong-msg';
+    }
+    // 間違えた問題を記録
+    if (card) quizWrongLog.push({ question: quizDir === 'fb' ? card.front : card.back, correct: correctLabel||'', chosen: chosenLabel||'' });
+    // シェイクアニメーション
+    ge('quizQuestionCard')?.classList.add('quiz-card-wrong');
+    setTimeout(() => ge('quizQuestionCard')?.classList.remove('quiz-card-wrong'), 500);
   }
+
+  _updateQuizScoreUI();
   const nextBtn = ge('quizNextBtn');
   if (nextBtn) nextBtn.style.display = '';
 };
 
-window.nextQuizCard = () => { quizIdx++; renderQuizCard(); };
+window.nextQuizCard = function() { quizIdx++; renderQuizCard(); };
+
+// キーボードショートカット
+document.addEventListener('keydown', e => {
+  const qa = ge('quizArea');
+  if (!qa || qa.style.display === 'none') return;
+  if (['1','2','3','4'].includes(e.key)) {
+    const idx = parseInt(e.key) - 1;
+    const btns = document.querySelectorAll('.quiz-choice');
+    if (btns[idx] && !btns[idx].disabled) { btns[idx].click(); }
+  }
+  if (e.key === 'Enter') {
+    const nb = ge('quizNextBtn');
+    if (nb && nb.style.display !== 'none') nb.click();
+  }
+});
 
 // ══════════════════════════════════════════════════════
 //  DECK EDIT PAGE
