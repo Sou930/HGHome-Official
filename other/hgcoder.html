@@ -8,7 +8,6 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ══ LIGHT THEME ══ */
 :root, [data-theme="light"] {
   --bg:       #f0ede8;
   --surface:  #f8f6f2;
@@ -23,7 +22,6 @@
   --editor-bg:#ffffff;
   --error-line-bg: rgba(201,64,64,.07);
 }
-/* ══ DARK THEME ══ */
 [data-theme="dark"] {
   --bg:       #13111a;
   --surface:  #1c1926;
@@ -38,118 +36,128 @@
   --editor-bg:#13111a;
   --error-line-bg: rgba(201,64,64,.12);
 }
-
 :root {
-  --accent-py:  #4a8fd4;
-  --accent-c:   #d4823a;
-  --accent-cpp: #9b6dd4;
-  --accent-cs:  #3aab6e;
-  --accent-bf:  #d45f8a;
-  --accent-zig: #d97f30;
-  --accent-apl: #2aab99;
-  --accent-ws:  #7a8fa6;
-  --accent-mb:  #c95f5f;
-  --success: #2a9d5c;
-  --error:   #c94040;
-  --run:     #3d9e6e;
-  --run-h:   #2e8a5c;
-  --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
-  --sh-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
-  --sh-md: 0 3px 10px rgba(0,0,0,.09), 0 1px 3px rgba(0,0,0,.05);
+  --accent-py:#4a8fd4; --accent-c:#d4823a; --accent-cpp:#9b6dd4;
+  --accent-cs:#3aab6e; --accent-bf:#d45f8a; --accent-zig:#d97f30;
+  --accent-apl:#2aab99; --accent-ws:#7a8fa6; --accent-mb:#c95f5f;
+  --success:#2a9d5c; --error:#c94040; --run:#3d9e6e; --run-h:#2e8a5c;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 3px 10px rgba(0,0,0,.09),0 1px 3px rgba(0,0,0,.05);
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Nunito', sans-serif;
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-  overflow: hidden;
-  transition: background .25s, color .25s;
+  background:var(--bg); color:var(--text);
+  font-family:'Nunito',sans-serif;
+  min-height:100vh; display:flex; flex-direction:column;
+  overflow:hidden; transition:background .25s,color .25s;
 }
 
 /* ══ HEADER ══ */
 header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 18px; height: 52px;
-  background: var(--card); border-bottom: 1px solid var(--border);
-  box-shadow: var(--sh-sm); flex-shrink: 0; z-index: 100;
-  gap: 10px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 18px; height:52px;
+  background:var(--card); border-bottom:1px solid var(--border);
+  box-shadow:var(--sh-sm); flex-shrink:0; z-index:100; gap:10px;
 }
-.logo { font-size: 18px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 9px; }
-.logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg,#4a8fd4,#3aab6e); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 8px rgba(74,143,212,.28); flex-shrink: 0; }
-.logo-text em { font-style: normal; color: var(--run); }
-.header-right { display: flex; align-items: center; gap: 8px; }
-.header-badge { font-size: 11px; color: var(--text-muted); font-weight: 600; background: var(--surface2); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); }
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-right { display:flex; align-items:center; gap:8px; }
 
-/* icon buttons */
+/* ── back button ── */
+.btn-home {
+  display:flex; align-items:center; gap:6px;
+  padding:5px 13px; border-radius:var(--r-sm);
+  border:1.5px solid var(--border);
+  background:var(--card); color:var(--text-dim);
+  font-family:'Nunito',sans-serif; font-size:12px; font-weight:700;
+  cursor:pointer; text-decoration:none;
+  transition:all .17s; box-shadow:var(--sh-sm); white-space:nowrap;
+}
+.btn-home:hover {
+  color:var(--text); border-color:var(--border2);
+  background:var(--surface2); transform:translateY(-1px); box-shadow:var(--sh-md);
+}
+.btn-home-arrow { font-size:11px; opacity:.7; }
+
+.header-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; }
+
+.logo { font-size:18px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:9px; }
+.logo-icon {
+  width:28px; height:28px;
+  background:linear-gradient(135deg,#4a8fd4,#3aab6e);
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:12px; box-shadow:0 2px 8px rgba(74,143,212,.28); flex-shrink:0;
+}
+.logo-text em { font-style:normal; color:var(--run); }
+
+.header-badge {
+  font-size:11px; color:var(--text-muted); font-weight:600;
+  background:var(--surface2); padding:3px 10px;
+  border-radius:20px; border:1px solid var(--border);
+}
+
 .icon-btn {
-  width: 32px; height: 32px; border-radius: var(--r-sm);
-  border: 1.5px solid var(--border); background: var(--card);
-  color: var(--text-dim); cursor: pointer; font-size: 14px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .17s; box-shadow: var(--sh-sm);
+  width:32px; height:32px; border-radius:var(--r-sm);
+  border:1.5px solid var(--border); background:var(--card);
+  color:var(--text-dim); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .17s; box-shadow:var(--sh-sm);
 }
-.icon-btn:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); transform: translateY(-1px); box-shadow: var(--sh-md); }
-.icon-btn.active { background: var(--surface2); border-color: var(--border2); color: var(--text); }
+.icon-btn:hover { color:var(--text); border-color:var(--border2); background:var(--surface2); transform:translateY(-1px); box-shadow:var(--sh-md); }
 
-/* font size control */
-.font-ctrl { display: flex; align-items: center; gap: 4px; }
-.font-ctrl span { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-dim); min-width: 24px; text-align: center; }
+.font-ctrl { display:flex; align-items:center; gap:4px; }
+.font-ctrl span { font-size:11px; font-family:'DM Mono',monospace; color:var(--text-dim); min-width:24px; text-align:center; }
 
 /* ══ LANG TABS ══ */
 .lang-tabs {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
-  padding: 8px 16px; background: var(--surface);
-  border-bottom: 1px solid var(--border); flex-shrink: 0;
+  display:flex; flex-wrap:wrap; align-items:center; gap:5px;
+  padding:8px 16px; background:var(--surface);
+  border-bottom:1px solid var(--border); flex-shrink:0;
 }
-.tabs-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing:.07em; text-transform:uppercase; margin-right:2px; }
+.tabs-label { font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.07em; text-transform:uppercase; margin-right:2px; }
 .lang-tab {
-  display: flex; align-items: center; gap: 5px;
-  padding: 4px 12px; border-radius: 20px;
-  border: 1.5px solid var(--border); cursor: pointer;
-  font-family: 'DM Mono', monospace; font-size: 11.5px; font-weight: 500;
-  background: var(--card); color: var(--text-dim);
-  transition: all .17s; box-shadow: var(--sh-sm); white-space: nowrap; user-select: none;
+  display:flex; align-items:center; gap:5px;
+  padding:4px 12px; border-radius:20px;
+  border:1.5px solid var(--border); cursor:pointer;
+  font-family:'DM Mono',monospace; font-size:11.5px; font-weight:500;
+  background:var(--card); color:var(--text-dim);
+  transition:all .17s; box-shadow:var(--sh-sm); white-space:nowrap; user-select:none;
 }
-.lang-tab:hover { color: var(--text); border-color: var(--border2); transform: translateY(-1px); box-shadow: var(--sh-md); }
-.lang-tab.active { color: #fff; border-color: transparent; box-shadow: var(--sh-md); transform: translateY(-1px); }
-.lang-tab.active[data-lang="python"] { background: var(--accent-py); }
-.lang-tab.active[data-lang="c"]      { background: var(--accent-c); }
-.lang-tab.active[data-lang="cpp"]    { background: var(--accent-cpp); }
-.lang-tab.active[data-lang="csharp"] { background: var(--accent-cs); }
-.lang-tab.active[data-lang="bf"]     { background: var(--accent-bf); }
-.lang-tab.active[data-lang="zig"]    { background: var(--accent-zig); }
-.lang-tab.active[data-lang="apl"]    { background: var(--accent-apl); }
-.lang-tab.active[data-lang="ws"]     { background: var(--accent-ws); }
-.lang-tab.active[data-lang="mb"]     { background: var(--accent-mb); }
-.tab-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .4; flex-shrink: 0; transition: opacity .17s; }
-.lang-tab.active .tab-dot { opacity: .85; background: rgba(255,255,255,.9); }
+.lang-tab:hover { color:var(--text); border-color:var(--border2); transform:translateY(-1px); box-shadow:var(--sh-md); }
+.lang-tab.active { color:#fff; border-color:transparent; box-shadow:var(--sh-md); transform:translateY(-1px); }
+.lang-tab.active[data-lang="python"] { background:var(--accent-py); }
+.lang-tab.active[data-lang="c"]      { background:var(--accent-c); }
+.lang-tab.active[data-lang="cpp"]    { background:var(--accent-cpp); }
+.lang-tab.active[data-lang="csharp"] { background:var(--accent-cs); }
+.lang-tab.active[data-lang="bf"]     { background:var(--accent-bf); }
+.lang-tab.active[data-lang="zig"]    { background:var(--accent-zig); }
+.lang-tab.active[data-lang="apl"]    { background:var(--accent-apl); }
+.lang-tab.active[data-lang="ws"]     { background:var(--accent-ws); }
+.lang-tab.active[data-lang="mb"]     { background:var(--accent-mb); }
+.tab-dot { width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.4; flex-shrink:0; transition:opacity .17s; }
+.lang-tab.active .tab-dot { opacity:.85; background:rgba(255,255,255,.9); }
 
 /* ══ MAIN ══ */
 main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:10px 12px; gap:10px; }
-
 .panels { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:10px; overflow:hidden; min-height:0; }
 
-/* ══ PANE ══ */
 .editor-pane, .output-pane {
-  display: flex; flex-direction: column;
-  background: var(--card); border-radius: var(--r-lg);
-  border: 1px solid var(--border); box-shadow: var(--sh-md); overflow: hidden;
+  display:flex; flex-direction:column;
+  background:var(--card); border-radius:var(--r-lg);
+  border:1px solid var(--border); box-shadow:var(--sh-md); overflow:hidden;
 }
 .pane-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 12px; border-bottom: 1px solid var(--border);
-  background: var(--surface); flex-shrink: 0;
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px; border-bottom:1px solid var(--border);
+  background:var(--surface); flex-shrink:0;
+  border-radius:var(--r-lg) var(--r-lg) 0 0;
 }
 .pane-title { display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:800; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase; }
-.pane-icon { width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0; }
+.pane-icon { width:19px; height:19px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; }
 .pane-icon.ei { background:rgba(74,143,212,.12); }
 .pane-icon.oi { background:rgba(58,171,110,.12); }
 
-/* lang badge */
-.lang-badge { font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;border:1.5px solid transparent; }
+.lang-badge { font-family:'DM Mono',monospace; font-size:10px; font-weight:500; padding:2px 8px; border-radius:20px; border:1.5px solid transparent; }
 .lang-badge.python { background:rgba(74,143,212,.1);  color:var(--accent-py);  border-color:rgba(74,143,212,.2); }
 .lang-badge.c      { background:rgba(212,130,58,.1);  color:var(--accent-c);   border-color:rgba(212,130,58,.2); }
 .lang-badge.cpp    { background:rgba(155,109,212,.1); color:var(--accent-cpp); border-color:rgba(155,109,212,.2); }
@@ -160,71 +168,66 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:10p
 .lang-badge.ws     { background:rgba(122,143,166,.1); color:var(--accent-ws);  border-color:rgba(122,143,166,.2); }
 .lang-badge.mb     { background:rgba(201,95,95,.1);   color:var(--accent-mb);  border-color:rgba(201,95,95,.2); }
 
-/* ══ EDITOR ══ */
 .editor-wrapper { flex:1; display:flex; overflow:hidden; min-height:0; position:relative; }
 .line-numbers {
-  padding: 13px 10px 13px 12px;
-  background: var(--ln-bg); border-right: 1px solid var(--border);
-  color: var(--text-muted); font-family:'DM Mono',monospace;
+  padding:13px 10px 13px 12px;
+  background:var(--ln-bg); border-right:1px solid var(--border);
+  color:var(--text-muted); font-family:'DM Mono',monospace;
   line-height:22px; text-align:right; min-width:38px;
   overflow:hidden; user-select:none; white-space:pre; flex-shrink:0;
-  transition: font-size .15s;
+  transition:font-size .15s;
 }
-/* error line highlight overlay */
 .editor-err-overlay {
   position:absolute; left:38px; right:0; pointer-events:none; overflow:hidden;
   top:0; font-family:'DM Mono',monospace; line-height:22px;
-  padding: 13px 16px; white-space:pre; z-index:1;
+  padding:13px 16px; white-space:pre; z-index:1;
 }
 .err-line-marker {
-  display:block; width:100%; background: var(--error-line-bg);
-  border-left: 3px solid var(--error);
-  padding-left: 4px; color: transparent; /* text invisible, only bg shown */
-  margin-left: -4px;
+  display:block; width:100%; background:var(--error-line-bg);
+  border-left:3px solid var(--error);
+  padding-left:4px; color:transparent; margin-left:-4px;
 }
 #editor {
   flex:1; background:var(--editor-bg); color:var(--text);
   font-family:'DM Mono',monospace; line-height:22px;
   padding:13px 16px; border:none; outline:none; resize:none;
   overflow:auto; tab-size:4; white-space:pre; position:relative; z-index:2;
-  transition: font-size .15s, background .25s, color .25s;
-  caret-color: var(--accent-py);
+  transition:font-size .15s,background .25s,color .25s;
+  caret-color:var(--accent-py);
 }
 #editor::selection { background:rgba(74,143,212,.2); }
 
-/* ══ STDIN ══ */
 .stdin-section { border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; }
 .stdin-header {
   display:flex; align-items:center; gap:7px; padding:6px 12px;
   cursor:pointer; user-select:none; transition:background .15s;
-  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  border-radius:0 0 var(--r-lg) var(--r-lg);
 }
 .stdin-section.open .stdin-header { border-radius:0; border-bottom:1px solid var(--border); }
 .stdin-header:hover { background:var(--surface2); }
-.stdin-icon { width:17px;height:17px;background:rgba(122,143,166,.14);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;color:var(--text-dim); }
-.stdin-label { font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--text-dim);text-transform:uppercase;flex:1; }
-.stdin-chevron { color:var(--text-muted);font-size:10px;transition:transform .2s ease;line-height:1; }
+.stdin-icon { width:17px; height:17px; background:rgba(122,143,166,.14); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; color:var(--text-dim); }
+.stdin-label { font-size:10px; font-weight:700; letter-spacing:.05em; color:var(--text-dim); text-transform:uppercase; flex:1; }
+.stdin-chevron { color:var(--text-muted); font-size:10px; transition:transform .2s ease; line-height:1; }
 .stdin-section.open .stdin-chevron { transform:rotate(180deg); }
 #stdin {
   display:none; width:100%;
   background:var(--editor-bg); color:var(--text);
   font-family:'DM Mono',monospace; font-size:12.5px; line-height:20px;
   padding:9px 14px; border:none; outline:none; resize:none; height:64px;
-  transition: background .25s, color .25s;
+  transition:background .25s,color .25s;
 }
 .stdin-section.open #stdin { display:block; }
 
-/* ══ OUTPUT ══ */
 #output {
   flex:1; font-family:'DM Mono',monospace; line-height:21px;
   padding:13px 14px; overflow:auto; white-space:pre-wrap;
   word-break:break-word; color:var(--text); min-height:0;
-  transition: background .25s, color .25s;
+  transition:background .25s,color .25s;
 }
-#output .line-stdout  { color: var(--text); }
-#output .line-stderr  { color: var(--error); }
-#output .line-info    { color: var(--text-muted); font-style:italic; }
-#output .line-success { color: var(--success); font-weight:700; }
+#output .line-stdout  { color:var(--text); }
+#output .line-stderr  { color:var(--error); }
+#output .line-info    { color:var(--text-muted); font-style:italic; }
+#output .line-success { color:var(--success); font-weight:700; }
 
 .output-footer {
   display:flex; align-items:center; gap:7px;
@@ -238,13 +241,12 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:10p
   color:var(--text-dim); background:var(--surface2);
   border:1px solid var(--border); padding:2px 8px; border-radius:20px;
 }
-.status-dot { width:6px;height:6px;border-radius:50%;background:var(--text-muted);transition:background .2s,box-shadow .2s;flex-shrink:0; }
+.status-dot { width:6px; height:6px; border-radius:50%; background:var(--text-muted); transition:background .2s,box-shadow .2s; flex-shrink:0; }
 .status-dot.ok  { background:var(--success); box-shadow:0 0 5px rgba(42,157,92,.45); }
 .status-dot.err { background:var(--error);   box-shadow:0 0 5px rgba(201,64,64,.45); }
 .status-dot.run { background:var(--accent-py); box-shadow:0 0 5px rgba(74,143,212,.55); animation:blink 1s infinite; }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:.25} }
 
-/* copy btn */
 .copy-btn {
   margin-left:auto; padding:2px 8px; font-size:10.5px; font-family:'Nunito',sans-serif; font-weight:700;
   background:transparent; color:var(--text-dim); border:1.5px solid var(--border);
@@ -253,7 +255,6 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:10p
 .copy-btn:hover { color:var(--text); border-color:var(--border2); background:var(--surface2); }
 .copy-btn.copied { color:var(--success); border-color:rgba(42,157,92,.3); }
 
-/* ══ TOOLBAR ══ */
 .toolbar { display:flex; align-items:center; gap:7px; flex-shrink:0; }
 .btn-run {
   display:flex; align-items:center; gap:7px; padding:8px 20px;
@@ -284,17 +285,14 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:10p
 .shortcut-hint { font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; display:flex; align-items:center; gap:4px; }
 kbd { background:var(--surface2); border:1px solid var(--border2); border-radius:4px; padding:1px 5px; font-size:9.5px; font-family:'DM Mono',monospace; box-shadow:0 1px 0 var(--border2); }
 
-/* spinner */
-.spinner { width:13px;height:13px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .55s linear infinite;display:none;flex-shrink:0; }
+.spinner { width:13px; height:13px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .55s linear infinite; display:none; flex-shrink:0; }
 .btn-run.loading .spinner { display:block; }
 .btn-run.loading .run-icon { display:none; }
 @keyframes spin { to{transform:rotate(360deg)} }
 
-/* ══ CHEATSHEET MODAL ══ */
 .modal-backdrop {
   position:fixed; inset:0; background:rgba(0,0,0,.35); backdrop-filter:blur(4px);
-  z-index:1000; display:none; align-items:center; justify-content:center;
-  padding:20px;
+  z-index:1000; display:none; align-items:center; justify-content:center; padding:20px;
 }
 .modal-backdrop.open { display:flex; }
 .modal {
@@ -312,13 +310,12 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
 .modal-body { overflow-y:auto; padding:16px 18px; }
 .cheat-lang { margin-bottom:18px; }
 .cheat-lang-name { font-size:12px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
-.cheat-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+.cheat-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .cheat-table { width:100%; border-collapse:collapse; }
 .cheat-table td { padding:5px 8px; font-size:12px; border-bottom:1px solid var(--border); vertical-align:top; }
 .cheat-table td:first-child { font-family:'DM Mono',monospace; font-size:11.5px; color:var(--accent-py); white-space:nowrap; width:40%; }
 .cheat-table tr:last-child td { border-bottom:none; }
 
-/* ══ HISTORY PANEL ══ */
 .history-panel {
   position:fixed; right:0; top:0; bottom:0; width:300px;
   background:var(--card); border-left:1px solid var(--border);
@@ -341,7 +338,6 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
 .history-item-preview { font-size:11px; font-family:'DM Mono',monospace; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .history-empty { text-align:center; padding:40px 16px; color:var(--text-muted); font-size:13px; }
 
-/* scrollbar */
 ::-webkit-scrollbar { width:5px; height:5px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:99px; }
@@ -350,35 +346,37 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
 @media(max-width:768px){
   .panels{grid-template-columns:1fr;grid-template-rows:1fr 1fr;}
   .history-panel{width:100%;}
+  .btn-home-label{display:none;}
 }
 </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
 <header>
-  <div class="logo">
-    <div class="logo-icon">⚡</div>
-    <span class="logo-text">HG<em>Coder</em></span>
+  <div class="header-left">
+    <a href="../index.html" class="btn-home">
+      <span class="btn-home-arrow">←</span>
+      <span class="btn-home-label">HGHome へ戻る</span>
+    </a>
+    <div class="header-divider"></div>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">HG<em>Coder</em></span>
+    </div>
   </div>
   <div class="header-right">
-    <!-- font size -->
     <div class="font-ctrl">
       <button class="icon-btn" id="fontDec" title="文字を小さく">A-</button>
       <span id="fontSizeLabel">13</span>
       <button class="icon-btn" id="fontInc" title="文字を大きく">A+</button>
     </div>
-    <!-- history -->
     <button class="icon-btn" id="historyBtn" title="実行履歴">🕐</button>
-    <!-- cheatsheet -->
     <button class="icon-btn" id="cheatBtn" title="チートシート">?</button>
-    <!-- theme toggle -->
     <button class="icon-btn" id="themeBtn" title="テーマ切替">🌙</button>
     <div class="header-badge">ブラウザ内実行</div>
   </div>
 </header>
 
-<!-- ══ LANG TABS ══ -->
 <div class="lang-tabs">
   <span class="tabs-label">言語</span>
   <button class="lang-tab active" data-lang="python"><span class="tab-dot"></span>Python</button>
@@ -394,7 +392,6 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
 
 <main>
   <div class="panels">
-    <!-- EDITOR -->
     <div class="editor-pane">
       <div class="pane-header">
         <div class="pane-title"><div class="pane-icon ei">✏️</div>エディタ</div>
@@ -415,7 +412,6 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
       </div>
     </div>
 
-    <!-- OUTPUT -->
     <div class="output-pane">
       <div class="pane-header">
         <div class="pane-title"><div class="pane-icon oi">▶</div>出力</div>
@@ -433,7 +429,6 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
     </div>
   </div>
 
-  <!-- TOOLBAR -->
   <div class="toolbar">
     <button class="btn-run" id="btnRun" onclick="runCode()">
       <svg class="run-icon" width="11" height="12" viewBox="0 0 11 12" fill="currentColor"><polygon points="0,0 11,6 0,12"/></svg>
@@ -448,7 +443,6 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
   </div>
 </main>
 
-<!-- ══ HISTORY PANEL ══ -->
 <div class="history-panel" id="historyPanel">
   <div class="history-header">
     <span class="history-title">🕐 実行履歴</span>
@@ -459,7 +453,6 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
   </div>
 </div>
 
-<!-- ══ CHEATSHEET MODAL ══ -->
 <div class="modal-backdrop" id="cheatModal">
   <div class="modal">
     <div class="modal-header">
@@ -470,912 +463,121 @@ kbd { background:var(--surface2); border:1px solid var(--border2); border-radius
   </div>
 </div>
 
-<!-- Skulpt for Python -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt-stdlib.js"></script>
 <script>
 'use strict';
 
-// ══ WHITESPACE HELLO WORLD (correct binary encoding) ══
-// "Hello, World!\n" encoded properly as Whitespace
-const WS_HELLO = (()=>{
-  const S=' ',T='\t',L='\n';
-  // push char code then print: each char = [SS + sign + bits + L] then [TLS S]
-  const pushNum = n => {
-    const sign = n >= 0 ? S : T;
-    const bits = n === 0 ? '' : Math.abs(n).toString(2).split('').map(b=>b==='1'?T:S).join('');
-    return S+S+sign+bits+L;
-  };
-  const printChar = T+L+S+S;
-  let prog = '';
-  for (const c of 'Hello, World!\n') {
-    prog += pushNum(c.charCodeAt(0)) + printChar;
-  }
-  prog += L+L+L; // end
-  return prog;
-})();
+const WS_HELLO=(()=>{const S=' ',T='\t',L='\n';const pushNum=n=>{const sign=n>=0?S:T;const bits=n===0?'':Math.abs(n).toString(2).split('').map(b=>b==='1'?T:S).join('');return S+S+sign+bits+L;};const printChar=T+L+S+S;let prog='';for(const c of'Hello, World!\n'){prog+=pushNum(c.charCodeAt(0))+printChar;}prog+=L+L+L;return prog;})();
 
-// ══ DEFAULT SNIPPETS ══
-const DEFAULTS = {
-  python: `# Python のサンプル
-import math
-
-def fibonacci(n):
-    a, b = 0, 1
-    result = []
-    for _ in range(n):
-        result.append(a)
-        a, b = b, a + b
-    return result
-
-n = int(input("何番目まで表示しますか? "))
-fib = fibonacci(n)
-print(f"フィボナッチ数列 (最初の{n}個):")
-print(fib)
-print(f"合計: {sum(fib)}")
-print(f"最大値: {max(fib)}")
-`,
-  c: `/* C のサンプル */
-#include <stdio.h>
-#include <math.h>
-
-int isPrime(int n) {
-    if (n < 2) return 0;
-    for (int i = 2; i <= (int)sqrt(n); i++)
-        if (n % i == 0) return 0;
-    return 1;
-}
-
-int main() {
-    int limit;
-    printf("素数を表示する上限を入力: ");
-    scanf("%d", &limit);
-    printf("2 から %d までの素数:\\n", limit);
-    int count = 0;
-    for (int i = 2; i <= limit; i++) {
-        if (isPrime(i)) {
-            printf("%4d", i);
-            count++;
-            if (count % 10 == 0) printf("\\n");
-        }
-    }
-    printf("\\n合計 %d 個の素数\\n", count);
-    return 0;
-}
-`,
-  cpp: `// C++ のサンプル
-#include <iostream>
-#include <vector>
-using namespace std;
-
-class Stack {
-    vector<int> data;
-public:
-    void push(int val) { data.push_back(val); }
-    int pop() {
-        if (data.empty()) throw runtime_error("Stack is empty");
-        int val = data.back(); data.pop_back(); return val;
-    }
-    bool empty() const { return data.empty(); }
-    int size() const { return data.size(); }
+const DEFAULTS={
+  python:`# Python のサンプル\nimport math\n\ndef fibonacci(n):\n    a, b = 0, 1\n    result = []\n    for _ in range(n):\n        result.append(a)\n        a, b = b, a + b\n    return result\n\nn = int(input("何番目まで表示しますか? "))\nfib = fibonacci(n)\nprint(f"フィボナッチ数列 (最初の{n}個):")\nprint(fib)\nprint(f"合計: {sum(fib)}")\nprint(f"最大値: {max(fib)}")\n`,
+  c:`/* C のサンプル */\n#include <stdio.h>\n#include <math.h>\n\nint isPrime(int n) {\n    if (n < 2) return 0;\n    for (int i = 2; i <= (int)sqrt(n); i++)\n        if (n % i == 0) return 0;\n    return 1;\n}\n\nint main() {\n    int limit;\n    printf("素数を表示する上限を入力: ");\n    scanf("%d", &limit);\n    printf("2 から %d までの素数:\\n", limit);\n    int count = 0;\n    for (int i = 2; i <= limit; i++) {\n        if (isPrime(i)) {\n            printf("%4d", i);\n            count++;\n            if (count % 10 == 0) printf("\\n");\n        }\n    }\n    printf("\\n合計 %d 個の素数\\n", count);\n    return 0;\n}\n`,
+  cpp:`// C++ のサンプル\n#include <iostream>\n#include <vector>\nusing namespace std;\n\nclass Stack {\n    vector<int> data;\npublic:\n    void push(int val) { data.push_back(val); }\n    int pop() {\n        if (data.empty()) throw runtime_error("Stack is empty");\n        int val = data.back(); data.pop_back(); return val;\n    }\n    bool empty() const { return data.empty(); }\n    int size() const { return data.size(); }\n};\n\nint main() {\n    cout << "=== C++ Stack デモ ===" << endl;\n    Stack s;\n    int n;\n    cout << "プッシュする数値の個数を入力: ";\n    cin >> n;\n    for (int i = 0; i < n; i++) {\n        int val; cout << "値 " << (i+1) << ": "; cin >> val;\n        s.push(val);\n    }\n    cout << "\\nスタックサイズ: " << s.size() << endl;\n    cout << "ポップ順: ";\n    while (!s.empty()) cout << s.pop() << " ";\n    cout << endl;\n    return 0;\n}\n`,
+  csharp:`// C# のサンプル\nusing System;\nusing System.Linq;\n\nclass Program {\n    static bool IsPrime(int n) {\n        if (n < 2) return false;\n        for (int i = 2; i * i <= n; i++)\n            if (n % i == 0) return false;\n        return true;\n    }\n    static void Main(string[] args) {\n        Console.Write("上限を入力してください: ");\n        int limit = int.Parse(Console.ReadLine());\n        var primes = Enumerable.Range(2, limit - 1).Where(IsPrime).ToList();\n        Console.WriteLine($"2 〜 {limit} の素数 ({primes.Count}個):");\n        Console.WriteLine(string.Join(", ", primes));\n    }\n}\n`,
+  zig:`// Zig のサンプル: FizzBuzz\nconst std = @import("std");\n\npub fn main() !void {\n    const stdout = std.io.getStdOut().writer();\n    var i: u32 = 1;\n    while (i <= 20) : (i += 1) {\n        if (i % 15 == 0)      try stdout.print("FizzBuzz\\n", .{})\n        else if (i % 3 == 0)  try stdout.print("Fizz\\n", .{})\n        else if (i % 5 == 0)  try stdout.print("Buzz\\n", .{})\n        else                  try stdout.print("{d}\\n", .{i});\n    }\n}\n`,
+  apl:`⍝ APL のサンプル\n⍝ 1〜10の二乗\nsq ← {⍵*2}\n⎕ ← sq ⍳10\n\n⍝ 素数フィルタ\nisPrime ← {1=+/0=⍵|⍨⍳⍵}\nprimes ← (isPrime¨ ⍳20) / ⍳20\n⎕ ← primes\n`,
+  ws:WS_HELLO,
+  mb:`(=<\`#9]~6ZY32Vv/3*<]'}&%\`#3^*>+}]|,6/\\+%<[*!?'\`;(,&@+\\#4/;0\`\`,HL>!4}1)`,
+  bf:`[ BrainFuck: "Hello, World!" ]\n++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]\n>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.\n`
 };
 
-int main() {
-    cout << "=== C++ Stack デモ ===" << endl;
-    Stack s;
-    int n;
-    cout << "プッシュする数値の個数を入力: ";
-    cin >> n;
-    for (int i = 0; i < n; i++) {
-        int val; cout << "値 " << (i+1) << ": "; cin >> val;
-        s.push(val);
-    }
-    cout << "\\nスタックサイズ: " << s.size() << endl;
-    cout << "ポップ順: ";
-    while (!s.empty()) cout << s.pop() << " ";
-    cout << endl;
-    return 0;
-}
-`,
-  csharp: `// C# のサンプル
-using System;
-using System.Linq;
-
-class Program {
-    static bool IsPrime(int n) {
-        if (n < 2) return false;
-        for (int i = 2; i * i <= n; i++)
-            if (n % i == 0) return false;
-        return true;
-    }
-    static void Main(string[] args) {
-        Console.Write("上限を入力してください: ");
-        int limit = int.Parse(Console.ReadLine());
-        var primes = Enumerable.Range(2, limit - 1).Where(IsPrime).ToList();
-        Console.WriteLine($"2 〜 {limit} の素数 ({primes.Count}個):");
-        Console.WriteLine(string.Join(", ", primes));
-    }
-}
-`,
-  zig: `// Zig のサンプル: FizzBuzz
-const std = @import("std");
-
-pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    var i: u32 = 1;
-    while (i <= 20) : (i += 1) {
-        if (i % 15 == 0)      try stdout.print("FizzBuzz\\n", .{})
-        else if (i % 3 == 0)  try stdout.print("Fizz\\n", .{})
-        else if (i % 5 == 0)  try stdout.print("Buzz\\n", .{})
-        else                  try stdout.print("{d}\\n", .{i});
-    }
-}
-`,
-  apl: `⍝ APL のサンプル
-⍝ 1〜10の二乗
-sq ← {⍵*2}
-⎕ ← sq ⍳10
-
-⍝ 素数フィルタ
-isPrime ← {1=+/0=⍵|⍨⍳⍵}
-primes ← (isPrime¨ ⍳20) / ⍳20
-⎕ ← primes
-`,
-  ws: WS_HELLO,
-  mb: `(=<\`#9]~6ZY32Vv/3*<]'}&%\`#3^*>+}]|,6/\\+%<[*!?'\`;(,&@+\\#4/;0\`\`,HL>!4}1)`,
-  bf: `[ BrainFuck: "Hello, World!" ]
-++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]
->>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
-`
+const CHEATSHEETS={
+  python:{color:'#4a8fd4',items:[['print("Hi")','出力'],['input("? ")','入力'],['for i in range(n):','ループ'],['def f(x): return x','関数'],['[x for x in lst]','リスト内包'],['import math\nmath.sqrt(x)','平方根'],['f"{val:.2f}"','フォーマット'],['try:\n  ...\nexcept E as e:','例外処理']]},
+  c:{color:'#d4823a',items:[['printf("%d\\n", x)','出力'],['scanf("%d", &x)','入力'],['for(int i=0;i<n;i++)','ループ'],['int f(int x){return x;}','関数'],['#include <stdlib.h>\nmalloc(n*sizeof(int))','動的配列'],['#include <string.h>\nstrlen(s)','文字列長'],['#include <math.h> -lm\nsqrt(x)','平方根']]},
+  cpp:{color:'#9b6dd4',items:[['cout << x << endl','出力'],['cin >> x','入力'],['vector<int> v','動的配列'],['for(auto& x : v)','範囲for'],['#include <algorithm>\nsort(v.begin(),v.end())','ソート'],['map<string,int> m','マップ'],['class Foo { ... }','クラス']]},
+  csharp:{color:'#3aab6e',items:[['Console.WriteLine(x)','出力'],['Console.ReadLine()','入力'],['var list = new List<int>()','リスト'],['foreach(var x in col)','ループ'],['LINQ: .Where().Select()','クエリ'],['async Task<T> f(){}','非同期'],['try{} catch(Exception e){}','例外']]},
+  zig:{color:'#d97f30',items:[['const std = @import("std")','標準ライブラリ'],['std.debug.print("{}", .{x})','デバッグ出力'],['var x: i32 = 0','変数宣言'],['const x = 42','定数'],['while(i < n) : (i += 1)','ループ'],['fn name(x: i32) i32 {}','関数'],['try stdout.print("{}\\n",.{x})','標準出力']]},
+  apl:{color:'#2aab99',items:[['⍳N','1〜Nの整数'],['⎕ ← x','出力'],['x ← val','代入'],['+/ x','合計'],['×/ x','積'],['⌽ x','逆順'],['x*2','二乗'],['⍉M','転置'],['x ⍴ y','整形'],['{⍵+1}¨ v','各要素に適用'],['(cond)/v','フィルタ']]},
+  ws:{color:'#7a8fa6',items:[['Space Space + num + LF','push数値'],['Space LF Space','dup'],['Space LF LF','discard'],['Tab Space Space Space','add'],['Tab Space Space Tab','sub'],['Tab LF Space Space','printchar'],['Tab LF Space Tab','printnum'],['LF LF LF','プログラム終了'],['※ 空白・タブ・改行のみが意味を持つ','（他の文字はコメント）']]},
+  mb:{color:'#c95f5f',items:[['jmp (=)','d←mem[c]; c←d'],['out (/)','a を出力'],['in (*)','a に入力'],['rotr (<)','rot(mem[d])→a,mem[d]'],['mov ([)','d←mem[d]'],['crazy (^)','crazy(a,mem[d])→a,mem[d]'],['nop (v)','何もしない'],['end (~)','終了'],['※ 命令は実行のたびに暗号化される','（自己書き換えコード）']]},
+  bf:{color:'#d45f8a',items:[['>','ポインタ右'],['<','ポインタ左'],['+','セルをインクリメント'],['-','セルをデクリメント'],['.',  'セルの値を文字出力'],[',','1文字入力→セル'],['[','セル==0 なら対応 ] へ'],[']','セル!=0 なら対応 [ へ'],['テープ: 30,000セル (各8bit)','']]},
 };
 
-// ══ CHEATSHEET DATA ══
-const CHEATSHEETS = {
-  python: { color:'#4a8fd4', items:[
-    ['print("Hi")', '出力'],['input("? ")', '入力'],['for i in range(n):', 'ループ'],
-    ['def f(x): return x', '関数'],['[x for x in lst]', 'リスト内包'],
-    ['import math\nmath.sqrt(x)', '平方根'],['f"{val:.2f}"', 'フォーマット'],
-    ['try:\n  ...\nexcept E as e:', '例外処理'],
-  ]},
-  c: { color:'#d4823a', items:[
-    ['printf("%d\\n", x)', '出力'],['scanf("%d", &x)', '入力'],
-    ['for(int i=0;i<n;i++)', 'ループ'],['int f(int x){return x;}','関数'],
-    ['#include <stdlib.h>\nmalloc(n*sizeof(int))','動的配列'],
-    ['#include <string.h>\nstrlen(s)','文字列長'],
-    ['#include <math.h> -lm\nsqrt(x)','平方根'],
-  ]},
-  cpp: { color:'#9b6dd4', items:[
-    ['cout << x << endl','出力'],['cin >> x','入力'],
-    ['vector<int> v','動的配列'],['for(auto& x : v)','範囲for'],
-    ['#include <algorithm>\nsort(v.begin(),v.end())','ソート'],
-    ['map<string,int> m','マップ'],['class Foo { ... }','クラス'],
-  ]},
-  csharp: { color:'#3aab6e', items:[
-    ['Console.WriteLine(x)','出力'],['Console.ReadLine()','入力'],
-    ['var list = new List<int>()','リスト'],['foreach(var x in col)','ループ'],
-    ['LINQ: .Where().Select()','クエリ'],['async Task<T> f(){}','非同期'],
-    ['try{} catch(Exception e){}','例外'],
-  ]},
-  zig: { color:'#d97f30', items:[
-    ['const std = @import("std")','標準ライブラリ'],
-    ['std.debug.print("{}", .{x})','デバッグ出力'],
-    ['var x: i32 = 0','変数宣言'],['const x = 42','定数'],
-    ['while(i < n) : (i += 1)','ループ'],
-    ['fn name(x: i32) i32 {}','関数'],
-    ['try stdout.print("{}\\n",.{x})','標準出力'],
-  ]},
-  apl: { color:'#2aab99', items:[
-    ['⍳N','1〜Nの整数'],['⎕ ← x','出力'],['x ← val','代入'],
-    ['+/ x','合計'],['×/ x','積'],['⌽ x','逆順'],
-    ['x*2','二乗'],['⍉M','転置'],['x ⍴ y','整形'],
-    ['{⍵+1}¨ v','各要素に適用'],['(cond)/v','フィルタ'],
-  ]},
-  ws: { color:'#7a8fa6', items:[
-    ['Space Space + num + LF','push数値'],['Space LF Space','dup'],
-    ['Space LF LF','discard'],['Tab Space Space Space','add'],
-    ['Tab Space Space Tab','sub'],['Tab LF Space Space','printchar'],
-    ['Tab LF Space Tab','printnum'],['LF LF LF','プログラム終了'],
-    ['※ 空白・タブ・改行のみが意味を持つ','（他の文字はコメント）'],
-  ]},
-  mb: { color:'#c95f5f', items:[
-    ['jmp (=)','d←mem[c]; c←d'],['out (/)','a を出力'],
-    ['in (*)','a に入力'],['rotr (<)','rot(mem[d])→a,mem[d]'],
-    ['mov ([)','d←mem[d]'],['crazy (^)','crazy(a,mem[d])→a,mem[d]'],
-    ['nop (v)','何もしない'],['end (~)','終了'],
-    ['※ 命令は実行のたびに暗号化される','（自己書き換えコード）'],
-  ]},
-  bf: { color:'#d45f8a', items:[
-    ['>','ポインタ右'],['<','ポインタ左'],
-    ['+','セルをインクリメント'],['-','セルをデクリメント'],
-    ['.','セルの値を文字出力'],[',','1文字入力→セル'],
-    ['[','セル==0 なら対応 ] へ',],[']','セル!=0 なら対応 [ へ'],
-    ['テープ: 30,000セル (各8bit)',''],
-  ]},
-};
+let currentLang='python',currentFontSize=13,abortController=null,runHistory=[];
+const STORE_KEY='hgcoder_code_',LS_FONT_KEY='hgcoder_font',LS_THEME_KEY='hgcoder_theme';
+const editor=document.getElementById('editor'),outputEl=document.getElementById('output'),lineNumbers=document.getElementById('lineNumbers'),langBadge=document.getElementById('langBadge'),btnRun=document.getElementById('btnRun'),btnCancel=document.getElementById('btnCancel'),statusDot=document.getElementById('statusDot'),statusText=document.getElementById('statusText'),timeInfo=document.getElementById('timeInfo'),exitInfo=document.getElementById('exitInfo'),stdinEl=document.getElementById('stdin'),errOverlay=document.getElementById('errOverlay');
 
-// ══ STATE ══
-let currentLang = 'python';
-let currentFontSize = 13;
-let abortController = null;
-let runHistory = [];
-const codeStore = {};  // per-lang localStorage key prefix
-const STORE_KEY = 'hgcoder_code_';
-const LS_FONT_KEY = 'hgcoder_font';
-const LS_THEME_KEY = 'hgcoder_theme';
-
-// ══ ELEMENTS ══
-const editor      = document.getElementById('editor');
-const outputEl    = document.getElementById('output');
-const lineNumbers = document.getElementById('lineNumbers');
-const langBadge   = document.getElementById('langBadge');
-const btnRun      = document.getElementById('btnRun');
-const btnCancel   = document.getElementById('btnCancel');
-const statusDot   = document.getElementById('statusDot');
-const statusText  = document.getElementById('statusText');
-const timeInfo    = document.getElementById('timeInfo');
-const exitInfo    = document.getElementById('exitInfo');
-const stdinEl     = document.getElementById('stdin');
-const errOverlay  = document.getElementById('errOverlay');
-
-// ══ INIT ══
 (function init(){
-  // restore theme
-  const savedTheme = localStorage.getItem(LS_THEME_KEY) || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-
-  // restore font size
-  const savedFont = parseInt(localStorage.getItem(LS_FONT_KEY)) || 13;
-  setFontSize(savedFont, false);
-
-  // restore or load default code
-  const saved = localStorage.getItem(STORE_KEY + currentLang);
-  editor.value = saved !== null ? saved : DEFAULTS[currentLang];
-  updateLineNumbers();
-  buildCheatsheet();
+  const t=localStorage.getItem(LS_THEME_KEY)||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent=t==='dark'?'☀️':'🌙';
+  setFontSize(parseInt(localStorage.getItem(LS_FONT_KEY))||13,false);
+  const saved=localStorage.getItem(STORE_KEY+currentLang);
+  editor.value=saved!==null?saved:DEFAULTS[currentLang];
+  updateLineNumbers();buildCheatsheet();
 })();
 
-// ══ FONT SIZE ══
-function setFontSize(size, save=true) {
-  currentFontSize = Math.min(20, Math.max(10, size));
-  editor.style.fontSize = currentFontSize + 'px';
-  lineNumbers.style.fontSize = currentFontSize + 'px';
-  editor.style.lineHeight = (currentFontSize + 9) + 'px';
-  lineNumbers.style.lineHeight = (currentFontSize + 9) + 'px';
-  document.getElementById('fontSizeLabel').textContent = currentFontSize;
-  if (save) localStorage.setItem(LS_FONT_KEY, currentFontSize);
-  updateLineNumbers();
-}
-document.getElementById('fontInc').onclick = () => setFontSize(currentFontSize + 1);
-document.getElementById('fontDec').onclick = () => setFontSize(currentFontSize - 1);
+function setFontSize(size,save=true){currentFontSize=Math.min(20,Math.max(10,size));editor.style.fontSize=currentFontSize+'px';lineNumbers.style.fontSize=currentFontSize+'px';editor.style.lineHeight=(currentFontSize+9)+'px';lineNumbers.style.lineHeight=(currentFontSize+9)+'px';document.getElementById('fontSizeLabel').textContent=currentFontSize;if(save)localStorage.setItem(LS_FONT_KEY,currentFontSize);updateLineNumbers();}
+document.getElementById('fontInc').onclick=()=>setFontSize(currentFontSize+1);
+document.getElementById('fontDec').onclick=()=>setFontSize(currentFontSize-1);
+document.getElementById('themeBtn').onclick=()=>{const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';localStorage.setItem(LS_THEME_KEY,n);};
 
-// ══ THEME TOGGLE ══
-document.getElementById('themeBtn').onclick = () => {
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
-  localStorage.setItem(LS_THEME_KEY, next);
-};
+function updateLineNumbers(){const l=editor.value.split('\n').length;lineNumbers.textContent=Array.from({length:l},(_,i)=>i+1).join('\n');lineNumbers.scrollTop=editor.scrollTop;}
+editor.addEventListener('input',()=>{updateLineNumbers();localStorage.setItem(STORE_KEY+currentLang,editor.value);});
+editor.addEventListener('scroll',()=>{lineNumbers.scrollTop=editor.scrollTop;});
 
-// ══ LINE NUMBERS ══
-function updateLineNumbers() {
-  const lines = editor.value.split('\n').length;
-  lineNumbers.textContent = Array.from({length:lines},(_,i)=>i+1).join('\n');
-  lineNumbers.scrollTop = editor.scrollTop;
-}
-editor.addEventListener('input', () => {
-  updateLineNumbers();
-  // save to localStorage
-  localStorage.setItem(STORE_KEY + currentLang, editor.value);
-});
-editor.addEventListener('scroll', () => { lineNumbers.scrollTop = editor.scrollTop; });
-
-// ══ TAB KEY + AUTO-INDENT + AUTO-CLOSE ══
-editor.addEventListener('keydown', e => {
-  const s = editor.selectionStart, end = editor.selectionEnd;
-  const v = editor.value;
-
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    editor.value = v.substring(0,s) + '    ' + v.substring(end);
-    editor.selectionStart = editor.selectionEnd = s + 4;
-    updateLineNumbers();
-    return;
-  }
-
-  // Auto-indent on Enter
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    const lineStart = v.lastIndexOf('\n', s-1) + 1;
-    const currentLine = v.substring(lineStart, s);
-    const indent = currentLine.match(/^(\s*)/)[1];
-    const extra = /[{(\[]$/.test(currentLine.trimEnd()) ? '    ' : '';
-    const ins = '\n' + indent + extra;
-    editor.value = v.substring(0,s) + ins + v.substring(end);
-    editor.selectionStart = editor.selectionEnd = s + ins.length;
-    updateLineNumbers();
-    localStorage.setItem(STORE_KEY + currentLang, editor.value);
-    return;
-  }
-
-  // Auto-close brackets
-  const pairs = {'(':')', '{':'}', '[':']', '"':'"', "'":"'"};
-  if (pairs[e.key] && end === s) {
-    e.preventDefault();
-    editor.value = v.substring(0,s) + e.key + pairs[e.key] + v.substring(end);
-    editor.selectionStart = editor.selectionEnd = s + 1;
-    return;
-  }
-  // Skip closing bracket if already typed
-  if (')}]'.includes(e.key) && v[s] === e.key) {
-    e.preventDefault();
-    editor.selectionStart = editor.selectionEnd = s + 1;
-    return;
-  }
-
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    e.preventDefault();
-    runCode();
-  }
+editor.addEventListener('keydown',e=>{
+  const s=editor.selectionStart,end=editor.selectionEnd,v=editor.value;
+  if(e.key==='Tab'){e.preventDefault();editor.value=v.substring(0,s)+'    '+v.substring(end);editor.selectionStart=editor.selectionEnd=s+4;updateLineNumbers();return;}
+  if(e.key==='Enter'){e.preventDefault();const ls=v.lastIndexOf('\n',s-1)+1;const cl=v.substring(ls,s);const indent=cl.match(/^(\s*)/)[1];const extra=/[{(\[]$/.test(cl.trimEnd())?'    ':'';const ins='\n'+indent+extra;editor.value=v.substring(0,s)+ins+v.substring(end);editor.selectionStart=editor.selectionEnd=s+ins.length;updateLineNumbers();localStorage.setItem(STORE_KEY+currentLang,editor.value);return;}
+  const pairs={'(':')','{':'}','[':']','"':'"',"'":"'"};
+  if(pairs[e.key]&&end===s){e.preventDefault();editor.value=v.substring(0,s)+e.key+pairs[e.key]+v.substring(end);editor.selectionStart=editor.selectionEnd=s+1;return;}
+  if(')}]'.includes(e.key)&&v[s]===e.key){e.preventDefault();editor.selectionStart=editor.selectionEnd=s+1;return;}
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();runCode();}
 });
 
-// ══ LANG SWITCH ══
-document.querySelectorAll('.lang-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    // save current code
-    localStorage.setItem(STORE_KEY + currentLang, editor.value);
-
-    document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    currentLang = tab.dataset.lang;
-    langBadge.className = 'lang-badge ' + currentLang;
-    langBadge.textContent = currentLang;
-
-    // restore saved or load default
-    const saved = localStorage.getItem(STORE_KEY + currentLang);
-    editor.value = saved !== null ? saved : DEFAULTS[currentLang];
-    updateLineNumbers();
-    clearOutput();
-    clearErrOverlay();
+document.querySelectorAll('.lang-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    localStorage.setItem(STORE_KEY+currentLang,editor.value);
+    document.querySelectorAll('.lang-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');currentLang=tab.dataset.lang;
+    langBadge.className='lang-badge '+currentLang;langBadge.textContent=currentLang;
+    const saved=localStorage.getItem(STORE_KEY+currentLang);
+    editor.value=saved!==null?saved:DEFAULTS[currentLang];
+    updateLineNumbers();clearOutput();clearErrOverlay();
   });
 });
 
-// ══ STDIN TOGGLE ══
-document.getElementById('stdinToggle').addEventListener('click', () => {
-  document.getElementById('stdinSection').classList.toggle('open');
-});
+document.getElementById('stdinToggle').addEventListener('click',()=>{document.getElementById('stdinSection').classList.toggle('open');});
 
-// ══ OUTPUT HELPERS ══
-function appendOutput(text, cls) {
-  const lines = String(text).split('\n');
-  lines.forEach((line, i) => {
-    if (i < lines.length - 1 || line) {
-      const span = document.createElement('span');
-      span.className = cls;
-      span.textContent = line + (i < lines.length-1 ? '\n' : '');
-      outputEl.appendChild(span);
-    }
-  });
-  outputEl.scrollTop = outputEl.scrollHeight;
-}
+function appendOutput(text,cls){const lines=String(text).split('\n');lines.forEach((line,i)=>{if(i<lines.length-1||line){const span=document.createElement('span');span.className=cls;span.textContent=line+(i<lines.length-1?'\n':'');outputEl.appendChild(span);}});outputEl.scrollTop=outputEl.scrollHeight;}
+function clearOutput(){outputEl.innerHTML='<span class="line-info">▶  実行ボタンを押すか Ctrl+Enter でコードを実行します</span>';setStatus('idle');timeInfo.textContent='⏱ —';exitInfo.textContent='exit —';}
+function resetCode(){if(!confirm('コードをデフォルトに戻しますか？'))return;editor.value=DEFAULTS[currentLang];localStorage.setItem(STORE_KEY+currentLang,editor.value);updateLineNumbers();clearErrOverlay();}
+function setStatus(s,msg){statusDot.className='status-dot '+(s==='ok'?'ok':s==='err'?'err':s==='run'?'run':'');statusText.textContent=msg||(s==='ok'?'正常終了':s==='err'?'エラー':s==='run'?'実行中...':'待機中');}
+function setLoading(v){btnRun.disabled=v;btnRun.classList.toggle('loading',v);btnCancel.classList.toggle('visible',v);}
+function clearErrOverlay(){errOverlay.innerHTML='';}
+function highlightErrorLines(stderr){clearErrOverlay();if(!stderr)return;const lineNums=new Set();const patterns=[/:(\d+):/g,/line (\d+)/gi,/\((\d+),/g];for(const pat of patterns){let m;while((m=pat.exec(stderr))!==null){const n=parseInt(m[1]);if(n>0)lineNums.add(n);}}if(!lineNums.size)return;const lh=currentFontSize+9;const lines=editor.value.split('\n');let html='';for(let i=0;i<lines.length;i++){if(lineNums.has(i+1)){html+=`<span class="err-line-marker" style="height:${lh}px;line-height:${lh}px;">${' '.repeat(Math.max(0,lines[i].length)||1)}</span>\n`;}else{html+='\n';}}errOverlay.style.lineHeight=lh+'px';errOverlay.style.fontSize=currentFontSize+'px';errOverlay.innerHTML=html;errOverlay.scrollTop=editor.scrollTop;}
 
-function clearOutput() {
-  outputEl.innerHTML = '<span class="line-info">▶  実行ボタンを押すか Ctrl+Enter でコードを実行します</span>';
-  setStatus('idle');
-  timeInfo.textContent = '⏱ —';
-  exitInfo.textContent = 'exit —';
-}
+document.getElementById('copyBtn').onclick=function(){const text=outputEl.textContent;if(!text.trim())return;navigator.clipboard.writeText(text).then(()=>{this.textContent='✓ コピー完了';this.classList.add('copied');setTimeout(()=>{this.textContent='📋 コピー';this.classList.remove('copied');},2000);});};
+function cancelRun(){if(abortController){abortController.abort();abortController=null;}setLoading(false);appendOutput('\n⚠ 実行を中断しました','line-info');setStatus('idle','中断');}
 
-function resetCode() {
-  if (!confirm('コードをデフォルトに戻しますか？')) return;
-  editor.value = DEFAULTS[currentLang];
-  localStorage.setItem(STORE_KEY + currentLang, editor.value);
-  updateLineNumbers();
-  clearErrOverlay();
-}
+const ACCENT_COLORS={python:'#4a8fd4',c:'#d4823a',cpp:'#9b6dd4',csharp:'#3aab6e',bf:'#d45f8a',zig:'#d97f30',apl:'#2aab99',ws:'#7a8fa6',mb:'#c95f5f'};
+function addHistory(lang,code,result,elapsed){runHistory.unshift({lang,code:code.trim().substring(0,200),result,elapsed,time:new Date()});if(runHistory.length>15)runHistory.pop();renderHistory();}
+function renderHistory(){const list=document.getElementById('historyList');if(!runHistory.length){list.innerHTML='<div class="history-empty">実行履歴はまだありません</div>';return;}list.innerHTML=runHistory.map((h,i)=>{const ago=Math.round((Date.now()-h.time)/1000);const agoStr=ago<60?`${ago}秒前`:ago<3600?`${Math.round(ago/60)}分前`:`${Math.round(ago/3600)}時間前`;const ok=h.result.exit===0||h.result.exit==='0';return`<div class="history-item" onclick="restoreHistory(${i})"><div class="history-item-meta"><span class="history-item-lang" style="background:${ACCENT_COLORS[h.lang]||'#888'}">${h.lang}</span><span class="history-item-time">${agoStr} • ${h.elapsed}s • ${ok?'✓':'✗'}</span></div><div class="history-item-preview">${h.code.split('\n').find(l=>l.trim()&&!l.trim().startsWith('#')&&!l.trim().startsWith('//'))||h.code.split('\n')[0]||'(empty)'}</div></div>`;}).join('');}
+function restoreHistory(i){const h=runHistory[i];document.querySelectorAll('.lang-tab').forEach(t=>t.classList.toggle('active',t.dataset.lang===h.lang));currentLang=h.lang;langBadge.className='lang-badge '+h.lang;langBadge.textContent=h.lang;editor.value=h.code;updateLineNumbers();clearErrOverlay();document.getElementById('historyPanel').classList.remove('open');}
+document.getElementById('historyBtn').onclick=()=>document.getElementById('historyPanel').classList.toggle('open');
+document.getElementById('historyClose').onclick=()=>document.getElementById('historyPanel').classList.remove('open');
 
-function setStatus(s, msg) {
-  statusDot.className = 'status-dot ' + (s==='ok'?'ok':s==='err'?'err':s==='run'?'run':'');
-  statusText.textContent = msg || (s==='ok'?'正常終了':s==='err'?'エラー':s==='run'?'実行中...':'待機中');
-}
+function buildCheatsheet(){const body=document.getElementById('cheatBody');body.innerHTML=Object.entries(CHEATSHEETS).map(([lang,data])=>`<div class="cheat-lang"><div class="cheat-lang-name"><span class="cheat-dot" style="background:${data.color}"></span>${lang.toUpperCase()}</div><table class="cheat-table">${data.items.map(([code,desc])=>`<tr><td>${code.replace(/\n/g,'<br>')}</td><td>${desc}</td></tr>`).join('')}</table></div>`).join('');}
+document.getElementById('cheatBtn').onclick=()=>document.getElementById('cheatModal').classList.add('open');
+document.getElementById('cheatClose').onclick=()=>document.getElementById('cheatModal').classList.remove('open');
+document.getElementById('cheatModal').onclick=e=>{if(e.target===document.getElementById('cheatModal'))document.getElementById('cheatModal').classList.remove('open');};
 
-function setLoading(v) {
-  btnRun.disabled = v;
-  btnRun.classList.toggle('loading', v);
-  btnCancel.classList.toggle('visible', v);
-}
+function runPython(code,stdinData){return new Promise(resolve=>{let outBuf='';const stdinLines=stdinData.split('\n');let stdinIdx=0;Sk.configure({output:txt=>{outBuf+=txt;},read:x=>{if(Sk.builtinFiles===undefined||Sk.builtinFiles.files[x]===undefined)throw"File not found: '"+x+"'";return Sk.builtinFiles.files[x];},inputfun:()=>new Promise(res=>{const line=stdinLines[stdinIdx++]||'';outBuf+=line+'\n';res(line);}),inputfunTakesPrompt:true,});Sk.misceval.asyncToPromise(()=>Sk.importMainWithBody('<stdin>',false,code,true)).then(()=>resolve({stdout:outBuf,stderr:'',exit:0})).catch(e=>resolve({stdout:outBuf,stderr:e.toString(),exit:1}));});}
 
-// ══ ERROR LINE HIGHLIGHT ══
-function clearErrOverlay() {
-  errOverlay.innerHTML = '';
-}
-function highlightErrorLines(stderr) {
-  clearErrOverlay();
-  if (!stderr) return;
-  // match common patterns: ":LINE:" or "line LINE" or "LINE:"
-  const lineNums = new Set();
-  const patterns = [/:(\d+):/g, /line (\d+)/gi, /\((\d+),/g];
-  for (const pat of patterns) {
-    let m;
-    while ((m = pat.exec(stderr)) !== null) {
-      const n = parseInt(m[1]);
-      if (n > 0) lineNums.add(n);
-    }
-  }
-  if (!lineNums.size) return;
+async function runWandbox(lang,code,stdinData,signal){const configs={c:{compiler:'gcc-head',options:'warning,c11',raw:'-std=c11 -lm'},cpp:{compiler:'gcc-head',options:'warning,gnu++17',raw:'-std=c++17 -lm'},csharp:{compiler:'dotnet-head',options:'',raw:''},zig:{compiler:'zig-head',options:'',raw:''}};const cfg=configs[lang];const body={compiler:cfg.compiler,code,stdin:stdinData,options:cfg.options,'compiler-option-raw':cfg.raw,'runtime-option-raw':'',save:false};const resp=await fetch('https://wandbox.org/api/compile.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal});if(!resp.ok)throw new Error(`Wandbox HTTP ${resp.status}`);const data=await resp.json();return{stdout:data.program_output||'',stderr:(data.compiler_error||'')+(data.program_error||''),exit:data.status||0};}
 
-  const lh = currentFontSize + 9;
-  const lines = editor.value.split('\n');
-  let html = '';
-  for (let i = 0; i < lines.length; i++) {
-    if (lineNums.has(i+1)) {
-      html += `<span class="err-line-marker" style="height:${lh}px;line-height:${lh}px;">${' '.repeat(Math.max(0,lines[i].length)||1)}</span>\n`;
-    } else {
-      html += '\n';
-    }
-  }
-  errOverlay.style.lineHeight = lh + 'px';
-  errOverlay.style.fontSize = currentFontSize + 'px';
-  errOverlay.innerHTML = html;
-  errOverlay.scrollTop = editor.scrollTop;
-  editor.addEventListener('scroll', () => { errOverlay.scrollTop = editor.scrollTop; }, {once:false});
-}
+function runBrainFuck(code,stdinData){return new Promise(resolve=>{const ops=code.replace(/[^><+\-.,\[\]]/g,'');const tape=new Uint8Array(30000);let dp=0,ip=0,si=0;const stdinBytes=[...stdinData].map(c=>c.charCodeAt(0));stdinBytes.push(0);let out='';const MAX=10_000_000;let steps=0;const jt={};const stack=[];for(let i=0;i<ops.length;i++){if(ops[i]==='[')stack.push(i);else if(ops[i]===']'){if(!stack.length){resolve({stdout:out,stderr:`BrainFuck: 位置 ${i} に対応する [ がありません`,exit:1});return;}const j=stack.pop();jt[i]=j;jt[j]=i;}}if(stack.length){resolve({stdout:out,stderr:`BrainFuck: 位置 ${stack[0]} に対応する ] がありません`,exit:1});return;}while(ip<ops.length){if(++steps>MAX){resolve({stdout:out,stderr:`BrainFuck: ステップ上限超過（無限ループ？）`,exit:1});return;}switch(ops[ip]){case'>':dp=(dp+1)%30000;break;case'<':dp=(dp+29999)%30000;break;case'+':tape[dp]=(tape[dp]+1)&0xff;break;case'-':tape[dp]=(tape[dp]+255)&0xff;break;case'.':out+=String.fromCharCode(tape[dp]);break;case',':tape[dp]=stdinBytes[si]??0;si=Math.min(si+1,stdinBytes.length-1);break;case'[':if(tape[dp]===0)ip=jt[ip];break;case']':if(tape[dp]!==0)ip=jt[ip];break;}ip++;}resolve({stdout:out,stderr:'',exit:0});});}
 
-// ══ COPY OUTPUT ══
-document.getElementById('copyBtn').onclick = function() {
-  const text = outputEl.textContent;
-  if (!text.trim()) return;
-  navigator.clipboard.writeText(text).then(() => {
-    this.textContent = '✓ コピー完了';
-    this.classList.add('copied');
-    setTimeout(() => { this.textContent = '📋 コピー'; this.classList.remove('copied'); }, 2000);
-  });
-};
+let aplLoaded=false;
+async function runAPL(code,stdinData){if(!aplLoaded){await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/ngn-apl@0.0.4/apl.js';s.onload=()=>{aplLoaded=true;res();};s.onerror=()=>rej(new Error('APL エンジンの読み込みに失敗しました'));document.head.appendChild(s);});}return new Promise(resolve=>{let out='';try{const fn=window.APL||window.apl;if(!fn)throw new Error('APL エンジンが見つかりません');const lines=code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('⍝'));for(const line of lines){try{const r=fn(line.trim());if(r!==undefined&&r!==null&&r!=='')out+=String(r)+'\n';}catch(e){out+=`エラー [${line.trim()}]: ${e.message||e}\n`;}}resolve({stdout:out,stderr:'',exit:0});}catch(e){resolve({stdout:out,stderr:e.message||String(e),exit:1});}});}
 
-// ══ CANCEL RUN ══
-function cancelRun() {
-  if (abortController) {
-    abortController.abort();
-    abortController = null;
-  }
-  setLoading(false);
-  appendOutput('\n⚠ 実行を中断しました', 'line-info');
-  setStatus('idle', '中断');
-}
+function runWhitespace(code,stdinData){return new Promise(resolve=>{const tokens=[...code].filter(c=>c===' '||c==='\t'||c==='\n');const S=' ',T='\t',L='\n';const stdinChars=[...stdinData];let si=0;function parseNum(pos){if(pos>=tokens.length)return{val:0,pos};const sign=tokens[pos]===T?-1:1;pos++;let bits='';while(pos<tokens.length&&tokens[pos]!==L){bits+=tokens[pos]===T?'1':'0';pos++;}pos++;return{val:sign*(bits?parseInt(bits,2):0),pos};}function parseLabel(pos){let lbl='';while(pos<tokens.length&&tokens[pos]!==L){lbl+=tokens[pos]===T?'1':'0';pos++;}pos++;return{lbl,pos};}const instrs=[];const labelMap={};let p=0;while(p<tokens.length){const t0=tokens[p];if(!t0)break;const t1=tokens[p+1],t2=tokens[p+2];if(t0===S){if(t1===S){const r=parseNum(p+2);instrs.push({op:'push',val:r.val});p=r.pos;}else if(t1===L&&t2===S){instrs.push({op:'dup'});p+=3;}else if(t1===T&&t2===S){const r=parseNum(p+3);instrs.push({op:'copy',val:r.val});p=r.pos;}else if(t1===L&&t2===T){instrs.push({op:'swap'});p+=3;}else if(t1===L&&t2===L){instrs.push({op:'discard'});p+=3;}else if(t1===T&&t2===L){const r=parseNum(p+3);instrs.push({op:'slide',val:r.val});p=r.pos;}else p++;}else if(t0===T&&t1===S){if(t2===S){const t3=tokens[p+3];if(t3===S)instrs.push({op:'add'});else if(t3===T)instrs.push({op:'sub'});else if(t3===L)instrs.push({op:'mul'});else{p++;continue;}p+=4;}else if(t2===T){const t3=tokens[p+3];if(t3===S)instrs.push({op:'div'});else if(t3===T)instrs.push({op:'mod'});else{p++;continue;}p+=4;}else p++;}else if(t0===T&&t1===T){if(t2===S){instrs.push({op:'store'});p+=3;}else if(t2===T){instrs.push({op:'retrieve'});p+=3;}else p++;}else if(t0===L){if(t1===S&&t2===S){const r=parseLabel(p+3);labelMap[r.lbl]=instrs.length;instrs.push({op:'label',lbl:r.lbl});p=r.pos;}else if(t1===S&&t2===T){const r=parseLabel(p+3);instrs.push({op:'call',lbl:r.lbl});p=r.pos;}else if(t1===S&&t2===L){const r=parseLabel(p+3);instrs.push({op:'jmp',lbl:r.lbl});p=r.pos;}else if(t1===T&&t2===S){const r=parseLabel(p+3);instrs.push({op:'jz',lbl:r.lbl});p=r.pos;}else if(t1===T&&t2===T){const r=parseLabel(p+3);instrs.push({op:'jn',lbl:r.lbl});p=r.pos;}else if(t1===T&&t2===L){instrs.push({op:'ret'});p+=3;}else if(t1===L&&t2===L){instrs.push({op:'end'});p+=3;}else p++;}else if(t0===T&&t1===L){if(t2===S){const t3=tokens[p+3];if(t3===S)instrs.push({op:'printc'});else if(t3===T)instrs.push({op:'printi'});else{p++;continue;}p+=4;}else if(t2===T){const t3=tokens[p+3];if(t3===S)instrs.push({op:'readc'});else if(t3===T)instrs.push({op:'readi'});else{p++;continue;}p+=4;}else p++;}else p++;}const stack=[];const heap={};const callStack=[];let ip=0;let out='';const MAX=1_000_000;let steps=0;const top=()=>stack[stack.length-1];const pop=()=>stack.pop();const push=v=>stack.push(v);try{while(ip<instrs.length){if(++steps>MAX)throw new Error(`ステップ上限超過`);const ins=instrs[ip++];switch(ins.op){case'push':push(ins.val);break;case'dup':push(top());break;case'copy':push(stack[stack.length-1-ins.val]??0);break;case'swap':{const a=pop(),b=pop();push(a);push(b);}break;case'discard':pop();break;case'slide':{const t=pop();stack.splice(stack.length-ins.val,ins.val);push(t);}break;case'add':{const b=pop(),a=pop();push(a+b);}break;case'sub':{const b=pop(),a=pop();push(a-b);}break;case'mul':{const b=pop(),a=pop();push(a*b);}break;case'div':{const b=pop(),a=pop();if(b===0)throw new Error('0除算');push(Math.trunc(a/b));}break;case'mod':{const b=pop(),a=pop();if(b===0)throw new Error('0除算');push(((a%b)+b)%b);}break;case'store':{const v=pop(),addr=pop();heap[addr]=v;}break;case'retrieve':{const addr=pop();push(heap[addr]??0);}break;case'label':break;case'call':callStack.push(ip);ip=labelMap[ins.lbl]??ip;break;case'jmp':ip=labelMap[ins.lbl]??ip;break;case'jz':{const v=pop();if(v===0)ip=labelMap[ins.lbl]??ip;}break;case'jn':{const v=pop();if(v<0)ip=labelMap[ins.lbl]??ip;}break;case'ret':ip=callStack.pop()??instrs.length;break;case'end':ip=instrs.length;break;case'printc':out+=String.fromCharCode(pop());break;case'printi':out+=String(pop());break;case'readc':{const addr=pop();const ch=stdinChars[si++]||'\0';heap[addr]=ch.charCodeAt(0);}break;case'readi':{const addr=pop();const line=(stdinData.split('\n')[si++]||'0').trim();heap[addr]=parseInt(line)||0;}break;}}resolve({stdout:out,stderr:'',exit:0});}catch(e){resolve({stdout:out,stderr:`Whitespace エラー: ${e.message}`,exit:1});}});}
 
-// ══ HISTORY ══
-const ACCENT_COLORS = {
-  python:'#4a8fd4',c:'#d4823a',cpp:'#9b6dd4',csharp:'#3aab6e',
-  bf:'#d45f8a',zig:'#d97f30',apl:'#2aab99',ws:'#7a8fa6',mb:'#c95f5f'
-};
-function addHistory(lang, code, result, elapsed) {
-  runHistory.unshift({ lang, code: code.trim().substring(0,200), result, elapsed, time: new Date() });
-  if (runHistory.length > 15) runHistory.pop();
-  renderHistory();
-}
-function renderHistory() {
-  const list = document.getElementById('historyList');
-  if (!runHistory.length) {
-    list.innerHTML = '<div class="history-empty">実行履歴はまだありません</div>';
-    return;
-  }
-  list.innerHTML = runHistory.map((h,i) => {
-    const ago = Math.round((Date.now()-h.time)/1000);
-    const agoStr = ago < 60 ? `${ago}秒前` : ago < 3600 ? `${Math.round(ago/60)}分前` : `${Math.round(ago/3600)}時間前`;
-    const ok = h.result.exit === 0 || h.result.exit === '0';
-    return `<div class="history-item" onclick="restoreHistory(${i})">
-      <div class="history-item-meta">
-        <span class="history-item-lang" style="background:${ACCENT_COLORS[h.lang]||'#888'}">${h.lang}</span>
-        <span class="history-item-time">${agoStr} • ${h.elapsed}s • ${ok?'✓':'✗'}</span>
-      </div>
-      <div class="history-item-preview">${h.code.split('\n').find(l=>l.trim()&&!l.trim().startsWith('#')&&!l.trim().startsWith('//'))||h.code.split('\n')[0]||'(empty)'}</div>
-    </div>`;
-  }).join('');
-}
-function restoreHistory(i) {
-  const h = runHistory[i];
-  // switch lang tab
-  document.querySelectorAll('.lang-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.lang === h.lang);
-  });
-  currentLang = h.lang;
-  langBadge.className = 'lang-badge ' + h.lang;
-  langBadge.textContent = h.lang;
-  editor.value = h.code;
-  updateLineNumbers();
-  clearErrOverlay();
-  document.getElementById('historyPanel').classList.remove('open');
-}
-document.getElementById('historyBtn').onclick = () => {
-  document.getElementById('historyPanel').classList.toggle('open');
-};
-document.getElementById('historyClose').onclick = () => {
-  document.getElementById('historyPanel').classList.remove('open');
-};
+function runMalbolge(code,stdinData){return new Promise(resolve=>{const mem=new Array(59049).fill(0);let a=0,c=0,d=0,si=0,out='';const stdinBytes=[...stdinData].map(ch=>ch.charCodeAt(0));const CRAZY=[[4,3,3,1,0,0,1,0,0],[8,9,8,7,8,7,4,3,4],[6,6,9,5,5,9,5,5,9],[5,3,5,8,6,5,8,6,5],[7,8,7,3,8,3,3,8,3],[0,1,0,7,8,7,4,5,4],[7,0,7,8,3,8,7,0,7],[8,3,8,7,6,7,8,3,8],[0,1,0,7,8,7,4,5,4]];function crazy(a,b){let r=0,base=1;for(let i=0;i<10;i++){r+=CRAZY[Math.floor(a/base)%3][Math.floor(b/base)%3]*base;base*=3;}return r;}function rot(x){return Math.floor(x/3)+((x%3)*19683);}const VALID=new Set([4,5,23,39,40,62,68,81]);let mp=0;for(const line of code.split('\n')){if(line.trim().startsWith('#'))continue;for(const ch of line){const cc=ch.charCodeAt(0);if(cc===9||cc===32||cc===13)continue;if(cc<33||cc>126){resolve({stdout:'',stderr:`Malbolge: 無効な文字 '${ch}' (pos ${mp})`,exit:1});return;}if(!VALID.has((cc-33+mp)%94)){resolve({stdout:'',stderr:`Malbolge: 位置 ${mp} の文字 '${ch}' は不正です\nサンプルコードをリセットして試してください`,exit:1});return;}mem[mp++]=cc;if(mp>=59049)break;}}for(let i=mp;i<59049;i++)mem[i]=crazy(mem[i-1],mem[i-2]);const MAX=5_000_000;let steps=0;try{while(true){if(++steps>MAX)throw new Error(`ステップ上限超過`);const ins=(mem[c]-33+c)%94;switch(ins){case 4:{const tmp=mem[d]%59049;c=tmp-1;d=(d+1)%59049;}break;case 5:out+=String.fromCharCode(a);break;case 23:a=stdinBytes[si++]??10;break;case 39:a=rot(mem[d]);mem[d]=a;break;case 40:d=mem[d]%59049;break;case 62:a=crazy(a,mem[d]);mem[d]=a;break;case 68:break;case 81:resolve({stdout:out,stderr:'',exit:0});return;}mem[c]=((mem[c]-33+1)%94)+33;c=(c+1)%59049;d=(d+1)%59049;}}catch(e){resolve({stdout:out,stderr:`Malbolge エラー: ${e.message}`,exit:1});}});}
 
-// ══ CHEATSHEET ══
-function buildCheatsheet() {
-  const body = document.getElementById('cheatBody');
-  body.innerHTML = Object.entries(CHEATSHEETS).map(([lang, data]) => `
-    <div class="cheat-lang">
-      <div class="cheat-lang-name">
-        <span class="cheat-dot" style="background:${data.color}"></span>
-        ${lang.toUpperCase()}
-      </div>
-      <table class="cheat-table">
-        ${data.items.map(([code,desc])=>`
-          <tr>
-            <td>${code.replace(/\n/g,'<br>')}</td>
-            <td>${desc}</td>
-          </tr>`).join('')}
-      </table>
-    </div>
-  `).join('');
-}
-document.getElementById('cheatBtn').onclick = () => {
-  document.getElementById('cheatModal').classList.add('open');
-};
-document.getElementById('cheatClose').onclick = () => {
-  document.getElementById('cheatModal').classList.remove('open');
-};
-document.getElementById('cheatModal').onclick = e => {
-  if (e.target === document.getElementById('cheatModal'))
-    document.getElementById('cheatModal').classList.remove('open');
-};
-
-// ══ PYTHON RUNNER (Skulpt) ══
-function runPython(code, stdinData) {
-  return new Promise(resolve => {
-    let outBuf = '';
-    const stdinLines = stdinData.split('\n');
-    let stdinIdx = 0;
-    Sk.configure({
-      output: txt => { outBuf += txt; },
-      read: x => {
-        if (Sk.builtinFiles===undefined || Sk.builtinFiles.files[x]===undefined)
-          throw "File not found: '"+x+"'";
-        return Sk.builtinFiles.files[x];
-      },
-      inputfun: () => new Promise(res => {
-        const line = stdinLines[stdinIdx++] || '';
-        outBuf += line + '\n';
-        res(line);
-      }),
-      inputfunTakesPrompt: true,
-    });
-    Sk.misceval.asyncToPromise(() =>
-      Sk.importMainWithBody('<stdin>', false, code, true)
-    ).then(() => {
-      resolve({ stdout: outBuf, stderr: '', exit: 0 });
-    }).catch(e => {
-      resolve({ stdout: outBuf, stderr: e.toString(), exit: 1 });
-    });
-  });
-}
-
-// ══ WANDBOX RUNNER (C/C++/C#/Zig) ══
-async function runWandbox(lang, code, stdinData, signal) {
-  const configs = {
-    c:      { compiler:'gcc-head',     options:'warning,c11',    raw:'-std=c11 -lm' },
-    cpp:    { compiler:'gcc-head',     options:'warning,gnu++17',raw:'-std=c++17 -lm' },
-    csharp: { compiler:'dotnet-head',  options:'',               raw:'' },
-    zig:    { compiler:'zig-head',     options:'',               raw:'' },
-  };
-  const cfg = configs[lang];
-  const body = {
-    compiler: cfg.compiler, code, stdin: stdinData,
-    options: cfg.options,
-    'compiler-option-raw': cfg.raw,
-    'runtime-option-raw': '', save: false,
-  };
-  const resp = await fetch('https://wandbox.org/api/compile.json', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body), signal,
-  });
-  if (!resp.ok) throw new Error(`Wandbox HTTP ${resp.status}`);
-  const data = await resp.json();
-  return {
-    stdout: data.program_output || '',
-    stderr: (data.compiler_error||'') + (data.program_error||''),
-    exit: data.status || 0,
-  };
-}
-
-// ══ BRAINFUCK INTERPRETER ══
-function runBrainFuck(code, stdinData) {
-  return new Promise(resolve => {
-    const ops = code.replace(/[^><+\-.,\[\]]/g,'');
-    const tape = new Uint8Array(30000);
-    let dp=0, ip=0, si=0;
-    const stdinBytes = [...stdinData].map(c=>c.charCodeAt(0));
-    stdinBytes.push(0);
-    let out = '';
-    const MAX = 10_000_000; let steps = 0;
-    const jt = {};
-    const stack = [];
-    for (let i=0;i<ops.length;i++) {
-      if (ops[i]==='[') stack.push(i);
-      else if (ops[i]===']') {
-        if (!stack.length) { resolve({stdout:out,stderr:`BrainFuck: 位置 ${i} に対応する [ がありません`,exit:1}); return; }
-        const j=stack.pop(); jt[i]=j; jt[j]=i;
-      }
-    }
-    if (stack.length) { resolve({stdout:out,stderr:`BrainFuck: 位置 ${stack[0]} に対応する ] がありません`,exit:1}); return; }
-    while (ip<ops.length) {
-      if(++steps>MAX){resolve({stdout:out,stderr:`BrainFuck: ステップ上限超過（無限ループ？）`,exit:1});return;}
-      switch(ops[ip]){
-        case '>': dp=(dp+1)%30000; break;
-        case '<': dp=(dp+29999)%30000; break;
-        case '+': tape[dp]=(tape[dp]+1)&0xff; break;
-        case '-': tape[dp]=(tape[dp]+255)&0xff; break;
-        case '.': out+=String.fromCharCode(tape[dp]); break;
-        case ',': tape[dp]=stdinBytes[si]??0; si=Math.min(si+1,stdinBytes.length-1); break;
-        case '[': if(tape[dp]===0)ip=jt[ip]; break;
-        case ']': if(tape[dp]!==0)ip=jt[ip]; break;
-      }
-      ip++;
-    }
-    resolve({stdout:out,stderr:'',exit:0});
-  });
-}
-
-// ══ APL INTERPRETER ══
-let aplLoaded = false;
-async function runAPL(code, stdinData) {
-  if (!aplLoaded) {
-    await new Promise((res,rej) => {
-      const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/ngn-apl@0.0.4/apl.js';
-      s.onload=()=>{aplLoaded=true;res();};
-      s.onerror=()=>rej(new Error('APL エンジンの読み込みに失敗しました'));
-      document.head.appendChild(s);
-    });
-  }
-  return new Promise(resolve => {
-    let out='';
-    try {
-      const fn = window.APL||window.apl;
-      if(!fn) throw new Error('APL エンジンが見つかりません');
-      const lines = code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('⍝'));
-      for (const line of lines) {
-        try {
-          const r = fn(line.trim());
-          if (r!==undefined&&r!==null&&r!=='') out+=String(r)+'\n';
-        } catch(e) { out+=`エラー [${line.trim()}]: ${e.message||e}\n`; }
-      }
-      resolve({stdout:out,stderr:'',exit:0});
-    } catch(e) { resolve({stdout:out,stderr:e.message||String(e),exit:1}); }
-  });
-}
-
-// ══ WHITESPACE INTERPRETER ══
-function runWhitespace(code, stdinData) {
-  return new Promise(resolve => {
-    const tokens=[...code].filter(c=>c===' '||c==='\t'||c==='\n');
-    const S=' ',T='\t',L='\n';
-    const stdinChars=[...stdinData]; let si=0;
-
-    function parseNum(pos){
-      if(pos>=tokens.length)return{val:0,pos};
-      const sign=tokens[pos]===T?-1:1; pos++;
-      let bits='';
-      while(pos<tokens.length&&tokens[pos]!==L){bits+=tokens[pos]===T?'1':'0';pos++;}
-      pos++;
-      return{val:sign*(bits?parseInt(bits,2):0),pos};
-    }
-    function parseLabel(pos){
-      let lbl='';
-      while(pos<tokens.length&&tokens[pos]!==L){lbl+=tokens[pos]===T?'1':'0';pos++;}
-      pos++;return{lbl,pos};
-    }
-    const instrs=[]; const labelMap={}; let p=0;
-    while(p<tokens.length){
-      const t0=tokens[p]; if(!t0)break;
-      const t1=tokens[p+1],t2=tokens[p+2];
-      if(t0===S){
-        if(t1===S){const r=parseNum(p+2);instrs.push({op:'push',val:r.val});p=r.pos;}
-        else if(t1===L&&t2===S){instrs.push({op:'dup'});p+=3;}
-        else if(t1===T&&t2===S){const r=parseNum(p+3);instrs.push({op:'copy',val:r.val});p=r.pos;}
-        else if(t1===L&&t2===T){instrs.push({op:'swap'});p+=3;}
-        else if(t1===L&&t2===L){instrs.push({op:'discard'});p+=3;}
-        else if(t1===T&&t2===L){const r=parseNum(p+3);instrs.push({op:'slide',val:r.val});p=r.pos;}
-        else p++;
-      } else if(t0===T&&t1===S){
-        if(t2===S){const t3=tokens[p+3];
-          if(t3===S)instrs.push({op:'add'});
-          else if(t3===T)instrs.push({op:'sub'});
-          else if(t3===L)instrs.push({op:'mul'});
-          else{p++;continue;} p+=4;
-        } else if(t2===T){const t3=tokens[p+3];
-          if(t3===S)instrs.push({op:'div'});
-          else if(t3===T)instrs.push({op:'mod'});
-          else{p++;continue;} p+=4;
-        } else p++;
-      } else if(t0===T&&t1===T){
-        if(t2===S){instrs.push({op:'store'});p+=3;}
-        else if(t2===T){instrs.push({op:'retrieve'});p+=3;}
-        else p++;
-      } else if(t0===L){
-        if(t1===S&&t2===S){const r=parseLabel(p+3);labelMap[r.lbl]=instrs.length;instrs.push({op:'label',lbl:r.lbl});p=r.pos;}
-        else if(t1===S&&t2===T){const r=parseLabel(p+3);instrs.push({op:'call',lbl:r.lbl});p=r.pos;}
-        else if(t1===S&&t2===L){const r=parseLabel(p+3);instrs.push({op:'jmp',lbl:r.lbl});p=r.pos;}
-        else if(t1===T&&t2===S){const r=parseLabel(p+3);instrs.push({op:'jz',lbl:r.lbl});p=r.pos;}
-        else if(t1===T&&t2===T){const r=parseLabel(p+3);instrs.push({op:'jn',lbl:r.lbl});p=r.pos;}
-        else if(t1===T&&t2===L){instrs.push({op:'ret'});p+=3;}
-        else if(t1===L&&t2===L){instrs.push({op:'end'});p+=3;}
-        else p++;
-      } else if(t0===T&&t1===L){
-        if(t2===S){const t3=tokens[p+3];
-          if(t3===S)instrs.push({op:'printc'});
-          else if(t3===T)instrs.push({op:'printi'});
-          else{p++;continue;} p+=4;
-        } else if(t2===T){const t3=tokens[p+3];
-          if(t3===S)instrs.push({op:'readc'});
-          else if(t3===T)instrs.push({op:'readi'});
-          else{p++;continue;} p+=4;
-        } else p++;
-      } else p++;
-    }
-    const stack=[]; const heap={}; const callStack=[]; let ip=0; let out='';
-    const MAX=1_000_000; let steps=0;
-    const top=()=>stack[stack.length-1];
-    const pop=()=>stack.pop();
-    const push=v=>stack.push(v);
-    try {
-      while(ip<instrs.length){
-        if(++steps>MAX)throw new Error(`ステップ上限超過`);
-        const ins=instrs[ip++];
-        switch(ins.op){
-          case 'push':push(ins.val);break;
-          case 'dup':push(top());break;
-          case 'copy':push(stack[stack.length-1-ins.val]??0);break;
-          case 'swap':{const a=pop(),b=pop();push(a);push(b);}break;
-          case 'discard':pop();break;
-          case 'slide':{const t=pop();stack.splice(stack.length-ins.val,ins.val);push(t);}break;
-          case 'add':{const b=pop(),a=pop();push(a+b);}break;
-          case 'sub':{const b=pop(),a=pop();push(a-b);}break;
-          case 'mul':{const b=pop(),a=pop();push(a*b);}break;
-          case 'div':{const b=pop(),a=pop();if(b===0)throw new Error('0除算');push(Math.trunc(a/b));}break;
-          case 'mod':{const b=pop(),a=pop();if(b===0)throw new Error('0除算');push(((a%b)+b)%b);}break;
-          case 'store':{const v=pop(),addr=pop();heap[addr]=v;}break;
-          case 'retrieve':{const addr=pop();push(heap[addr]??0);}break;
-          case 'label':break;
-          case 'call':callStack.push(ip);ip=labelMap[ins.lbl]??ip;break;
-          case 'jmp':ip=labelMap[ins.lbl]??ip;break;
-          case 'jz':{const v=pop();if(v===0)ip=labelMap[ins.lbl]??ip;}break;
-          case 'jn':{const v=pop();if(v<0)ip=labelMap[ins.lbl]??ip;}break;
-          case 'ret':ip=callStack.pop()??instrs.length;break;
-          case 'end':ip=instrs.length;break;
-          case 'printc':out+=String.fromCharCode(pop());break;
-          case 'printi':out+=String(pop());break;
-          case 'readc':{const addr=pop();const ch=stdinChars[si++]||'\0';heap[addr]=ch.charCodeAt(0);}break;
-          case 'readi':{const addr=pop();const line=(stdinData.split('\n')[si++]||'0').trim();heap[addr]=parseInt(line)||0;}break;
-        }
-      }
-      resolve({stdout:out,stderr:'',exit:0});
-    } catch(e) { resolve({stdout:out,stderr:`Whitespace エラー: ${e.message}`,exit:1}); }
-  });
-}
-
-// ══ MALBOLGE INTERPRETER (fixed jmp & NOP) ══
-function runMalbolge(code, stdinData) {
-  return new Promise(resolve => {
-    const mem = new Array(59049).fill(0);
-    let a=0,c=0,d=0,si=0,out='';
-    const stdinBytes=[...stdinData].map(ch=>ch.charCodeAt(0));
-
-    const CRAZY=[
-      [4,3,3,1,0,0,1,0,0],[8,9,8,7,8,7,4,3,4],
-      [6,6,9,5,5,9,5,5,9],[5,3,5,8,6,5,8,6,5],
-      [7,8,7,3,8,3,3,8,3],[0,1,0,7,8,7,4,5,4],
-      [7,0,7,8,3,8,7,0,7],[8,3,8,7,6,7,8,3,8],
-      [0,1,0,7,8,7,4,5,4]
-    ];
-    function crazy(a,b){
-      let r=0,base=1;
-      for(let i=0;i<10;i++){r+=CRAZY[Math.floor(a/base)%3][Math.floor(b/base)%3]*base;base*=3;}
-      return r;
-    }
-    function rot(x){ return Math.floor(x/3)+((x%3)*19683); }
-
-    // load — allow lines starting with # as comments, skip whitespace
-    const VALID=new Set([4,5,23,39,40,62,68,81]);
-    let mp=0;
-    for (const line of code.split('\n')) {
-      if (line.trim().startsWith('#')) continue; // allow # comments
-      for (const ch of line) {
-        const cc=ch.charCodeAt(0);
-        if(cc===9||cc===32||cc===13)continue;
-        if(cc<33||cc>126){
-          resolve({stdout:'',stderr:`Malbolge: 無効な文字 '${ch}' (pos ${mp})`,exit:1}); return;
-        }
-        if(!VALID.has((cc-33+mp)%94)){
-          resolve({stdout:'',stderr:`Malbolge: 位置 ${mp} の文字 '${ch}' は不正です\nサンプルコードをリセットして試してください`,exit:1}); return;
-        }
-        mem[mp++]=cc;
-        if(mp>=59049)break;
-      }
-    }
-    for(let i=mp;i<59049;i++) mem[i]=crazy(mem[i-1],mem[i-2]);
-
-    const MAX=5_000_000; let steps=0;
-    try {
-      while(true){
-        if(++steps>MAX)throw new Error(`ステップ上限超過`);
-        const ins=(mem[c]-33+c)%94;
-        switch(ins){
-          case 4: { const tmp=mem[d]%59049; c=tmp-1; d=(d+1)%59049; } break; // jmp: c←mem[d], then normal advance makes c=mem[d]
-          case 5:  out+=String.fromCharCode(a); break;
-          case 23: a=stdinBytes[si++]??10; break;
-          case 39: a=rot(mem[d]); mem[d]=a; break;
-          case 40: d=mem[d]%59049; break;
-          case 62: a=crazy(a,mem[d]); mem[d]=a; break;
-          case 68: break; // nop
-          case 81: resolve({stdout:out,stderr:'',exit:0}); return;
-        }
-        mem[c]=((mem[c]-33+1)%94)+33;
-        c=(c+1)%59049; d=(d+1)%59049;
-      }
-    } catch(e){resolve({stdout:out,stderr:`Malbolge エラー: ${e.message}`,exit:1});}
-  });
-}
-
-// ══ MAIN RUN ══
-async function runCode() {
-  const code  = editor.value.trim();
-  const stdin = stdinEl.value;
-  if (!code) return;
-
-  abortController = new AbortController();
-  setLoading(true);
-  outputEl.innerHTML = '';
-  setStatus('run','実行中...');
-  clearErrOverlay();
-  const t0 = performance.now();
-  appendOutput(`$ run (${currentLang})\n`, 'line-info');
-
-  let result;
-  try {
-    if      (currentLang==='python') result = await runPython(code, stdin);
-    else if (currentLang==='bf')     result = await runBrainFuck(code, stdin);
-    else if (currentLang==='ws')     result = await runWhitespace(code, stdin);
-    else if (currentLang==='mb')     result = await runMalbolge(code, stdin);
-    else if (currentLang==='apl')    result = await runAPL(code, stdin);
-    else {
-      try {
-        result = await runWandbox(currentLang, code, stdin, abortController.signal);
-      } catch(netErr) {
-        if (netErr.name==='AbortError') return; // cancelled
-        result = {
-          stdout:'',
-          stderr:`ネットワークエラー: Wandbox API に接続できませんでした。\n詳細: ${netErr.message}`,
-          exit:1,
-        };
-      }
-    }
-  } catch(e) {
-    result = { stdout:'', stderr: e.message||String(e), exit:1 };
-  }
-
-  const elapsed = ((performance.now()-t0)/1000).toFixed(3);
-  if (result.stdout) appendOutput(result.stdout, 'line-stdout');
-  if (result.stderr) {
-    appendOutput(result.stderr, 'line-stderr');
-    highlightErrorLines(result.stderr);
-  }
-  const ok = result.exit===0||result.exit==='0';
-  if (ok && !result.stderr) appendOutput(`\n✓ 正常終了 (${elapsed}s)`, 'line-success');
-  else if (!ok)              appendOutput(`\n✗ 終了コード: ${result.exit} (${elapsed}s)`, 'line-stderr');
-
-  setStatus(ok&&!result.stderr?'ok':'err');
-  timeInfo.textContent = `⏱ ${elapsed}s`;
-  exitInfo.textContent = `exit ${result.exit??0}`;
-
-  addHistory(currentLang, editor.value, result, elapsed);
-  abortController = null;
-  setLoading(false);
-}
+async function runCode(){const code=editor.value.trim();const stdin=stdinEl.value;if(!code)return;abortController=new AbortController();setLoading(true);outputEl.innerHTML='';setStatus('run','実行中...');clearErrOverlay();const t0=performance.now();appendOutput(`$ run (${currentLang})\n`,'line-info');let result;try{if(currentLang==='python')result=await runPython(code,stdin);else if(currentLang==='bf')result=await runBrainFuck(code,stdin);else if(currentLang==='ws')result=await runWhitespace(code,stdin);else if(currentLang==='mb')result=await runMalbolge(code,stdin);else if(currentLang==='apl')result=await runAPL(code,stdin);else{try{result=await runWandbox(currentLang,code,stdin,abortController.signal);}catch(netErr){if(netErr.name==='AbortError')return;result={stdout:'',stderr:`ネットワークエラー: Wandbox API に接続できませんでした。\n詳細: ${netErr.message}`,exit:1};}}}catch(e){result={stdout:'',stderr:e.message||String(e),exit:1};}const elapsed=((performance.now()-t0)/1000).toFixed(3);if(result.stdout)appendOutput(result.stdout,'line-stdout');if(result.stderr){appendOutput(result.stderr,'line-stderr');highlightErrorLines(result.stderr);}const ok=result.exit===0||result.exit==='0';if(ok&&!result.stderr)appendOutput(`\n✓ 正常終了 (${elapsed}s)`,'line-success');else if(!ok)appendOutput(`\n✗ 終了コード: ${result.exit} (${elapsed}s)`,'line-stderr');setStatus(ok&&!result.stderr?'ok':'err');timeInfo.textContent=`⏱ ${elapsed}s`;exitInfo.textContent=`exit ${result.exit??0}`;addHistory(currentLang,editor.value,result,elapsed);abortController=null;setLoading(false);}
 </script>
 </body>
 </html>
