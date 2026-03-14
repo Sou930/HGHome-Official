@@ -131,11 +131,7 @@ body {
     width: 50px; justify-content: center; gap: 0; padding: 12px 0;
   }
   .sidebar-label, .sidebar-logout-text { display: none !important; }
-  .sidebar-post-btn {
-    padding: 13px; width: 50px; height: 50px;
-    border-radius: 50%; margin: 16px 0 12px;
-  }
-  .sidebar-post-btn span { display: none !important; }
+
   .sidebar-profile { padding: 10px 0; justify-content: center; }
   .sidebar-name, .sidebar-dots { display: none !important; }
   .sidebar-logo { padding: 12px 0; margin-left: auto; margin-right: auto; }
@@ -343,11 +339,7 @@ body {
   padding: 0 4px; border: 2px solid var(--bg);
 }
 .sidebar-post-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 15px 24px; background: var(--accent); color: #fff;
-  border: none; border-radius: var(--r-full); cursor: pointer;
-  font-family: var(--font); font-weight: 700; font-size: .9375rem;
-  transition: background var(--trans); margin: 16px 0 12px;
+  display: none;
 }
 .sidebar-post-btn:hover { background: var(--accent-h); }
 .sidebar-profile {
