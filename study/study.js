@@ -94,7 +94,7 @@ const PAGE_SIZE  = 10;
 
 // ── State ─────────────────────────────────────────────
 let currentSession = null;
-let allPublicDecks = {}, allFavs = {}, deckSort = 'pop', deckCat = 'ALL';
+let allPublicDecks = {}, allFavs = {}, deckSort = 'pop', deckCat = 'ALL', deckSearch = '';
 let filteredSortedDecks = [], displayedCount = PAGE_SIZE;
 let currentDeckId = null, decks = {};
 let studyMode = 'normal', studyQueue = [], currentCardIdx = 0, cardFlipped = false;
@@ -749,6 +749,15 @@ async function loadAllDecks() {
 function renderDeckGrid() {
   let list = Object.entries(allPublicDecks);
   if (deckCat !== 'ALL') list = list.filter(([, d]) => d.cat === deckCat);
+  // 検索フィルター
+  if (deckSearch) {
+    const q = deckSearch.toLowerCase();
+    list = list.filter(([, d]) =>
+      (d.name||'').toLowerCase().includes(q) ||
+      (d.desc||'').toLowerCase().includes(q) ||
+      (d.owner||'').toLowerCase().includes(q)
+    );
+  }
   if (deckSort === 'pop') {
     list.sort((a, b) => ((b[1].favCount||0)*2 + (b[1].viewCount||0)) - ((a[1].favCount||0)*2 + (a[1].viewCount||0)));
   } else {
@@ -760,7 +769,12 @@ function renderDeckGrid() {
   if (ge('deckHeroCount'))  ge('deckHeroCount').textContent  = total;
   const grid = ge('deckGrid');
   if (!grid) return;
-  if (!total) { grid.innerHTML = '<div class="deck-empty"><div class="empty-emoji">📭</div><p>デッキがまだありません</p></div>'; return; }
+  if (!total) {
+    grid.innerHTML = deckSearch
+      ? `<div class="deck-empty"><div class="empty-emoji">🔍</div><p>「${esc(deckSearch)}」に一致するデッキがありません</p></div>`
+      : '<div class="deck-empty"><div class="empty-emoji">📭</div><p>デッキがまだありません</p></div>';
+    return;
+  }
   const shown = list.slice(0, displayedCount), remaining = total - shown.length;
   grid.innerHTML = shown.map(([id, dk]) => deckCardHTML(id, dk)).join('');
   if (remaining > 0) {
@@ -771,11 +785,56 @@ function renderDeckGrid() {
   }
 }
 
+// ── デッキ検索 ─────────────────────────────────────────
+window.onDeckSearch = function(val) {
+  deckSearch = val.trim();
+  displayedCount = PAGE_SIZE;
+  ge('deckSearchClear').style.display = deckSearch ? '' : 'none';
+  renderDeckGrid();
+};
+window.clearDeckSearch = function() {
+  deckSearch = '';
+  ge('deckSearchInput').value = '';
+  ge('deckSearchClear').style.display = 'none';
+  displayedCount = PAGE_SIZE;
+  renderDeckGrid();
+};
+
 function deckCardHTML(id, dk) {
   const isMine  = currentSession && dk.owner === currentSession.username;
   const isFav   = !!allFavs[id];
   const cnt     = dk.cardCount || 0, favCnt = dk.favCount || 0, viewCnt = dk.viewCount || 0;
   const tagHtml = dk.cat ? `<span class="dc-tag" style="${catBg(dk.cat)}">${esc(dk.cat)}</span>` : '<span></span>';
+
+  // ── 進捗バー計算 ──
+  let progressHtml = '';
+  const cards = dk.cards || {};
+  const cardVals = Object.values(cards);
+  if (cardVals.length > 0) {
+    let mastered = 0, learning = 0, fresh = 0;
+    cardVals.forEach(c => {
+      if ((c.reps||0) >= 3 && (c.interval||0) >= 7) mastered++;
+      else if ((c.reps||0) > 0) learning++;
+      else fresh++;
+    });
+    const total = cardVals.length;
+    const pMastered = Math.round(mastered / total * 100);
+    const pLearning = Math.round(learning / total * 100);
+    const pFresh    = 100 - pMastered - pLearning;
+    progressHtml = `<div class="dc-progress-wrap">
+      <div class="dc-progress-bar">
+        <div class="dc-progress-seg mastered" style="width:${pMastered}%" title="習得済み ${mastered}枚"></div>
+        <div class="dc-progress-seg learning" style="width:${pLearning}%" title="学習中 ${learning}枚"></div>
+        <div class="dc-progress-seg fresh"    style="width:${pFresh}%"    title="未着手 ${fresh}枚"></div>
+      </div>
+      <div class="dc-progress-legend">
+        <span class="dc-prog-dot mastered"></span><span>${mastered}</span>
+        <span class="dc-prog-dot learning"></span><span>${learning}</span>
+        <span class="dc-prog-dot fresh"></span><span>${fresh}</span>
+      </div>
+    </div>`;
+  }
+
   return `<div class="deck-card-new" id="dcard_${id}">
     <div class="dc-card-top">${tagHtml}
       ${isMine ? `<div class="dc-owner-btns">
@@ -785,6 +844,7 @@ function deckCardHTML(id, dk) {
     </div>
     <div class="dc-title-new">${esc(dk.name || '無題')}</div>
     ${dk.desc ? `<div class="dc-desc-new">${esc(dk.desc)}</div>` : ''}
+    ${progressHtml}
     <div class="dc-meta-new">
       <span class="dc-author-new" onclick="openUserProfile('${esc(dk.owner||'')}')">@${esc(dk.owner||'')}</span>
       <span>📇 ${cnt}枚</span><span>⭐ ${favCnt}</span><span>👁 ${viewCnt}</span>
@@ -986,8 +1046,19 @@ function renderFlashcard() {
   const cardId = studyQueue[currentCardIdx], card = d.cards[cardId];
   if (!card) { currentCardIdx++; renderFlashcard(); return; }
   cardFlipped = false;
-  ge('cardFront').textContent = card.front;
-  ge('cardBack').textContent  = card.back;
+
+  // 表面テキスト＋画像
+  const frontEl = ge('cardFront');
+  frontEl.innerHTML = '';
+  if (card.img_f) { const img = document.createElement('img'); img.src = card.img_f; img.className = 'flashcard-img'; frontEl.appendChild(img); }
+  frontEl.appendChild(document.createTextNode(card.front));
+
+  // 裏面テキスト＋画像
+  const backEl = ge('cardBack');
+  backEl.innerHTML = '';
+  if (card.img_b) { const img = document.createElement('img'); img.src = card.img_b; img.className = 'flashcard-img'; backEl.appendChild(img); }
+  backEl.appendChild(document.createTextNode(card.back));
+
   ge('cardBackArea').style.display = 'none';
   document.querySelectorAll('.ctrl-btn').forEach(b => b.disabled = true);
   ge('cardProgress').textContent = `${currentCardIdx} / ${studyQueue.length}`;
@@ -1338,17 +1409,24 @@ function renderEditPageCards(deckId) {
   const dk    = allPublicDecks[deckId];
   if (!dk) return;
   const cards = dk.cards || {};
-  const cnt   = Object.keys(cards).length;
+  const entries = Object.entries(cards);
+  // order フィールドでソート
+  entries.sort((a, b) => (a[1].order||0) - (b[1].order||0));
+  const cnt = entries.length;
   ge('editPageCardCount').textContent = `${cnt}枚`;
   const list = ge('editPageCardList');
   if (!cnt) { list.innerHTML = '<p style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">カードがまだありません</p>'; return; }
-  list.innerHTML = Object.entries(cards).map(([cid, c]) => `
-    <div class="ep-card-item" id="epc_${cid}">
+
+  list.innerHTML = entries.map(([cid, c]) => {
+    const imgF = c.img_f ? `<img class="ep-card-img" src="${c.img_f}" alt="">` : '';
+    const imgB = c.img_b ? `<img class="ep-card-img" src="${c.img_b}" alt="">` : '';
+    return `<div class="ep-card-item" id="epc_${cid}" draggable="true" data-cid="${cid}" data-deckid="${deckId}">
+      <div class="ep-drag-handle" title="ドラッグで並び替え">⠿</div>
       <div class="ep-card-display" id="epcd_${cid}">
         <div class="ep-card-texts">
-          <div class="ep-card-front">${esc(c.front)}</div>
+          <div class="ep-card-front">${imgF}${esc(c.front)}</div>
           <div class="ep-card-arrow">→</div>
-          <div class="ep-card-back">${esc(c.back)}</div>
+          <div class="ep-card-back">${imgB}${esc(c.back)}</div>
         </div>
         <div class="ep-card-btns">
           <button class="ep-btn edit" onclick="startEditCard('${deckId}','${cid}')">✏️</button>
@@ -1358,12 +1436,73 @@ function renderEditPageCards(deckId) {
       <div class="ep-card-editor" id="epce_${cid}" style="display:none">
         <input class="dm-add-input" id="epf_${cid}" value="${esc(c.front)}" placeholder="表面">
         <input class="dm-add-input" id="epb_${cid}" value="${esc(c.back)}"  placeholder="裏面">
+        <div class="ep-editor-img-row">
+          <label class="ep-img-label">
+            <span id="epImgFLbl_${cid}">${c.img_f ? '🖼 表面画像あり' : '🖼 表面に画像'}</span>
+            <input type="file" accept="image/*" style="display:none" onchange="handleCardImgUpload('${deckId}','${cid}','front',this)">
+          </label>
+          <label class="ep-img-label">
+            <span id="epImgBLbl_${cid}">${c.img_b ? '🖼 裏面画像あり' : '🖼 裏面に画像'}</span>
+            <input type="file" accept="image/*" style="display:none" onchange="handleCardImgUpload('${deckId}','${cid}','back',this)">
+          </label>
+          ${c.img_f||c.img_b ? `<button class="ep-img-clear" onclick="clearCardImg('${deckId}','${cid}')">画像削除</button>` : ''}
+        </div>
         <div style="display:flex;gap:6px;margin-top:6px">
           <button class="dm-add-btn" onclick="saveEditCard('${deckId}','${cid}')">保存</button>
           <button style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;" onclick="cancelEditCard('${cid}')">キャンセル</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  // ── ドラッグ並び替え ──────────────────────────────
+  initDragSort(list, deckId);
+}
+
+function initDragSort(listEl, deckId) {
+  let dragSrc = null;
+  listEl.querySelectorAll('.ep-card-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragSrc = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      listEl.querySelectorAll('.ep-card-item').forEach(i => i.classList.remove('drag-over'));
+      saveDragOrder(listEl, deckId);
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (item !== dragSrc) {
+        listEl.querySelectorAll('.ep-card-item').forEach(i => i.classList.remove('drag-over'));
+        item.classList.add('drag-over');
+        const allItems = [...listEl.querySelectorAll('.ep-card-item')];
+        const srcIdx = allItems.indexOf(dragSrc);
+        const tgtIdx = allItems.indexOf(item);
+        if (srcIdx < tgtIdx) item.after(dragSrc);
+        else item.before(dragSrc);
+      }
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', e => { e.preventDefault(); item.classList.remove('drag-over'); });
+  });
+}
+
+async function saveDragOrder(listEl, deckId) {
+  const items = [...listEl.querySelectorAll('.ep-card-item')];
+  const updates = {};
+  items.forEach((item, i) => {
+    const cid = item.dataset.cid;
+    if (cid) {
+      updates[`cards/${deckId}/${cid}/order`] = i;
+      if (allPublicDecks[deckId]?.cards?.[cid]) allPublicDecks[deckId].cards[cid].order = i;
+      if (decks[deckId]?.cards?.[cid])          decks[deckId].cards[cid].order = i;
+    }
+  });
+  try { await db.ref().update(updates); showToast('順番を保存しました', 'success'); }
+  catch(e) { showToast('順番の保存に失敗しました', 'error'); }
 }
 
 window.startEditCard  = (deckId, cid) => { ge(`epcd_${cid}`).style.display = 'none'; ge(`epce_${cid}`).style.display = ''; ge(`epf_${cid}`).focus(); };
@@ -1392,12 +1531,61 @@ window.deleteEditPageCard = async function(deckId, cid) {
   } catch(e) { showToast('削除エラー: ' + e.message, 'error'); }
 };
 
+let _epAddImgFront = null, _epAddImgBack = null;
+
+window.previewAddImg = function(side, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 800 * 1024) { showToast('画像は800KB以下にしてください', 'error'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    if (side === 'front') { _epAddImgFront = ev.target.result; ge('epAddImgFrontLbl').textContent = '✅ 表面画像あり'; }
+    else                  { _epAddImgBack  = ev.target.result; ge('epAddImgBackLbl').textContent  = '✅ 裏面画像あり'; }
+  };
+  reader.readAsDataURL(file);
+};
+
+window.handleCardImgUpload = function(deckId, cid, side, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 800 * 1024) { showToast('画像は800KB以下にしてください', 'error'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const data = ev.target.result;
+    const field = side === 'front' ? 'img_f' : 'img_b';
+    const lbl   = side === 'front' ? `epImgFLbl_${cid}` : `epImgBLbl_${cid}`;
+    try {
+      await db.ref(`cards/${deckId}/${cid}`).update({ [field]: data });
+      if (allPublicDecks[deckId]?.cards?.[cid]) allPublicDecks[deckId].cards[cid][field] = data;
+      if (decks[deckId]?.cards?.[cid])          decks[deckId].cards[cid][field] = data;
+      const lblEl = ge(lbl);
+      if (lblEl) lblEl.textContent = side === 'front' ? '✅ 表面画像あり' : '✅ 裏面画像あり';
+      showToast('画像を保存しました', 'success');
+      renderEditPageCards(deckId);
+    } catch(e) { showToast('画像保存エラー: ' + e.message, 'error'); }
+  };
+  reader.readAsDataURL(file);
+};
+
+window.clearCardImg = async function(deckId, cid) {
+  if (!confirm('このカードの画像を削除しますか？')) return;
+  try {
+    await db.ref(`cards/${deckId}/${cid}`).update({ img_f: null, img_b: null });
+    if (allPublicDecks[deckId]?.cards?.[cid]) { delete allPublicDecks[deckId].cards[cid].img_f; delete allPublicDecks[deckId].cards[cid].img_b; }
+    if (decks[deckId]?.cards?.[cid])          { delete decks[deckId].cards[cid].img_f;          delete decks[deckId].cards[cid].img_b; }
+    renderEditPageCards(deckId); showToast('画像を削除しました');
+  } catch(e) { showToast('削除エラー: ' + e.message, 'error'); }
+};
+
 window.addEditPageCard = async function() {
   if (!currentSession || !editingDeckIdPage) return;
   const front = (ge('epAddFront')?.value || '').trim(), back = (ge('epAddBack')?.value || '').trim();
   if (!front || !back) { showToast('表面と裏面を入力してください', 'error'); return; }
   const cardId = 'c_' + Math.random().toString(36).slice(2, 10);
-  const card   = { f:front, b:back, due:Date.now(), interval:0, ease:2.5, reps:0 };
+  const entries = Object.keys(allPublicDecks[editingDeckIdPage]?.cards || {});
+  const card = { f:front, b:back, due:Date.now(), interval:0, ease:2.5, reps:0, order:entries.length };
+  if (_epAddImgFront) card.img_f = _epAddImgFront;
+  if (_epAddImgBack)  card.img_b = _epAddImgBack;
   try {
     await db.ref(`cards/${editingDeckIdPage}/${cardId}`).set(card);
     const nc = (allPublicDecks[editingDeckIdPage].cardCount || 0) + 1;
@@ -1406,7 +1594,12 @@ window.addEditPageCard = async function() {
     allPublicDecks[editingDeckIdPage].cards[cardId] = { front, back, deckId:editingDeckIdPage, ...card };
     allPublicDecks[editingDeckIdPage].cardCount = nc;
     if (decks[editingDeckIdPage]) decks[editingDeckIdPage] = allPublicDecks[editingDeckIdPage];
-    ge('epAddFront').value = ''; ge('epAddBack').value = ''; ge('epAddFront').focus();
+    ge('epAddFront').value = ''; ge('epAddBack').value = '';
+    ge('epAddImgFrontLbl').textContent = '🖼 表面に画像';
+    ge('epAddImgBackLbl').textContent  = '🖼 裏面に画像';
+    ge('epAddImgFront').value = ''; ge('epAddImgBack').value = '';
+    _epAddImgFront = null; _epAddImgBack = null;
+    ge('epAddFront').focus();
     renderEditPageCards(editingDeckIdPage); showToast('カードを追加しました', 'success');
   } catch(e) { showToast('追加エラー: ' + e.message, 'error'); }
 };
