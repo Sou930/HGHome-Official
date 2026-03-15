@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COMPOSE — マルコフ連鎖 文章生成AI</title>
+<title>COMPOSE — 対話型マルコフAI</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -11,677 +11,655 @@
   --s1:      #131510;
   --s2:      #1a1d17;
   --border:  #252920;
-  --border2: #323628;
+  --border2: #2e3228;
   --green:   #a3e635;
   --green2:  #84cc16;
-  --green-d: rgba(163,230,53,0.12);
-  --green-g: rgba(163,230,53,0.06);
+  --glow:    rgba(163,230,53,0.15);
+  --glow2:   rgba(163,230,53,0.06);
   --amber:   #fbbf24;
   --cyan:    #67e8f9;
-  --text:    #d9ddd0;
-  --mid:     #7a8070;
-  --dim:     #3f4238;
-  --danger:  #f87171;
+  --rose:    #fb7185;
+  --text:    #d4d9cc;
+  --mid:     #6b7263;
+  --dim:     #353930;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
-  background:var(--bg);
-  color:var(--text);
+  background:var(--bg);color:var(--text);
   font-family:'Zen Kaku Gothic New',sans-serif;
-  display:grid;
-  grid-template-rows:auto 1fr;
-  height:100vh;
+  display:flex;flex-direction:column;height:100vh;
 }
 
-/* scanline overlay */
-body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:100;
-  background:repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px
-  );
+/* noise texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:200px 200px;opacity:.4;
 }
 
 /* ─── Header ─── */
 header{
-  border-bottom:1px solid var(--border);
-  background:rgba(12,14,11,0.97);
-  backdrop-filter:blur(16px);
-  padding:12px 24px;
+  position:relative;z-index:20;
   display:flex;align-items:center;justify-content:space-between;
-  z-index:50;flex-shrink:0;
+  padding:13px 22px;
+  border-bottom:1px solid var(--border);
+  background:rgba(12,14,11,0.96);
+  backdrop-filter:blur(20px);
+  flex-shrink:0;
 }
 .brand{
-  font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;
-  letter-spacing:.2em;color:var(--green);
   display:flex;align-items:center;gap:10px;
+  font-family:'DM Mono',monospace;font-size:.88rem;
+  font-weight:500;letter-spacing:.2em;color:var(--green);
 }
-.brand-box{
-  width:24px;height:24px;border:1.5px solid var(--green);border-radius:4px;
-  display:grid;place-items:center;position:relative;overflow:hidden;
+.brand-orb{
+  width:26px;height:26px;border-radius:50%;
+  border:1.5px solid var(--green);
+  display:grid;place-items:center;
+  position:relative;
 }
-.brand-box::before{
-  content:'';position:absolute;
-  width:100%;height:2px;background:var(--green);opacity:.3;
-  animation:scan 2s linear infinite;
+.brand-orb::after{
+  content:'';width:8px;height:8px;
+  background:var(--green);border-radius:50%;
+  box-shadow:0 0 8px var(--green);
+  animation:orb 2.5s ease-in-out infinite;
 }
-@keyframes scan{from{top:-2px}to{top:26px}}
+@keyframes orb{0%,100%{transform:scale(.7);opacity:.5}50%{transform:scale(1);opacity:1}}
 
-.meta{display:flex;align-items:center;gap:12px}
-.pill{
-  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;
-  padding:3px 9px;border:1px solid var(--border2);border-radius:2px;
+.header-right{display:flex;align-items:center;gap:10px}
+.hbadge{
+  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;
+  padding:3px 8px;border:1px solid var(--border2);border-radius:3px;
   color:var(--mid);background:var(--s1);
 }
-.pill.live{border-color:rgba(163,230,53,.3);color:var(--green)}
-.status-row{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--mid)}
-.led{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
-.led.warn{background:var(--amber)}
-.led.err{background:var(--danger);animation:none}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hbadge.ok{border-color:rgba(163,230,53,.25);color:var(--green)}
+.hbadge.warn{border-color:rgba(251,191,36,.3);color:var(--amber)}
+.hstat{
+  font-family:'DM Mono',monospace;font-size:.58rem;
+  color:var(--mid);display:flex;align-items:center;gap:5px;
+}
+.dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--green);animation:blink 2s ease-in-out infinite;
+}
+.dot.warn{background:var(--amber)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
 
-/* ─── Main layout ─── */
-main{
-  display:grid;
-  grid-template-columns:300px 1fr;
-  overflow:hidden;
-  height:100%;
+/* ─── Chat area ─── */
+#chat{
+  flex:1;overflow-y:auto;
+  padding:24px 0;position:relative;z-index:5;
+  scroll-behavior:smooth;
+}
+#chat::-webkit-scrollbar{width:3px}
+#chat::-webkit-scrollbar-track{background:transparent}
+#chat::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+
+.msgs{
+  max-width:740px;margin:0 auto;
+  padding:0 20px;
+  display:flex;flex-direction:column;gap:18px;
 }
 
-/* ─── Left panel ─── */
-aside{
-  border-right:1px solid var(--border);
-  background:var(--s1);
-  overflow-y:auto;
-  display:flex;flex-direction:column;
-  gap:0;
+/* ─── Welcome ─── */
+.welcome{
+  padding:36px 0 20px;
+  animation:fadeUp .6s ease both;
 }
-aside::-webkit-scrollbar{width:3px}
-aside::-webkit-scrollbar-track{background:transparent}
-aside::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.welcome-inner{
+  border:1px solid var(--border2);border-radius:12px;
+  background:var(--s1);padding:24px 28px;
+  position:relative;overflow:hidden;
+}
+.welcome-inner::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,rgba(163,230,53,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.welcome-title{
+  font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:500;
+  color:var(--green);letter-spacing:.12em;margin-bottom:8px;
+}
+.welcome-sub{
+  color:var(--mid);font-size:.85rem;line-height:1.8;margin-bottom:20px;
+}
+.welcome-sub code{
+  font-family:'DM Mono',monospace;font-size:.8em;
+  color:var(--cyan);background:rgba(103,232,249,.08);
+  padding:1px 5px;border-radius:3px;
+}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.78rem;
+  padding:6px 13px;border:1px solid var(--border2);border-radius:16px;
+  background:var(--s2);color:var(--mid);cursor:pointer;
+  transition:all .15s;
+}
+.chip:hover{
+  border-color:var(--green);color:var(--green);
+  background:var(--glow2);transform:translateY(-1px);
+}
 
-.panel{border-bottom:1px solid var(--border);padding:16px}
-.panel-title{
-  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;
-  color:var(--mid);text-transform:uppercase;margin-bottom:12px;
-  display:flex;align-items:center;gap:6px;
+/* ─── Messages ─── */
+.msg{
+  display:flex;gap:11px;align-items:flex-start;
+  animation:msgIn .28s cubic-bezier(.34,1.4,.64,1) both;
 }
-.panel-title::before{content:'//';color:var(--dim)}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
 
-/* Stats */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stat{
-  background:var(--s2);border:1px solid var(--border2);border-radius:6px;
-  padding:10px 12px;
+.av{
+  width:30px;height:30px;border-radius:8px;
+  display:grid;place-items:center;
+  font-family:'DM Mono',monospace;font-size:.55rem;font-weight:500;
+  letter-spacing:.06em;flex-shrink:0;
 }
-.stat-val{
-  font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;
-  color:var(--green);line-height:1;margin-bottom:3px;
+.av.ai{
+  background:linear-gradient(135deg,rgba(163,230,53,.12),rgba(103,232,249,.08));
+  border:1px solid rgba(163,230,53,.22);color:var(--green);
 }
-.stat-lbl{font-size:.68rem;color:var(--mid)}
+.av.user{
+  background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(251,113,133,.08));
+  border:1px solid rgba(251,191,36,.22);color:var(--amber);
+}
 
-/* Controls */
-.control-group{margin-bottom:14px}
-.control-label{
-  font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.06em;
-  color:var(--mid);margin-bottom:7px;display:flex;justify-content:space-between;
+.bub{
+  max-width:78%;padding:12px 16px;border-radius:12px;
+  font-size:.9rem;line-height:1.85;position:relative;
 }
-.control-label span{color:var(--green)}
+.bub.ai{
+  background:var(--s1);border:1px solid var(--border);
+  border-top-left-radius:3px;color:var(--text);
+}
+.bub.user{
+  background:var(--s2);border:1px solid rgba(251,191,36,.15);
+  border-top-right-radius:3px;color:var(--text);
+  text-align:right;
+}
+.bub.ai.typing{
+  border-color:rgba(163,230,53,.25);
+  box-shadow:0 0 16px rgba(163,230,53,.06);
+}
 
+/* typing cursor */
+.cursor-blink{
+  display:inline-block;width:1.5px;height:.95em;
+  background:var(--green);margin-left:1px;vertical-align:text-bottom;
+  animation:cb .65s step-end infinite;
+}
+@keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
+
+/* system message */
+.sys{
+  text-align:center;
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+  color:var(--dim);padding:4px 0;
+  animation:fadeUp .4s ease both;
+}
+.sys span{
+  border:1px solid var(--dim);border-radius:10px;
+  padding:2px 10px;
+}
+
+/* ─── Model panel (collapsible) ─── */
+.model-bar{
+  position:relative;z-index:10;
+  border-top:1px solid var(--border);
+  background:rgba(12,14,11,0.9);
+  flex-shrink:0;overflow:hidden;
+  transition:max-height .3s ease;
+  max-height:0;
+}
+.model-bar.open{max-height:160px}
+.model-inner{
+  padding:14px 22px;
+  display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:140px}
+.ctrl-lbl{
+  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;
+  color:var(--mid);display:flex;justify-content:space-between;
+}
+.ctrl-lbl span{color:var(--green)}
 input[type=range]{
   -webkit-appearance:none;appearance:none;
-  width:100%;height:3px;border-radius:2px;
+  width:100%;height:2px;border-radius:2px;
   background:var(--border2);outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
   background:var(--green);cursor:pointer;
-  box-shadow:0 0 6px rgba(163,230,53,.4);
+  box-shadow:0 0 5px rgba(163,230,53,.4);
+}
+.stats-row{
+  display:flex;gap:14px;margin-left:auto;flex-wrap:wrap;
+}
+.sstat{
+  font-family:'DM Mono',monospace;font-size:.6rem;color:var(--mid);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.sstat b{font-size:.85rem;color:var(--green);font-weight:400}
+
+/* ─── Footer / Input ─── */
+footer{
+  position:relative;z-index:20;
+  border-top:1px solid var(--border);
+  background:rgba(12,14,11,0.97);
+  backdrop-filter:blur(20px);
+  padding:14px 20px;flex-shrink:0;
+}
+.input-wrap{max-width:740px;margin:0 auto}
+.input-row{
+  display:flex;align-items:flex-end;gap:8px;
+  background:var(--s1);border:1px solid var(--border2);
+  border-radius:12px;padding:8px 8px 8px 16px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.input-row:focus-within{
+  border-color:rgba(163,230,53,.3);
+  box-shadow:0 0 0 3px rgba(163,230,53,.05);
+}
+textarea{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;
+  font-size:.88rem;resize:none;max-height:120px;
+  line-height:1.65;padding:2px 0;
+}
+textarea::placeholder{color:var(--dim)}
+.btn-row{display:flex;gap:6px}
+.icon-btn{
+  width:34px;height:34px;border:1px solid var(--border2);border-radius:8px;
+  background:var(--s2);color:var(--mid);cursor:pointer;
+  display:grid;place-items:center;flex-shrink:0;
+  font-size:.78rem;transition:all .15s;
+}
+.icon-btn:hover{border-color:var(--green);color:var(--green);background:var(--glow2)}
+.send-btn{
+  width:34px;height:34px;border:none;border-radius:8px;
+  background:var(--green);color:#0c0e0b;cursor:pointer;
+  display:grid;place-items:center;flex-shrink:0;
+  transition:all .18s;
+}
+.send-btn:hover{background:var(--green2);box-shadow:0 0 14px rgba(163,230,53,.3);transform:scale(1.05)}
+.send-btn:active{transform:scale(.94)}
+.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.send-btn svg{width:14px;height:14px}
+.footer-hint{
+  text-align:center;margin-top:8px;
+  font-family:'DM Mono',monospace;font-size:.56rem;
+  color:var(--dim);letter-spacing:.06em;
 }
 
-.radio-group{display:flex;gap:6px;flex-wrap:wrap}
-.radio-btn{
-  font-family:'DM Mono',monospace;font-size:.65rem;padding:4px 10px;
-  border:1px solid var(--border2);border-radius:3px;background:var(--s2);
-  color:var(--mid);cursor:pointer;transition:all .15s;user-select:none;
+/* progress */
+.gen-progress{
+  height:1px;background:linear-gradient(90deg,var(--green),var(--cyan));
+  width:0%;transition:width .08s linear;
+  margin-bottom:1px;
 }
-.radio-btn.active{border-color:var(--green);color:var(--green);background:var(--green-g)}
-.radio-btn:hover{border-color:var(--border2);color:var(--text)}
-.radio-btn.active:hover{border-color:var(--green);color:var(--green)}
-
-/* Seed input */
-.seed-input{
-  width:100%;background:var(--s2);border:1px solid var(--border2);
-  border-radius:4px;padding:7px 10px;color:var(--text);outline:none;
-  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.82rem;
-  transition:border-color .15s;
-}
-.seed-input:focus{border-color:rgba(163,230,53,.4)}
-.seed-input::placeholder{color:var(--dim)}
-
-/* Generate button */
-.gen-btn{
-  width:100%;padding:12px;border:none;border-radius:6px;
-  font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;
-  font-weight:500;cursor:pointer;
-  background:var(--green);color:#0c0e0b;
-  transition:all .2s;position:relative;overflow:hidden;
-}
-.gen-btn::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
-  transform:translateX(-100%);transition:transform .4s;
-}
-.gen-btn:hover::before{transform:translateX(100%)}
-.gen-btn:hover{background:var(--green2);box-shadow:0 0 20px rgba(163,230,53,.3)}
-.gen-btn:active{transform:scale(.98)}
-.gen-btn:disabled{opacity:.4;cursor:not-allowed}
-.gen-btn:disabled::before{display:none}
-
-/* Top N-grams */
-.ngram-list{display:flex;flex-direction:column;gap:5px}
-.ngram-item{
-  display:flex;align-items:center;gap:8px;
-  font-family:'DM Mono',monospace;font-size:.65rem;
-}
-.ngram-key{color:var(--green);min-width:40px;white-space:nowrap}
-.ngram-bar-wrap{flex:1;height:4px;background:var(--border2);border-radius:2px}
-.ngram-bar{height:100%;background:var(--green);border-radius:2px;transition:width .5s ease}
-.ngram-count{color:var(--mid);min-width:28px;text-align:right}
-
-/* Custom text area */
-.txt-input{
-  width:100%;min-height:80px;background:var(--s2);border:1px solid var(--border2);
-  border-radius:4px;padding:8px 10px;color:var(--text);outline:none;
-  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.78rem;
-  resize:vertical;transition:border-color .15s;line-height:1.6;
-}
-.txt-input:focus{border-color:rgba(163,230,53,.35)}
-.txt-input::placeholder{color:var(--dim)}
-.add-btn{
-  width:100%;margin-top:6px;padding:7px;
-  border:1px solid var(--border2);border-radius:4px;
-  background:transparent;color:var(--mid);
-  font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
-  cursor:pointer;transition:all .15s;
-}
-.add-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-g)}
-
-/* ─── Right panel ─── */
-section{
-  display:flex;flex-direction:column;overflow:hidden;
-  background:var(--bg);
-}
-
-.output-header{
-  padding:14px 24px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;background:rgba(12,14,11,0.8);
-}
-.output-title{
-  font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.14em;
-  color:var(--mid);display:flex;align-items:center;gap:8px;
-}
-.output-title::before{content:'//';color:var(--dim)}
-.copy-btn{
-  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;
-  padding:4px 10px;border:1px solid var(--border2);border-radius:3px;
-  background:transparent;color:var(--mid);cursor:pointer;transition:all .15s;
-}
-.copy-btn:hover{border-color:var(--green);color:var(--green)}
-
-/* Output area */
-.output-wrap{
-  flex:1;overflow-y:auto;padding:28px 32px;
-}
-.output-wrap::-webkit-scrollbar{width:3px}
-.output-wrap::-webkit-scrollbar-track{background:transparent}
-.output-wrap::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
-
-#output{
-  font-size:1.05rem;line-height:2.0;color:var(--text);
-  min-height:100px;position:relative;
-  font-weight:300;letter-spacing:.02em;
-}
-
-.char{
-  display:inline;
-  animation:charIn .04s ease both;
-}
-@keyframes charIn{
-  from{opacity:0;filter:blur(2px)}
-  to{opacity:1;filter:blur(0)}
-}
-
-.cursor{
-  display:inline-block;width:2px;height:1.1em;
-  background:var(--green);margin-left:1px;vertical-align:text-bottom;
-  animation:curBlink .7s step-end infinite;
-}
-@keyframes curBlink{0%,100%{opacity:1}50%{opacity:0}}
-
-.placeholder{color:var(--dim);font-size:.9rem}
-
-/* Token highlight stream */
-.tok{
-  display:inline;border-radius:2px;transition:background .1s;
-}
-.tok.fresh{background:rgba(163,230,53,.18);color:var(--green)}
-
-/* Progress bar at bottom */
-.progress-bar{
-  height:2px;background:var(--border);flex-shrink:0;
-}
-.progress-fill{
-  height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));
-  width:0%;transition:width .1s linear;
-}
-
-/* Info bar */
-.info-bar{
-  padding:8px 24px;border-top:1px solid var(--border);
-  display:flex;align-items:center;gap:16px;flex-shrink:0;
-  background:var(--s1);
-}
-.info-item{
-  font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);
-  display:flex;align-items:center;gap:5px;
-}
-.info-item span{color:var(--mid)}
-.info-item.active span{color:var(--green)}
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <div class="brand">
-    <div class="brand-box">✦</div>
+    <div class="brand-orb"></div>
     COMPOSE
   </div>
-  <div class="meta">
-    <div class="pill">マルコフ連鎖</div>
-    <div class="pill live" id="livePill">LOADING</div>
-    <div class="status-row">
-      <div class="led" id="led"></div>
-      <span id="ledTxt">ai.txt 読込中…</span>
+  <div class="header-right">
+    <div class="hbadge warn" id="hbadge">LOADING</div>
+    <div class="hstat">
+      <div class="dot warn" id="hled"></div>
+      <span id="hledtxt">読込中…</span>
     </div>
+    <div class="icon-btn" onclick="togglePanel()" title="モデル設定">⚙</div>
   </div>
 </header>
 
-<!-- Body -->
-<main>
-  <!-- Left sidebar -->
-  <aside>
-
-    <!-- Stats -->
-    <div class="panel">
-      <div class="panel-title">モデル統計</div>
-      <div class="stat-grid">
-        <div class="stat">
-          <div class="stat-val" id="sChars">—</div>
-          <div class="stat-lbl">学習文字数</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="sStates">—</div>
-          <div class="stat-lbl">状態数</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="sSents">—</div>
-          <div class="stat-lbl">文章数</div>
-        </div>
-        <div class="stat">
-          <div class="stat-val" id="sGen">0</div>
-          <div class="stat-lbl">生成回数</div>
-        </div>
-      </div>
+<!-- Model settings panel -->
+<div class="model-bar" id="modelBar">
+  <div class="gen-progress" id="genprog"></div>
+  <div class="model-inner">
+    <div class="ctrl">
+      <div class="ctrl-lbl">N-gram 次数 <span id="vOrder">3</span></div>
+      <input type="range" id="rOrder" min="2" max="5" value="3"
+        oninput="document.getElementById('vOrder').textContent=this.value;rebuildModel()">
     </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">応答長 <span id="vLen">90</span> 文字</div>
+      <input type="range" id="rLen" min="20" max="300" value="90" step="10"
+        oninput="document.getElementById('vLen').textContent=this.value">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">温度（創造性） <span id="vTemp">1.0</span></div>
+      <input type="range" id="rTemp" min="0.1" max="3.0" value="1.0" step="0.1"
+        oninput="document.getElementById('vTemp').textContent=parseFloat(this.value).toFixed(1)">
+    </div>
+    <div class="stats-row">
+      <div class="sstat"><b id="sChars">—</b>文字数</div>
+      <div class="sstat"><b id="sStates">—</b>状態数</div>
+      <div class="sstat"><b id="sSents">—</b>文章数</div>
+    </div>
+  </div>
+</div>
 
-    <!-- Controls -->
-    <div class="panel">
-      <div class="panel-title">生成設定</div>
-
-      <div class="control-group">
-        <div class="control-label">N-gram 次数 <span id="orderVal">3</span></div>
-        <input type="range" id="order" min="2" max="5" value="3"
-          oninput="document.getElementById('orderVal').textContent=this.value;rebuildModel()">
-      </div>
-
-      <div class="control-group">
-        <div class="control-label">生成文字数 <span id="lenVal">120</span></div>
-        <input type="range" id="genLen" min="30" max="400" value="120" step="10"
-          oninput="document.getElementById('lenVal').textContent=this.value">
-      </div>
-
-      <div class="control-group">
-        <div class="control-label">ランダム性（温度） <span id="tempVal">1.0</span></div>
-        <input type="range" id="temp" min="0.1" max="3.0" value="1.0" step="0.1"
-          oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(1)">
-      </div>
-
-      <div class="control-group">
-        <div class="control-label">開始位置</div>
-        <div class="radio-group">
-          <div class="radio-btn active" onclick="setSeedMode(this,'auto')">自動</div>
-          <div class="radio-btn" onclick="setSeedMode(this,'sentence')">文頭</div>
-          <div class="radio-btn" onclick="setSeedMode(this,'custom')">指定</div>
+<div id="chat">
+  <div class="msgs" id="msgs">
+    <div class="welcome" id="welcome">
+      <div class="welcome-inner">
+        <div class="welcome-title">COMPOSE</div>
+        <p class="welcome-sub">
+          <code>ai.txt</code> を学習した対話型マルコフ連鎖AIです。<br>
+          あなたの入力キーワードを起点に文章を生成して返答します。
+        </p>
+        <div class="chips" id="chips">
+          <span style="color:var(--dim);font-size:.78rem">データ読込中…</span>
         </div>
       </div>
-
-      <div class="control-group" id="seedGroup" style="display:none">
-        <input class="seed-input" id="seedInp" placeholder="開始テキストを入力…" maxlength="20">
-      </div>
-
-      <button class="gen-btn" id="genBtn" onclick="generate()" disabled>
-        ▶ &nbsp;文章を生成する
-      </button>
     </div>
+  </div>
+</div>
 
-    <!-- Top N-grams -->
-    <div class="panel">
-      <div class="panel-title">頻出 N-gram TOP 8</div>
-      <div class="ngram-list" id="ngramList">
-        <div style="color:var(--dim);font-size:.72rem">読み込み中…</div>
-      </div>
-    </div>
-
-    <!-- Custom training data -->
-    <div class="panel">
-      <div class="panel-title">学習データを追加</div>
-      <textarea class="txt-input" id="extraTxt"
-        placeholder="テキストを貼り付けると学習データに追加されます…"></textarea>
-      <button class="add-btn" onclick="addCustomData()">+ 学習データに追加</button>
-    </div>
-
-  </aside>
-
-  <!-- Right output panel -->
-  <section>
-    <div class="output-header">
-      <div class="output-title">生成出力</div>
-      <button class="copy-btn" onclick="copyOutput()">COPY</button>
-    </div>
-
-    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
-
-    <div class="output-wrap">
-      <div id="output">
-        <span class="placeholder">←「文章を生成する」ボタンを押すと、ai.txtの学習データをもとに新しい文章が生成されます。</span>
+<footer>
+  <div class="input-wrap">
+    <div class="input-row">
+      <textarea id="inp" placeholder="メッセージを入力…" rows="1"
+        oninput="resize(this)" onkeydown="onKey(event)"></textarea>
+      <div class="btn-row">
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled title="送信">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
       </div>
     </div>
-
-    <div class="info-bar">
-      <div class="info-item active" id="iChars">生成文字数 <span id="outChars">0</span></div>
-      <div class="info-item" id="iTime">処理時間 <span id="outTime">—</span></div>
-      <div class="info-item">N-gram <span id="outOrder">—</span></div>
-      <div class="info-item">温度 <span id="outTemp">—</span></div>
-      <div class="info-item" id="iMode">モード <span id="outMode">—</span></div>
-    </div>
-  </section>
-</main>
+    <div class="footer-hint">ENTER で送信 ／ SHIFT+ENTER で改行 ／ ⚙ でモデル設定</div>
+  </div>
+</footer>
 
 <script>
 // ============================================================
-//  COMPOSE — マルコフ連鎖 文章生成エンジン
+//  マルコフ連鎖 対話エンジン
 // ============================================================
 
 let corpus = '';
-let model  = {};       // { key: [{ch, weight}] }
+let model  = {};
 let order  = 3;
-let seedMode = 'auto';
-let genCount = 0;
 let sentenceStarts = [];
+let busy   = false;
 
-// ── データ読み込み ──
-async function loadData() {
+// ── 読み込み ──
+async function init() {
   try {
     const r = await fetch('ai.txt');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (!r.ok) throw new Error();
     corpus = await r.text();
-    setStatus(true, 'ai.txt 読込完了');
-  } catch(e) {
-    corpus = getFallbackCorpus();
-    setStatus(false, 'フォールバックデータ使用中');
+    setStatus(true);
+  } catch {
+    corpus = fallbackCorpus();
+    setStatus(false);
   }
   buildModel();
-  updateUI();
+  updateStats();
+  buildChips();
+  document.getElementById('sendBtn').disabled = false;
 }
 
-function setStatus(ok, msg) {
-  document.getElementById('led').className    = 'led' + (ok ? '' : ' warn');
-  document.getElementById('ledTxt').textContent = msg;
-  document.getElementById('livePill').textContent = ok ? 'READY' : 'FALLBACK';
-  document.getElementById('livePill').style.borderColor = ok ? 'rgba(163,230,53,.4)' : 'rgba(251,191,36,.4)';
-  document.getElementById('livePill').style.color        = ok ? 'var(--green)' : 'var(--amber)';
+function setStatus(ok) {
+  document.getElementById('hbadge').textContent = ok ? 'READY' : 'FALLBACK';
+  document.getElementById('hbadge').className   = 'hbadge ' + (ok ? 'ok' : 'warn');
+  document.getElementById('hled').className     = 'dot ' + (ok ? '' : 'warn');
+  document.getElementById('hledtxt').textContent= ok ? 'ai.txt 読込完了' : 'フォールバックデータ';
 }
 
-// ── モデル構築（N-gram マルコフ連鎖）──
+// ── モデル構築 ──
 function buildModel() {
-  order = parseInt(document.getElementById('order').value);
+  order = parseInt(document.getElementById('rOrder').value);
   model = {};
   sentenceStarts = [];
 
-  // 文章区切り（。！？\n）でセンテンス開始位置を収集
-  const clean = corpus.replace(/[\r\n##]+/g, ' ').replace(/\s+/g, '　');
+  const clean = cleanText(corpus);
 
   // 文頭収集
-  const sentPattern = /[。！？]/g;
-  let m;
   sentenceStarts.push(0);
-  while ((m = sentPattern.exec(clean)) !== null) {
-    const next = m.index + 1;
-    if (next < clean.length) sentenceStarts.push(next);
+  for (let i = 0; i < clean.length; i++) {
+    if ('。！？'.includes(clean[i]) && i+1 < clean.length)
+      sentenceStarts.push(i+1);
   }
 
-  // N-gram モデル構築
+  // N-gram
   for (let i = 0; i <= clean.length - order - 1; i++) {
-    const key  = clean.slice(i, i + order);
-    const next = clean[i + order];
+    const key  = clean.slice(i, i+order);
+    const next = clean[i+order];
     if (!model[key]) model[key] = {};
-    model[key][next] = (model[key][next] || 0) + 1;
+    model[key][next] = (model[key][next]||0) + 1;
   }
-
-  // カウントを重みに変換
+  // → 確率へ
   for (const key in model) {
     const total = Object.values(model[key]).reduce((a,b)=>a+b,0);
-    model[key] = Object.entries(model[key]).map(([ch,cnt])=>({
-      ch, w: cnt / total
-    }));
+    model[key] = Object.entries(model[key]).map(([ch,c])=>({ch,w:c/total}));
   }
 }
 
-function rebuildModel() { buildModel(); updateUI(); }
+function rebuildModel() { buildModel(); updateStats(); }
 
-// ── UI 更新 ──
-function updateUI() {
-  const clean = corpus.replace(/[\r\n##]+/g,' ').replace(/\s+/g,'　');
-  const sentCount = (corpus.match(/[。！？]/g)||[]).length;
-
-  document.getElementById('sChars').textContent  = fmtNum(clean.length);
-  document.getElementById('sStates').textContent = fmtNum(Object.keys(model).length);
-  document.getElementById('sSents').textContent  = sentCount;
-  document.getElementById('genBtn').disabled = false;
-
-  buildNgramChart(clean);
+function cleanText(t) {
+  return t.replace(/[#\r\n]+/g,' ').replace(/\s+/g,'　');
 }
 
-function fmtNum(n) {
-  return n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+function updateStats() {
+  const clean = cleanText(corpus);
+  document.getElementById('sChars').textContent  = fmt(clean.length);
+  document.getElementById('sStates').textContent = fmt(Object.keys(model).length);
+  document.getElementById('sSents').textContent  = (corpus.match(/[。！？]/g)||[]).length;
 }
 
-// ── 頻出 N-gram チャート ──
-function buildNgramChart(clean) {
-  const freq = {};
-  for (let i = 0; i <= clean.length - order; i++) {
-    const k = clean.slice(i, i + order);
-    if (/[。　！？]/.test(k)) continue;
-    freq[k] = (freq[k]||0) + 1;
+function fmt(n){ return n>=1000?(n/1000).toFixed(1)+'k':String(n) }
+
+// ── チップ生成 ──
+function buildChips() {
+  const ideas = ['春の光','夜の街','孤独とは','科学の話','食べ物の香り','旅に出る','音楽について','言葉の力','宇宙の不思議','季節の変わり目'];
+  document.getElementById('chips').innerHTML = ideas.map(s=>
+    `<button class="chip" onclick="suggest('${s}')">${s}</button>`
+  ).join('');
+}
+
+// ── 返答生成コア ──
+function generateReply(seed) {
+  const temp = parseFloat(document.getElementById('rTemp').value);
+  const len  = parseInt(document.getElementById('rLen').value);
+  const clean = cleanText(corpus);
+
+  // シードのマッチングを探す
+  let start = '';
+  if (seed && seed.length >= order) {
+    // 入力テキストを探す
+    const seedClean = cleanText(seed);
+    for (let i = 0; i < seedClean.length - order + 1; i++) {
+      const k = seedClean.slice(i, i+order);
+      if (model[k]) { start = k; break; }
+    }
   }
-  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const max = top[0]?.[1] || 1;
-  const el = document.getElementById('ngramList');
-  el.innerHTML = top.map(([k,c])=>`
-    <div class="ngram-item">
-      <span class="ngram-key">${k}</span>
-      <div class="ngram-bar-wrap">
-        <div class="ngram-bar" style="width:${(c/max*100).toFixed(1)}%"></div>
-      </div>
-      <span class="ngram-count">${c}</span>
-    </div>
-  `).join('');
-}
-
-// ── テキスト生成 ──
-async function generate() {
-  const btn    = document.getElementById('genBtn');
-  const outDiv = document.getElementById('output');
-  const prog   = document.getElementById('prog');
-  const len    = parseInt(document.getElementById('genLen').value);
-  const temp   = parseFloat(document.getElementById('temp').value);
-  const t0     = performance.now();
-
-  btn.disabled = true;
-  outDiv.innerHTML = '<span class="cursor"></span>';
-  prog.style.width = '0%';
-
-  // シード選択
-  let seed = '';
-  if (seedMode === 'custom') {
-    seed = document.getElementById('seedInp').value.trim();
-    if (seed.length < order) seed = '';
+  if (!start) {
+    // キーワードの1文字ずつ確認
+    const seedClean = cleanText(seed || '');
+    for (const ch of seedClean) {
+      const found = Object.keys(model).find(k=>k.includes(ch));
+      if (found) { start = found; break; }
+    }
   }
-  if (!seed && seedMode === 'sentence' && sentenceStarts.length) {
-    const clean = corpus.replace(/[\r\n##]+/g,' ').replace(/\s+/g,'　');
+  if (!start) {
+    // 文頭からランダム
     const idx = sentenceStarts[Math.floor(Math.random()*sentenceStarts.length)];
-    seed = clean.slice(idx, idx + order);
-  }
-  if (!seed) {
-    // ランダムな有効キーから開始
-    const keys = Object.keys(model);
-    seed = keys[Math.floor(Math.random()*keys.length)];
+    start = clean.slice(idx, idx+order);
+    if (!model[start]) {
+      start = Object.keys(model)[Math.floor(Math.random()*Object.keys(model).length)];
+    }
   }
 
-  // 生成
-  let result = seed;
-  let current = seed.slice(-order);
+  let result = start;
+  let cur    = start;
 
   for (let i = 0; i < len; i++) {
-    const candidates = model[current];
+    const candidates = model[cur];
     if (!candidates) break;
-
-    // 温度スケーリング
-    const next = sampleWithTemp(candidates, temp);
-    result  += next;
-    current  = (current + next).slice(-order);
-
-    // アニメーション付き表示
-    const pct = ((i+1)/len*100).toFixed(1);
-    prog.style.width = pct + '%';
-
-    outDiv.innerHTML = escHtml(result) + '<span class="cursor"></span>';
-    scrollToBottom();
-
-    // 速度調整（短い文字はスキップ）
-    if (i % 3 === 0) await sleep(8);
+    const next = sampleTemp(candidates, temp);
+    result += next;
+    cur = (cur+next).slice(-order);
+    // 文末で自然に終わるよう少し延長後停止
+    if (result.length > len * 0.8 && '。！？'.includes(next)) break;
   }
 
-  // 完成
-  prog.style.width = '100%';
-  outDiv.innerHTML = escHtml(result);
-
-  const elapsed = ((performance.now()-t0)/1000).toFixed(2);
-  genCount++;
-  document.getElementById('sGen').textContent      = genCount;
-  document.getElementById('outChars').textContent  = result.length;
-  document.getElementById('outTime').textContent   = elapsed+'s';
-  document.getElementById('outOrder').textContent  = order;
-  document.getElementById('outTemp').textContent   = temp.toFixed(1);
-  document.getElementById('outMode').textContent   = seedMode;
-
-  setTimeout(()=>prog.style.width='0%', 800);
-  btn.disabled = false;
+  return result;
 }
 
-// ── 温度付きサンプリング ──
-function sampleWithTemp(candidates, temp) {
-  if (temp <= 0.01) return candidates.reduce((a,b)=>a.w>b.w?a:b).ch;
-
-  // ソフトマックス with temperature
-  const scaled = candidates.map(c => ({ch:c.ch, w: Math.pow(c.w, 1/temp)}));
-  const sum = scaled.reduce((a,b)=>a+b.w, 0);
-  let r = Math.random() * sum;
-  for (const c of scaled) { r -= c.w; if (r <= 0) return c.ch; }
-  return scaled[scaled.length-1].ch;
+function sampleTemp(cands, temp) {
+  if (temp <= 0.01) return cands.reduce((a,b)=>a.w>b.w?a:b).ch;
+  const sc = cands.map(c=>({ch:c.ch, w:Math.pow(c.w, 1/temp)}));
+  const sum = sc.reduce((a,b)=>a+b.w,0);
+  let r = Math.random()*sum;
+  for (const c of sc){ r-=c.w; if(r<=0) return c.ch; }
+  return sc[sc.length-1].ch;
 }
 
-// ── カスタムデータ追加 ──
-function addCustomData() {
-  const txt = document.getElementById('extraTxt').value.trim();
+// ── UI ──
+function togglePanel() {
+  document.getElementById('modelBar').classList.toggle('open');
+}
+
+function resize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight,120)+'px';
+}
+
+function onKey(e) {
+  if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
+}
+
+function suggest(text) {
+  document.getElementById('inp').value = text;
+  sendMsg();
+}
+
+async function sendMsg() {
+  if (busy) return;
+  const inp = document.getElementById('inp');
+  const txt = inp.value.trim();
   if (!txt) return;
-  corpus += '\n' + txt;
-  document.getElementById('extraTxt').value = '';
-  buildModel();
-  updateUI();
-  flashBtn();
+
+  inp.value=''; inp.style.height='auto';
+  busy = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  // ウェルカム削除
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+
+  // ユーザーバブル
+  addBubble(txt, 'user');
+  addSys('生成中…');
+
+  // 思考中アニメ
+  const prog = document.getElementById('genprog');
+  let progVal = 0;
+  const progTimer = setInterval(()=>{
+    progVal = Math.min(progVal + Math.random()*12, 90);
+    prog.style.width = progVal + '%';
+  }, 60);
+
+  await sleep(300 + Math.random()*400);
+
+  // 生成
+  const reply = generateReply(txt);
+
+  clearInterval(progTimer);
+  prog.style.width = '100%';
+  removeSys();
+
+  // AIバブル（タイピングアニメ）
+  const bub = addBubble('', 'ai');
+  bub.classList.add('typing');
+  await typeText(bub, reply);
+  bub.classList.remove('typing');
+
+  setTimeout(()=>{ prog.style.width='0%'; }, 600);
+  busy = false;
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('inp').focus();
 }
 
-function flashBtn() {
-  const b = document.querySelector('.add-btn');
-  b.textContent = '✓ 追加完了';
-  b.style.color = 'var(--green)';
-  b.style.borderColor = 'rgba(163,230,53,.4)';
-  setTimeout(()=>{
-    b.textContent = '+ 学習データに追加';
-    b.style.color = '';
-    b.style.borderColor = '';
-  }, 1500);
+function addBubble(html, role) {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = `msg ${role}`;
+  d.innerHTML = `
+    <div class="av ${role}">${role==='ai'?'AI':'YOU'}</div>
+    <div class="bub ${role}">${escHtml(html)}</div>
+  `;
+  c.appendChild(d);
+  scrollDown();
+  return d.querySelector('.bub');
 }
 
-// ── Seed mode ──
-function setSeedMode(el, mode) {
-  document.querySelectorAll('.radio-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  seedMode = mode;
-  document.getElementById('seedGroup').style.display = mode==='custom' ? 'block' : 'none';
+function addSys(text) {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'sys'; d.id = 'sys-msg';
+  d.innerHTML = `<span>${text}</span>`;
+  c.appendChild(d);
+  scrollDown();
 }
 
-// ── コピー ──
-function copyOutput() {
-  const text = document.getElementById('output').textContent;
-  navigator.clipboard.writeText(text).then(()=>{
-    const b = document.querySelector('.copy-btn');
-    b.textContent = 'COPIED ✓';
-    setTimeout(()=>b.textContent='COPY', 1200);
-  });
+function removeSys() {
+  const el = document.getElementById('sys-msg');
+  if (el) el.remove();
 }
 
-// ── Utils ──
-function scrollToBottom() {
-  const w = document.querySelector('.output-wrap');
-  w.scrollTop = w.scrollHeight;
+async function typeText(bub, text) {
+  let html = '';
+  bub.innerHTML = '<span class="cursor-blink"></span>';
+  for (let i = 0; i < text.length; i++) {
+    html += escHtml(text[i]);
+    if (i % 3 === 0) {
+      bub.innerHTML = html + '<span class="cursor-blink"></span>';
+      scrollDown();
+      await sleep(12);
+    }
+  }
+  bub.innerHTML = html;
+  scrollDown();
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\n/g,'<br>');
+}
+
+function scrollDown() {
+  const c = document.getElementById('chat');
+  c.scrollTop = c.scrollHeight;
 }
 
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── フォールバックコーパス ──
-function getFallbackCorpus() {
-  return `春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。
-夏の夜空には無数の星が瞬いている。蛍の光が暗い草むらの中でゆっくりと浮かび上がる。
-秋の森では葉が赤や黄色に染まり始めていた。落ち葉を踏みしめる音が静かな山道に響き渡る。
-冬の朝は凛とした空気が体を引き締める。雪が静かに降り積もって世界を白く覆っていく。
-言葉は思考を表現するためのものであるが同時に思考そのものを形作るものでもある。
-未来は確定していないからこそ希望を持つことができる。小さな選択の積み重ねがやがて人生という大きな物語を作り出していく。
-音楽は言葉の届かない場所まで届くことがある。旋律が記憶と結びついて遠い過去を一瞬で呼び戻す。
-文章を書くことは自分の内側を言葉という形に変換する作業だ。`;
+// ── フォールバック ──
+function fallbackCorpus() {
+  return `春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。山の向こうから吹いてくる風は若葉の香りをたっぷりと含んでいた。
+夏の夜空には無数の星が瞬いている。蛍の光が暗い草むらの中でゆっくりと浮かび上がる。湿った大気の中で虫たちの鳴き声が重なり合って複雑な音楽を奏でていた。
+秋の森では葉が赤や黄色に染まり始めていた。落ち葉を踏みしめる音が静かな山道に響き渡る。霧が深く立ち込めて木々の姿を幻想的に変えていった。
+冬の朝は凛とした空気が体を引き締める。雪が静かに降り積もって世界を白く覆っていく。凍った地面に足跡がくっきりと残っていた。
+言葉は思考を表現するためのものであるが同時に思考そのものを形作るものでもある。未来は確定していないからこそ希望を持つことができる。
+音楽は言葉の届かない場所まで届くことがある。旋律が記憶と結びついて遠い過去を一瞬で呼び戻す。文章を書くことは自分の内側を言葉という形に変換する作業だ。
+出汁の香りが台所に満ちるとどこか懐かしい気持ちになる。野菜を炒める音がリズミカルに響いて食欲をそそる香りが広がっていく。
+海の水平線を眺めていると時間の感覚がなくなっていく。波が繰り返し岸に打ち寄せては砂を削り形を変えていく。旅とは場所を移動することではなく自分の中に新しい何かを持ち帰ることなのかもしれない。`;
 }
 
 // ── 起動 ──
-loadData();
+init();
 </script>
 </body>
 </html>
