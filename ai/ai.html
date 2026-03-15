@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COMPOSE — マルコフ連鎖 文章生成AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0c0e0b;
+  --s1:      #131510;
+  --s2:      #1a1d17;
+  --border:  #252920;
+  --border2: #323628;
+  --green:   #a3e635;
+  --green2:  #84cc16;
+  --green-d: rgba(163,230,53,0.12);
+  --green-g: rgba(163,230,53,0.06);
+  --amber:   #fbbf24;
+  --cyan:    #67e8f9;
+  --text:    #d9ddd0;
+  --mid:     #7a8070;
+  --dim:     #3f4238;
+  --danger:  #f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  height:100vh;
+}
+
+/* scanline overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px
+  );
+}
+
+/* ─── Header ─── */
+header{
+  border-bottom:1px solid var(--border);
+  background:rgba(12,14,11,0.97);
+  backdrop-filter:blur(16px);
+  padding:12px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:50;flex-shrink:0;
+}
+.brand{
+  font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;
+  letter-spacing:.2em;color:var(--green);
+  display:flex;align-items:center;gap:10px;
+}
+.brand-box{
+  width:24px;height:24px;border:1.5px solid var(--green);border-radius:4px;
+  display:grid;place-items:center;position:relative;overflow:hidden;
+}
+.brand-box::before{
+  content:'';position:absolute;
+  width:100%;height:2px;background:var(--green);opacity:.3;
+  animation:scan 2s linear infinite;
+}
+@keyframes scan{from{top:-2px}to{top:26px}}
+
+.meta{display:flex;align-items:center;gap:12px}
+.pill{
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+  padding:3px 9px;border:1px solid var(--border2);border-radius:2px;
+  color:var(--mid);background:var(--s1);
+}
+.pill.live{border-color:rgba(163,230,53,.3);color:var(--green)}
+.status-row{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--mid)}
+.led{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+.led.warn{background:var(--amber)}
+.led.err{background:var(--danger);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ─── Main layout ─── */
+main{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  overflow:hidden;
+  height:100%;
+}
+
+/* ─── Left panel ─── */
+aside{
+  border-right:1px solid var(--border);
+  background:var(--s1);
+  overflow-y:auto;
+  display:flex;flex-direction:column;
+  gap:0;
+}
+aside::-webkit-scrollbar{width:3px}
+aside::-webkit-scrollbar-track{background:transparent}
+aside::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+
+.panel{border-bottom:1px solid var(--border);padding:16px}
+.panel-title{
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;
+  color:var(--mid);text-transform:uppercase;margin-bottom:12px;
+  display:flex;align-items:center;gap:6px;
+}
+.panel-title::before{content:'//';color:var(--dim)}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{
+  background:var(--s2);border:1px solid var(--border2);border-radius:6px;
+  padding:10px 12px;
+}
+.stat-val{
+  font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;
+  color:var(--green);line-height:1;margin-bottom:3px;
+}
+.stat-lbl{font-size:.68rem;color:var(--mid)}
+
+/* Controls */
+.control-group{margin-bottom:14px}
+.control-label{
+  font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.06em;
+  color:var(--mid);margin-bottom:7px;display:flex;justify-content:space-between;
+}
+.control-label span{color:var(--green)}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:3px;border-radius:2px;
+  background:var(--border2);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--green);cursor:pointer;
+  box-shadow:0 0 6px rgba(163,230,53,.4);
+}
+
+.radio-group{display:flex;gap:6px;flex-wrap:wrap}
+.radio-btn{
+  font-family:'DM Mono',monospace;font-size:.65rem;padding:4px 10px;
+  border:1px solid var(--border2);border-radius:3px;background:var(--s2);
+  color:var(--mid);cursor:pointer;transition:all .15s;user-select:none;
+}
+.radio-btn.active{border-color:var(--green);color:var(--green);background:var(--green-g)}
+.radio-btn:hover{border-color:var(--border2);color:var(--text)}
+.radio-btn.active:hover{border-color:var(--green);color:var(--green)}
+
+/* Seed input */
+.seed-input{
+  width:100%;background:var(--s2);border:1px solid var(--border2);
+  border-radius:4px;padding:7px 10px;color:var(--text);outline:none;
+  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.82rem;
+  transition:border-color .15s;
+}
+.seed-input:focus{border-color:rgba(163,230,53,.4)}
+.seed-input::placeholder{color:var(--dim)}
+
+/* Generate button */
+.gen-btn{
+  width:100%;padding:12px;border:none;border-radius:6px;
+  font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;
+  font-weight:500;cursor:pointer;
+  background:var(--green);color:#0c0e0b;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.gen-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  transform:translateX(-100%);transition:transform .4s;
+}
+.gen-btn:hover::before{transform:translateX(100%)}
+.gen-btn:hover{background:var(--green2);box-shadow:0 0 20px rgba(163,230,53,.3)}
+.gen-btn:active{transform:scale(.98)}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed}
+.gen-btn:disabled::before{display:none}
+
+/* Top N-grams */
+.ngram-list{display:flex;flex-direction:column;gap:5px}
+.ngram-item{
+  display:flex;align-items:center;gap:8px;
+  font-family:'DM Mono',monospace;font-size:.65rem;
+}
+.ngram-key{color:var(--green);min-width:40px;white-space:nowrap}
+.ngram-bar-wrap{flex:1;height:4px;background:var(--border2);border-radius:2px}
+.ngram-bar{height:100%;background:var(--green);border-radius:2px;transition:width .5s ease}
+.ngram-count{color:var(--mid);min-width:28px;text-align:right}
+
+/* Custom text area */
+.txt-input{
+  width:100%;min-height:80px;background:var(--s2);border:1px solid var(--border2);
+  border-radius:4px;padding:8px 10px;color:var(--text);outline:none;
+  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.78rem;
+  resize:vertical;transition:border-color .15s;line-height:1.6;
+}
+.txt-input:focus{border-color:rgba(163,230,53,.35)}
+.txt-input::placeholder{color:var(--dim)}
+.add-btn{
+  width:100%;margin-top:6px;padding:7px;
+  border:1px solid var(--border2);border-radius:4px;
+  background:transparent;color:var(--mid);
+  font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+  cursor:pointer;transition:all .15s;
+}
+.add-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-g)}
+
+/* ─── Right panel ─── */
+section{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);
+}
+
+.output-header{
+  padding:14px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;background:rgba(12,14,11,0.8);
+}
+.output-title{
+  font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.14em;
+  color:var(--mid);display:flex;align-items:center;gap:8px;
+}
+.output-title::before{content:'//';color:var(--dim)}
+.copy-btn{
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+  padding:4px 10px;border:1px solid var(--border2);border-radius:3px;
+  background:transparent;color:var(--mid);cursor:pointer;transition:all .15s;
+}
+.copy-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* Output area */
+.output-wrap{
+  flex:1;overflow-y:auto;padding:28px 32px;
+}
+.output-wrap::-webkit-scrollbar{width:3px}
+.output-wrap::-webkit-scrollbar-track{background:transparent}
+.output-wrap::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+
+#output{
+  font-size:1.05rem;line-height:2.0;color:var(--text);
+  min-height:100px;position:relative;
+  font-weight:300;letter-spacing:.02em;
+}
+
+.char{
+  display:inline;
+  animation:charIn .04s ease both;
+}
+@keyframes charIn{
+  from{opacity:0;filter:blur(2px)}
+  to{opacity:1;filter:blur(0)}
+}
+
+.cursor{
+  display:inline-block;width:2px;height:1.1em;
+  background:var(--green);margin-left:1px;vertical-align:text-bottom;
+  animation:curBlink .7s step-end infinite;
+}
+@keyframes curBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+.placeholder{color:var(--dim);font-size:.9rem}
+
+/* Token highlight stream */
+.tok{
+  display:inline;border-radius:2px;transition:background .1s;
+}
+.tok.fresh{background:rgba(163,230,53,.18);color:var(--green)}
+
+/* Progress bar at bottom */
+.progress-bar{
+  height:2px;background:var(--border);flex-shrink:0;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));
+  width:0%;transition:width .1s linear;
+}
+
+/* Info bar */
+.info-bar{
+  padding:8px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;flex-shrink:0;
+  background:var(--s1);
+}
+.info-item{
+  font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);
+  display:flex;align-items:center;gap:5px;
+}
+.info-item span{color:var(--mid)}
+.info-item.active span{color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="brand">
+    <div class="brand-box">✦</div>
+    COMPOSE
+  </div>
+  <div class="meta">
+    <div class="pill">マルコフ連鎖</div>
+    <div class="pill live" id="livePill">LOADING</div>
+    <div class="status-row">
+      <div class="led" id="led"></div>
+      <span id="ledTxt">ai.txt 読込中…</span>
+    </div>
+  </div>
+</header>
+
+<!-- Body -->
+<main>
+  <!-- Left sidebar -->
+  <aside>
+
+    <!-- Stats -->
+    <div class="panel">
+      <div class="panel-title">モデル統計</div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-val" id="sChars">—</div>
+          <div class="stat-lbl">学習文字数</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="sStates">—</div>
+          <div class="stat-lbl">状態数</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="sSents">—</div>
+          <div class="stat-lbl">文章数</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="sGen">0</div>
+          <div class="stat-lbl">生成回数</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="panel">
+      <div class="panel-title">生成設定</div>
+
+      <div class="control-group">
+        <div class="control-label">N-gram 次数 <span id="orderVal">3</span></div>
+        <input type="range" id="order" min="2" max="5" value="3"
+          oninput="document.getElementById('orderVal').textContent=this.value;rebuildModel()">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">生成文字数 <span id="lenVal">120</span></div>
+        <input type="range" id="genLen" min="30" max="400" value="120" step="10"
+          oninput="document.getElementById('lenVal').textContent=this.value">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">ランダム性（温度） <span id="tempVal">1.0</span></div>
+        <input type="range" id="temp" min="0.1" max="3.0" value="1.0" step="0.1"
+          oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(1)">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">開始位置</div>
+        <div class="radio-group">
+          <div class="radio-btn active" onclick="setSeedMode(this,'auto')">自動</div>
+          <div class="radio-btn" onclick="setSeedMode(this,'sentence')">文頭</div>
+          <div class="radio-btn" onclick="setSeedMode(this,'custom')">指定</div>
+        </div>
+      </div>
+
+      <div class="control-group" id="seedGroup" style="display:none">
+        <input class="seed-input" id="seedInp" placeholder="開始テキストを入力…" maxlength="20">
+      </div>
+
+      <button class="gen-btn" id="genBtn" onclick="generate()" disabled>
+        ▶ &nbsp;文章を生成する
+      </button>
+    </div>
+
+    <!-- Top N-grams -->
+    <div class="panel">
+      <div class="panel-title">頻出 N-gram TOP 8</div>
+      <div class="ngram-list" id="ngramList">
+        <div style="color:var(--dim);font-size:.72rem">読み込み中…</div>
+      </div>
+    </div>
+
+    <!-- Custom training data -->
+    <div class="panel">
+      <div class="panel-title">学習データを追加</div>
+      <textarea class="txt-input" id="extraTxt"
+        placeholder="テキストを貼り付けると学習データに追加されます…"></textarea>
+      <button class="add-btn" onclick="addCustomData()">+ 学習データに追加</button>
+    </div>
+
+  </aside>
+
+  <!-- Right output panel -->
+  <section>
+    <div class="output-header">
+      <div class="output-title">生成出力</div>
+      <button class="copy-btn" onclick="copyOutput()">COPY</button>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+
+    <div class="output-wrap">
+      <div id="output">
+        <span class="placeholder">←「文章を生成する」ボタンを押すと、ai.txtの学習データをもとに新しい文章が生成されます。</span>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <div class="info-item active" id="iChars">生成文字数 <span id="outChars">0</span></div>
+      <div class="info-item" id="iTime">処理時間 <span id="outTime">—</span></div>
+      <div class="info-item">N-gram <span id="outOrder">—</span></div>
+      <div class="info-item">温度 <span id="outTemp">—</span></div>
+      <div class="info-item" id="iMode">モード <span id="outMode">—</span></div>
+    </div>
+  </section>
+</main>
+
+<script>
+// ============================================================
+//  COMPOSE — マルコフ連鎖 文章生成エンジン
+// ============================================================
+
+let corpus = '';
+let model  = {};       // { key: [{ch, weight}] }
+let order  = 3;
+let seedMode = 'auto';
+let genCount = 0;
+let sentenceStarts = [];
+
+// ── データ読み込み ──
+async function loadData() {
+  try {
+    const r = await fetch('ai.txt');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    corpus = await r.text();
+    setStatus(true, 'ai.txt 読込完了');
+  } catch(e) {
+    corpus = getFallbackCorpus();
+    setStatus(false, 'フォールバックデータ使用中');
+  }
+  buildModel();
+  updateUI();
+}
+
+function setStatus(ok, msg) {
+  document.getElementById('led').className    = 'led' + (ok ? '' : ' warn');
+  document.getElementById('ledTxt').textContent = msg;
+  document.getElementById('livePill').textContent = ok ? 'READY' : 'FALLBACK';
+  document.getElementById('livePill').style.borderColor = ok ? 'rgba(163,230,53,.4)' : 'rgba(251,191,36,.4)';
+  document.getElementById('livePill').style.color        = ok ? 'var(--green)' : 'var(--amber)';
+}
+
+// ── モデル構築（N-gram マルコフ連鎖）──
+function buildModel() {
+  order = parseInt(document.getElementById('order').value);
+  model = {};
+  sentenceStarts = [];
+
+  // 文章区切り（。！？\n）でセンテンス開始位置を収集
+  const clean = corpus.replace(/[\r\n##]+/g, ' ').replace(/\s+/g, '　');
+
+  // 文頭収集
+  const sentPattern = /[。！？]/g;
+  let m;
+  sentenceStarts.push(0);
+  while ((m = sentPattern.exec(clean)) !== null) {
+    const next = m.index + 1;
+    if (next < clean.length) sentenceStarts.push(next);
+  }
+
+  // N-gram モデル構築
+  for (let i = 0; i <= clean.length - order - 1; i++) {
+    const key  = clean.slice(i, i + order);
+    const next = clean[i + order];
+    if (!model[key]) model[key] = {};
+    model[key][next] = (model[key][next] || 0) + 1;
+  }
+
+  // カウントを重みに変換
+  for (const key in model) {
+    const total = Object.values(model[key]).reduce((a,b)=>a+b,0);
+    model[key] = Object.entries(model[key]).map(([ch,cnt])=>({
+      ch, w: cnt / total
+    }));
+  }
+}
+
+function rebuildModel() { buildModel(); updateUI(); }
+
+// ── UI 更新 ──
+function updateUI() {
+  const clean = corpus.replace(/[\r\n##]+/g,' ').replace(/\s+/g,'　');
+  const sentCount = (corpus.match(/[。！？]/g)||[]).length;
+
+  document.getElementById('sChars').textContent  = fmtNum(clean.length);
+  document.getElementById('sStates').textContent = fmtNum(Object.keys(model).length);
+  document.getElementById('sSents').textContent  = sentCount;
+  document.getElementById('genBtn').disabled = false;
+
+  buildNgramChart(clean);
+}
+
+function fmtNum(n) {
+  return n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+}
+
+// ── 頻出 N-gram チャート ──
+function buildNgramChart(clean) {
+  const freq = {};
+  for (let i = 0; i <= clean.length - order; i++) {
+    const k = clean.slice(i, i + order);
+    if (/[。　！？]/.test(k)) continue;
+    freq[k] = (freq[k]||0) + 1;
+  }
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max = top[0]?.[1] || 1;
+  const el = document.getElementById('ngramList');
+  el.innerHTML = top.map(([k,c])=>`
+    <div class="ngram-item">
+      <span class="ngram-key">${k}</span>
+      <div class="ngram-bar-wrap">
+        <div class="ngram-bar" style="width:${(c/max*100).toFixed(1)}%"></div>
+      </div>
+      <span class="ngram-count">${c}</span>
+    </div>
+  `).join('');
+}
+
+// ── テキスト生成 ──
+async function generate() {
+  const btn    = document.getElementById('genBtn');
+  const outDiv = document.getElementById('output');
+  const prog   = document.getElementById('prog');
+  const len    = parseInt(document.getElementById('genLen').value);
+  const temp   = parseFloat(document.getElementById('temp').value);
+  const t0     = performance.now();
+
+  btn.disabled = true;
+  outDiv.innerHTML = '<span class="cursor"></span>';
+  prog.style.width = '0%';
+
+  // シード選択
+  let seed = '';
+  if (seedMode === 'custom') {
+    seed = document.getElementById('seedInp').value.trim();
+    if (seed.length < order) seed = '';
+  }
+  if (!seed && seedMode === 'sentence' && sentenceStarts.length) {
+    const clean = corpus.replace(/[\r\n##]+/g,' ').replace(/\s+/g,'　');
+    const idx = sentenceStarts[Math.floor(Math.random()*sentenceStarts.length)];
+    seed = clean.slice(idx, idx + order);
+  }
+  if (!seed) {
+    // ランダムな有効キーから開始
+    const keys = Object.keys(model);
+    seed = keys[Math.floor(Math.random()*keys.length)];
+  }
+
+  // 生成
+  let result = seed;
+  let current = seed.slice(-order);
+
+  for (let i = 0; i < len; i++) {
+    const candidates = model[current];
+    if (!candidates) break;
+
+    // 温度スケーリング
+    const next = sampleWithTemp(candidates, temp);
+    result  += next;
+    current  = (current + next).slice(-order);
+
+    // アニメーション付き表示
+    const pct = ((i+1)/len*100).toFixed(1);
+    prog.style.width = pct + '%';
+
+    outDiv.innerHTML = escHtml(result) + '<span class="cursor"></span>';
+    scrollToBottom();
+
+    // 速度調整（短い文字はスキップ）
+    if (i % 3 === 0) await sleep(8);
+  }
+
+  // 完成
+  prog.style.width = '100%';
+  outDiv.innerHTML = escHtml(result);
+
+  const elapsed = ((performance.now()-t0)/1000).toFixed(2);
+  genCount++;
+  document.getElementById('sGen').textContent      = genCount;
+  document.getElementById('outChars').textContent  = result.length;
+  document.getElementById('outTime').textContent   = elapsed+'s';
+  document.getElementById('outOrder').textContent  = order;
+  document.getElementById('outTemp').textContent   = temp.toFixed(1);
+  document.getElementById('outMode').textContent   = seedMode;
+
+  setTimeout(()=>prog.style.width='0%', 800);
+  btn.disabled = false;
+}
+
+// ── 温度付きサンプリング ──
+function sampleWithTemp(candidates, temp) {
+  if (temp <= 0.01) return candidates.reduce((a,b)=>a.w>b.w?a:b).ch;
+
+  // ソフトマックス with temperature
+  const scaled = candidates.map(c => ({ch:c.ch, w: Math.pow(c.w, 1/temp)}));
+  const sum = scaled.reduce((a,b)=>a+b.w, 0);
+  let r = Math.random() * sum;
+  for (const c of scaled) { r -= c.w; if (r <= 0) return c.ch; }
+  return scaled[scaled.length-1].ch;
+}
+
+// ── カスタムデータ追加 ──
+function addCustomData() {
+  const txt = document.getElementById('extraTxt').value.trim();
+  if (!txt) return;
+  corpus += '\n' + txt;
+  document.getElementById('extraTxt').value = '';
+  buildModel();
+  updateUI();
+  flashBtn();
+}
+
+function flashBtn() {
+  const b = document.querySelector('.add-btn');
+  b.textContent = '✓ 追加完了';
+  b.style.color = 'var(--green)';
+  b.style.borderColor = 'rgba(163,230,53,.4)';
+  setTimeout(()=>{
+    b.textContent = '+ 学習データに追加';
+    b.style.color = '';
+    b.style.borderColor = '';
+  }, 1500);
+}
+
+// ── Seed mode ──
+function setSeedMode(el, mode) {
+  document.querySelectorAll('.radio-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  seedMode = mode;
+  document.getElementById('seedGroup').style.display = mode==='custom' ? 'block' : 'none';
+}
+
+// ── コピー ──
+function copyOutput() {
+  const text = document.getElementById('output').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const b = document.querySelector('.copy-btn');
+    b.textContent = 'COPIED ✓';
+    setTimeout(()=>b.textContent='COPY', 1200);
+  });
+}
+
+// ── Utils ──
+function scrollToBottom() {
+  const w = document.querySelector('.output-wrap');
+  w.scrollTop = w.scrollHeight;
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── フォールバックコーパス ──
+function getFallbackCorpus() {
+  return `春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。
+夏の夜空には無数の星が瞬いている。蛍の光が暗い草むらの中でゆっくりと浮かび上がる。
+秋の森では葉が赤や黄色に染まり始めていた。落ち葉を踏みしめる音が静かな山道に響き渡る。
+冬の朝は凛とした空気が体を引き締める。雪が静かに降り積もって世界を白く覆っていく。
+言葉は思考を表現するためのものであるが同時に思考そのものを形作るものでもある。
+未来は確定していないからこそ希望を持つことができる。小さな選択の積み重ねがやがて人生という大きな物語を作り出していく。
+音楽は言葉の届かない場所まで届くことがある。旋律が記憶と結びついて遠い過去を一瞬で呼び戻す。
+文章を書くことは自分の内側を言葉という形に変換する作業だ。`;
+}
+
+// ── 起動 ──
+loadData();
+</script>
+</body>
+</html>
