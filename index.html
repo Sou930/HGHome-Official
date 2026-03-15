@@ -49,6 +49,8 @@
   --c-hgscript-bg:#eeedf7;
   --c-blog-bg:    #fdf3ea;
   --c-coder-bg:   #eaf4f8;
+  --c-ai: #1a6b3a;
+  --c-ai-bg: #edf7f2;
   --border:  #e0d9cf;
   --border2: #cec7bc;
   --r:    6px;
@@ -546,6 +548,8 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
 .project-item.hgscript .project-icon{background:var(--c-hgscript-bg);}
 .project-item.blog     .project-icon{background:var(--c-blog-bg);}
 .project-item.coder    .project-icon{background:var(--c-coder-bg);}
+.project-item.ai::before { background: var(--c-ai); }
+.project-item.ai .project-icon { background: var(--c-ai-bg); }
 .project-info{flex:1;min-width:0;}
 .project-name{font-weight:700;font-size:.84rem;color:var(--ink);line-height:1.2;margin-bottom:2px;}
 .project-desc{font-size:.71rem;color:var(--ink5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1020,13 +1024,14 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--warm0);color:
             </div>
             <span class="project-arr">→</span>
           </a>
-          <a herf="ai/ai.html" class="project-item ai">
-            <div class="project-info">🤖</div>
+          <a href="ai/ai.html" class="project-item ai">
+            <div class="project-icon">🤖</div>
             <div class="project-info">
               <div class="project-name">HGAI</div>
               <div class="project-desc">精度のクソ悪いAI</div>
             </div>
             <span class="project-arr">→</span>
+          </a>
         </div>
       </div>
     </div>
