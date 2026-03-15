@@ -3,25 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COMPOSE — 対話型マルコフAI</title>
+<title>COMPOSE v2 — 単語N-gram + バックオフAI</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<!-- TinySegmenter: ブラウザ用日本語形態素解析 -->
+<script src="https://cdn.jsdelivr.net/npm/tiny-segmenter@0.2.0/tiny-segmenter.min.js"></script>
 <style>
 :root {
-  --bg:      #0c0e0b;
-  --s1:      #131510;
-  --s2:      #1a1d17;
-  --border:  #252920;
-  --border2: #2e3228;
-  --green:   #a3e635;
-  --green2:  #84cc16;
-  --glow:    rgba(163,230,53,0.15);
-  --glow2:   rgba(163,230,53,0.06);
-  --amber:   #fbbf24;
-  --cyan:    #67e8f9;
-  --rose:    #fb7185;
-  --text:    #d4d9cc;
-  --mid:     #6b7263;
-  --dim:     #353930;
+  --bg:    #0c0e0b;
+  --s1:    #131510;
+  --s2:    #1a1d17;
+  --bd:    #252920;
+  --bd2:   #2e3228;
+  --green: #a3e635;
+  --green2:#84cc16;
+  --glow:  rgba(163,230,53,0.13);
+  --glow2: rgba(163,230,53,0.06);
+  --amber: #fbbf24;
+  --cyan:  #67e8f9;
+  --violet:#a78bfa;
+  --text:  #d4d9cc;
+  --mid:   #6b7263;
+  --dim:   #353930;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -30,232 +32,219 @@ body{
   font-family:'Zen Kaku Gothic New',sans-serif;
   display:flex;flex-direction:column;height:100vh;
 }
-
-/* noise texture overlay */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  background-size:200px 200px;opacity:.4;
+  background-image:
+    linear-gradient(rgba(163,230,53,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(163,230,53,.018) 1px,transparent 1px);
+  background-size:48px 48px;
 }
 
 /* ─── Header ─── */
 header{
-  position:relative;z-index:20;
+  position:relative;z-index:20;flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
-  padding:13px 22px;
-  border-bottom:1px solid var(--border);
-  background:rgba(12,14,11,0.96);
+  padding:12px 22px;
+  border-bottom:1px solid var(--bd);
+  background:rgba(12,14,11,.97);
   backdrop-filter:blur(20px);
-  flex-shrink:0;
 }
 .brand{
   display:flex;align-items:center;gap:10px;
   font-family:'DM Mono',monospace;font-size:.88rem;
   font-weight:500;letter-spacing:.2em;color:var(--green);
 }
-.brand-orb{
-  width:26px;height:26px;border-radius:50%;
+.orb{
+  width:24px;height:24px;border-radius:50%;
   border:1.5px solid var(--green);
   display:grid;place-items:center;
-  position:relative;
 }
-.brand-orb::after{
-  content:'';width:8px;height:8px;
+.orb::after{
+  content:'';width:7px;height:7px;
   background:var(--green);border-radius:50%;
-  box-shadow:0 0 8px var(--green);
+  box-shadow:0 0 7px var(--green);
   animation:orb 2.5s ease-in-out infinite;
 }
-@keyframes orb{0%,100%{transform:scale(.7);opacity:.5}50%{transform:scale(1);opacity:1}}
+@keyframes orb{0%,100%{transform:scale(.6);opacity:.4}50%{transform:scale(1);opacity:1}}
 
-.header-right{display:flex;align-items:center;gap:10px}
+.hright{display:flex;align-items:center;gap:9px}
 .hbadge{
-  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;
-  padding:3px 8px;border:1px solid var(--border2);border-radius:3px;
-  color:var(--mid);background:var(--s1);
+  font-family:'DM Mono',monospace;font-size:.57rem;letter-spacing:.1em;
+  padding:3px 8px;border:1px solid var(--bd2);border-radius:3px;
+  color:var(--mid);background:var(--s1);white-space:nowrap;
 }
-.hbadge.ok{border-color:rgba(163,230,53,.25);color:var(--green)}
+.hbadge.ok{border-color:rgba(163,230,53,.28);color:var(--green)}
 .hbadge.warn{border-color:rgba(251,191,36,.3);color:var(--amber)}
-.hstat{
-  font-family:'DM Mono',monospace;font-size:.58rem;
-  color:var(--mid);display:flex;align-items:center;gap:5px;
-}
-.dot{
-  width:5px;height:5px;border-radius:50%;
-  background:var(--green);animation:blink 2s ease-in-out infinite;
-}
+.hstat{font-family:'DM Mono',monospace;font-size:.57rem;color:var(--mid);display:flex;align-items:center;gap:5px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:bk 2s ease-in-out infinite}
 .dot.warn{background:var(--amber)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
-
-/* ─── Chat area ─── */
-#chat{
-  flex:1;overflow-y:auto;
-  padding:24px 0;position:relative;z-index:5;
-  scroll-behavior:smooth;
-}
-#chat::-webkit-scrollbar{width:3px}
-#chat::-webkit-scrollbar-track{background:transparent}
-#chat::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
-
-.msgs{
-  max-width:740px;margin:0 auto;
-  padding:0 20px;
-  display:flex;flex-direction:column;gap:18px;
-}
-
-/* ─── Welcome ─── */
-.welcome{
-  padding:36px 0 20px;
-  animation:fadeUp .6s ease both;
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.welcome-inner{
-  border:1px solid var(--border2);border-radius:12px;
-  background:var(--s1);padding:24px 28px;
-  position:relative;overflow:hidden;
-}
-.welcome-inner::before{
-  content:'';position:absolute;top:-40px;right:-40px;
-  width:140px;height:140px;border-radius:50%;
-  background:radial-gradient(circle,rgba(163,230,53,.08) 0%,transparent 70%);
-  pointer-events:none;
-}
-.welcome-title{
-  font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:500;
-  color:var(--green);letter-spacing:.12em;margin-bottom:8px;
-}
-.welcome-sub{
-  color:var(--mid);font-size:.85rem;line-height:1.8;margin-bottom:20px;
-}
-.welcome-sub code{
-  font-family:'DM Mono',monospace;font-size:.8em;
-  color:var(--cyan);background:rgba(103,232,249,.08);
-  padding:1px 5px;border-radius:3px;
-}
-.chips{display:flex;flex-wrap:wrap;gap:7px}
-.chip{
-  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.78rem;
-  padding:6px 13px;border:1px solid var(--border2);border-radius:16px;
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.15}}
+.icon-btn{
+  width:32px;height:32px;border:1px solid var(--bd2);border-radius:7px;
   background:var(--s2);color:var(--mid);cursor:pointer;
-  transition:all .15s;
+  display:grid;place-items:center;font-size:.78rem;transition:all .15s;
+  flex-shrink:0;
 }
-.chip:hover{
-  border-color:var(--green);color:var(--green);
-  background:var(--glow2);transform:translateY(-1px);
-}
+.icon-btn:hover{border-color:var(--green);color:var(--green);background:var(--glow2)}
 
-/* ─── Messages ─── */
-.msg{
-  display:flex;gap:11px;align-items:flex-start;
-  animation:msgIn .28s cubic-bezier(.34,1.4,.64,1) both;
+/* ─── Settings panel ─── */
+.settings-bar{
+  position:relative;z-index:10;flex-shrink:0;
+  overflow:hidden;max-height:0;
+  border-bottom:0px solid var(--bd);
+  background:rgba(12,14,11,.9);
+  transition:max-height .32s ease, border-bottom-width .32s;
 }
-@keyframes msgIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
-.msg.user{flex-direction:row-reverse}
+.settings-bar.open{max-height:200px;border-bottom-width:1px}
+.settings-inner{padding:16px 22px;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
 
-.av{
-  width:30px;height:30px;border-radius:8px;
-  display:grid;place-items:center;
-  font-family:'DM Mono',monospace;font-size:.55rem;font-weight:500;
-  letter-spacing:.06em;flex-shrink:0;
-}
-.av.ai{
-  background:linear-gradient(135deg,rgba(163,230,53,.12),rgba(103,232,249,.08));
-  border:1px solid rgba(163,230,53,.22);color:var(--green);
-}
-.av.user{
-  background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(251,113,133,.08));
-  border:1px solid rgba(251,191,36,.22);color:var(--amber);
-}
-
-.bub{
-  max-width:78%;padding:12px 16px;border-radius:12px;
-  font-size:.9rem;line-height:1.85;position:relative;
-}
-.bub.ai{
-  background:var(--s1);border:1px solid var(--border);
-  border-top-left-radius:3px;color:var(--text);
-}
-.bub.user{
-  background:var(--s2);border:1px solid rgba(251,191,36,.15);
-  border-top-right-radius:3px;color:var(--text);
-  text-align:right;
-}
-.bub.ai.typing{
-  border-color:rgba(163,230,53,.25);
-  box-shadow:0 0 16px rgba(163,230,53,.06);
-}
-
-/* typing cursor */
-.cursor-blink{
-  display:inline-block;width:1.5px;height:.95em;
-  background:var(--green);margin-left:1px;vertical-align:text-bottom;
-  animation:cb .65s step-end infinite;
-}
-@keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
-
-/* system message */
-.sys{
-  text-align:center;
-  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;
-  color:var(--dim);padding:4px 0;
-  animation:fadeUp .4s ease both;
-}
-.sys span{
-  border:1px solid var(--dim);border-radius:10px;
-  padding:2px 10px;
-}
-
-/* ─── Model panel (collapsible) ─── */
-.model-bar{
-  position:relative;z-index:10;
-  border-top:1px solid var(--border);
-  background:rgba(12,14,11,0.9);
-  flex-shrink:0;overflow:hidden;
-  transition:max-height .3s ease;
-  max-height:0;
-}
-.model-bar.open{max-height:160px}
-.model-inner{
-  padding:14px 22px;
-  display:flex;gap:20px;align-items:center;flex-wrap:wrap;
-}
-.ctrl{display:flex;flex-direction:column;gap:6px;min-width:140px}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:130px}
 .ctrl-lbl{
-  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;
-  color:var(--mid);display:flex;justify-content:space-between;
+  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.07em;
+  color:var(--mid);display:flex;justify-content:space-between;align-items:center;
 }
 .ctrl-lbl span{color:var(--green)}
 input[type=range]{
   -webkit-appearance:none;appearance:none;
   width:100%;height:2px;border-radius:2px;
-  background:var(--border2);outline:none;cursor:pointer;
+  background:var(--bd2);outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
   background:var(--green);cursor:pointer;
-  box-shadow:0 0 5px rgba(163,230,53,.4);
+  box-shadow:0 0 6px rgba(163,230,53,.4);
 }
-.stats-row{
-  display:flex;gap:14px;margin-left:auto;flex-wrap:wrap;
-}
-.sstat{
-  font-family:'DM Mono',monospace;font-size:.6rem;color:var(--mid);
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-}
-.sstat b{font-size:.85rem;color:var(--green);font-weight:400}
 
-/* ─── Footer / Input ─── */
+/* stats chips */
+.stat-chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.sc{
+  font-family:'DM Mono',monospace;font-size:.6rem;
+  padding:4px 10px;border:1px solid var(--bd2);border-radius:4px;
+  background:var(--s1);color:var(--mid);white-space:nowrap;
+}
+.sc b{color:var(--green);font-weight:400}
+
+/* backoff indicator */
+.bo-pill{
+  font-family:'DM Mono',monospace;font-size:.57rem;letter-spacing:.08em;
+  padding:2px 7px;border-radius:10px;
+  border:1px solid rgba(167,139,250,.3);
+  color:var(--violet);background:rgba(167,139,250,.06);
+  white-space:nowrap;
+}
+
+/* ─── Chat ─── */
+#chat{
+  flex:1;overflow-y:auto;
+  padding:22px 0;position:relative;z-index:5;
+  scroll-behavior:smooth;
+}
+#chat::-webkit-scrollbar{width:3px}
+#chat::-webkit-scrollbar-track{background:transparent}
+#chat::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+.msgs{
+  max-width:740px;margin:0 auto;
+  padding:0 20px;
+  display:flex;flex-direction:column;gap:16px;
+}
+
+/* ─── Welcome ─── */
+.welcome{animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.welcome-inner{
+  border:1px solid var(--bd2);border-radius:12px;
+  background:var(--s1);padding:22px 26px;position:relative;overflow:hidden;
+}
+.welcome-inner::after{
+  content:'';position:absolute;top:-50px;right:-50px;
+  width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle,rgba(163,230,53,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.welcome-title{
+  font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;
+  color:var(--green);letter-spacing:.14em;margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.vtag{
+  font-size:.58rem;padding:2px 7px;
+  border:1px solid rgba(163,230,53,.3);border-radius:3px;
+  color:var(--green);letter-spacing:.1em;
+}
+.welcome-sub{color:var(--mid);font-size:.84rem;line-height:1.85;margin-bottom:18px}
+.welcome-sub code{
+  font-family:'DM Mono',monospace;font-size:.8em;
+  color:var(--cyan);background:rgba(103,232,249,.08);
+  padding:1px 5px;border-radius:3px;
+}
+.improve-note{
+  font-family:'DM Mono',monospace;font-size:.62rem;color:var(--violet);
+  border:1px solid rgba(167,139,250,.2);border-radius:6px;
+  padding:8px 12px;background:rgba(167,139,250,.04);
+  margin-bottom:16px;line-height:1.6;
+}
+.improve-note strong{color:var(--violet)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  font-size:.78rem;padding:5px 12px;
+  border:1px solid var(--bd2);border-radius:15px;
+  background:var(--s2);color:var(--mid);cursor:pointer;
+  transition:all .15s;
+}
+.chip:hover{border-color:var(--green);color:var(--green);background:var(--glow2);transform:translateY(-1px)}
+
+/* ─── Messages ─── */
+.msg{display:flex;gap:11px;align-items:flex-start;animation:msgIn .28s cubic-bezier(.34,1.4,.64,1) both}
+@keyframes msgIn{from{opacity:0;transform:translateY(7px) scale(.98)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.av{
+  width:30px;height:30px;border-radius:7px;
+  display:grid;place-items:center;
+  font-family:'DM Mono',monospace;font-size:.54rem;font-weight:500;
+  letter-spacing:.05em;flex-shrink:0;
+}
+.av.ai{background:linear-gradient(135deg,rgba(163,230,53,.12),rgba(103,232,249,.08));border:1px solid rgba(163,230,53,.22);color:var(--green)}
+.av.user{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(251,113,133,.08));border:1px solid rgba(251,191,36,.22);color:var(--amber)}
+.bub{max-width:78%;padding:12px 16px;border-radius:12px;font-size:.9rem;line-height:1.85}
+.bub.ai{background:var(--s1);border:1px solid var(--bd);border-top-left-radius:3px;color:var(--text)}
+.bub.user{background:var(--s2);border:1px solid rgba(251,191,36,.15);border-top-right-radius:3px;color:var(--text);text-align:right}
+.bub.streaming{border-color:rgba(163,230,53,.22);box-shadow:0 0 14px rgba(163,230,53,.05)}
+
+/* backoff badge on bubble */
+.bo-badge{
+  display:inline-block;font-family:'DM Mono',monospace;font-size:.55rem;
+  padding:1px 6px;border-radius:8px;margin-left:6px;
+  border:1px solid rgba(167,139,250,.25);color:var(--violet);
+  background:rgba(167,139,250,.06);vertical-align:middle;
+}
+
+.cursor-blink{
+  display:inline-block;width:1.5px;height:.9em;
+  background:var(--green);margin-left:1px;vertical-align:text-bottom;
+  animation:cb .65s step-end infinite;
+}
+@keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
+
+.sys{
+  text-align:center;
+  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.07em;
+  color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both;
+}
+.sys span{border:1px solid var(--dim);border-radius:10px;padding:2px 9px}
+
+/* ─── Footer ─── */
 footer{
-  position:relative;z-index:20;
-  border-top:1px solid var(--border);
-  background:rgba(12,14,11,0.97);
+  position:relative;z-index:20;flex-shrink:0;
+  border-top:1px solid var(--bd);
+  background:rgba(12,14,11,.97);
   backdrop-filter:blur(20px);
-  padding:14px 20px;flex-shrink:0;
+  padding:13px 20px;
 }
 .input-wrap{max-width:740px;margin:0 auto}
 .input-row{
-  display:flex;align-items:flex-end;gap:8px;
-  background:var(--s1);border:1px solid var(--border2);
-  border-radius:12px;padding:8px 8px 8px 16px;
+  display:flex;align-items:flex-end;gap:7px;
+  background:var(--s1);border:1px solid var(--bd2);
+  border-radius:12px;padding:8px 8px 8px 15px;
   transition:border-color .2s,box-shadow .2s;
 }
 .input-row:focus-within{
@@ -265,18 +254,10 @@ footer{
 textarea{
   flex:1;background:none;border:none;outline:none;
   color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;
-  font-size:.88rem;resize:none;max-height:120px;
-  line-height:1.65;padding:2px 0;
+  font-size:.88rem;resize:none;max-height:110px;
+  line-height:1.6;padding:2px 0;
 }
 textarea::placeholder{color:var(--dim)}
-.btn-row{display:flex;gap:6px}
-.icon-btn{
-  width:34px;height:34px;border:1px solid var(--border2);border-radius:8px;
-  background:var(--s2);color:var(--mid);cursor:pointer;
-  display:grid;place-items:center;flex-shrink:0;
-  font-size:.78rem;transition:all .15s;
-}
-.icon-btn:hover{border-color:var(--green);color:var(--green);background:var(--glow2)}
 .send-btn{
   width:34px;height:34px;border:none;border-radius:8px;
   background:var(--green);color:#0c0e0b;cursor:pointer;
@@ -287,17 +268,11 @@ textarea::placeholder{color:var(--dim)}
 .send-btn:active{transform:scale(.94)}
 .send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
 .send-btn svg{width:14px;height:14px}
+.progress-strip{height:1px;background:linear-gradient(90deg,var(--green),var(--cyan));width:0%;transition:width .08s linear;margin-top:8px}
 .footer-hint{
-  text-align:center;margin-top:8px;
-  font-family:'DM Mono',monospace;font-size:.56rem;
+  text-align:center;margin-top:7px;
+  font-family:'DM Mono',monospace;font-size:.55rem;
   color:var(--dim);letter-spacing:.06em;
-}
-
-/* progress */
-.gen-progress{
-  height:1px;background:linear-gradient(90deg,var(--green),var(--cyan));
-  width:0%;transition:width .08s linear;
-  margin-bottom:1px;
 }
 </style>
 </head>
@@ -305,42 +280,48 @@ textarea::placeholder{color:var(--dim)}
 
 <header>
   <div class="brand">
-    <div class="brand-orb"></div>
-    COMPOSE
+    <div class="orb"></div>
+    COMPOSE <span style="font-size:.6rem;opacity:.5;margin-left:4px">v2</span>
   </div>
-  <div class="header-right">
+  <div class="hright">
     <div class="hbadge warn" id="hbadge">LOADING</div>
+    <div class="bo-pill">BACKOFF ON</div>
     <div class="hstat">
       <div class="dot warn" id="hled"></div>
       <span id="hledtxt">読込中…</span>
     </div>
-    <div class="icon-btn" onclick="togglePanel()" title="モデル設定">⚙</div>
+    <div class="icon-btn" onclick="toggleSettings()" title="設定">⚙</div>
   </div>
 </header>
 
-<!-- Model settings panel -->
-<div class="model-bar" id="modelBar">
-  <div class="gen-progress" id="genprog"></div>
-  <div class="model-inner">
+<!-- Settings panel -->
+<div class="settings-bar" id="settingsBar">
+  <div class="settings-inner">
     <div class="ctrl">
-      <div class="ctrl-lbl">N-gram 次数 <span id="vOrder">3</span></div>
-      <input type="range" id="rOrder" min="2" max="5" value="3"
+      <div class="ctrl-lbl">最大N-gram次数 <span id="vOrder">4</span></div>
+      <input type="range" id="rOrder" min="2" max="6" value="4"
         oninput="document.getElementById('vOrder').textContent=this.value;rebuildModel()">
     </div>
     <div class="ctrl">
-      <div class="ctrl-lbl">応答長 <span id="vLen">90</span> 文字</div>
-      <input type="range" id="rLen" min="20" max="300" value="90" step="10"
+      <div class="ctrl-lbl">最小バックオフ次数 <span id="vMinOrder">2</span></div>
+      <input type="range" id="rMinOrder" min="1" max="3" value="2"
+        oninput="document.getElementById('vMinOrder').textContent=this.value">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">応答長（単語数） <span id="vLen">28</span></div>
+      <input type="range" id="rLen" min="8" max="80" value="28" step="4"
         oninput="document.getElementById('vLen').textContent=this.value">
     </div>
     <div class="ctrl">
-      <div class="ctrl-lbl">温度（創造性） <span id="vTemp">1.0</span></div>
-      <input type="range" id="rTemp" min="0.1" max="3.0" value="1.0" step="0.1"
+      <div class="ctrl-lbl">温度 <span id="vTemp">1.0</span></div>
+      <input type="range" id="rTemp" min="0.1" max="2.5" value="1.0" step="0.1"
         oninput="document.getElementById('vTemp').textContent=parseFloat(this.value).toFixed(1)">
     </div>
-    <div class="stats-row">
-      <div class="sstat"><b id="sChars">—</b>文字数</div>
-      <div class="sstat"><b id="sStates">—</b>状態数</div>
-      <div class="sstat"><b id="sSents">—</b>文章数</div>
+    <div class="stat-chips">
+      <div class="sc">単語数 <b id="sWords">—</b></div>
+      <div class="sc">状態数 <b id="sStates">—</b></div>
+      <div class="sc">文数 <b id="sSents">—</b></div>
+      <div class="sc">バックオフ率 <b id="sBoRate">—</b></div>
     </div>
   </div>
 </div>
@@ -349,11 +330,18 @@ textarea::placeholder{color:var(--dim)}
   <div class="msgs" id="msgs">
     <div class="welcome" id="welcome">
       <div class="welcome-inner">
-        <div class="welcome-title">COMPOSE</div>
+        <div class="welcome-title">
+          COMPOSE
+          <span class="vtag">v2</span>
+        </div>
         <p class="welcome-sub">
           <code>ai.txt</code> を学習した対話型マルコフ連鎖AIです。<br>
-          あなたの入力キーワードを起点に文章を生成して返答します。
+          あなたの入力を起点に文章を生成して返答します。
         </p>
+        <div class="improve-note">
+          ✦ <strong>単語単位トークン化</strong>（TinySegmenter）+ <strong>バックオフモデル</strong> 搭載<br>
+          高次N-gramが見つからない時に自動で低次へフォールバック。自然で途切れにくい文章を生成します。
+        </div>
         <div class="chips" id="chips">
           <span style="color:var(--dim);font-size:.78rem">データ読込中…</span>
         </div>
@@ -367,33 +355,40 @@ textarea::placeholder{color:var(--dim)}
     <div class="input-row">
       <textarea id="inp" placeholder="メッセージを入力…" rows="1"
         oninput="resize(this)" onkeydown="onKey(event)"></textarea>
-      <div class="btn-row">
-        <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled title="送信">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-               stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
-      </div>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled title="送信">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
     </div>
-    <div class="footer-hint">ENTER で送信 ／ SHIFT+ENTER で改行 ／ ⚙ でモデル設定</div>
+    <div class="progress-strip" id="prog"></div>
+    <div class="footer-hint">ENTER で送信 ／ SHIFT+ENTER で改行 ／ ⚙ で設定</div>
   </div>
 </footer>
 
 <script>
 // ============================================================
-//  マルコフ連鎖 対話エンジン
+//  COMPOSE v2 — 単語N-gram + バックオフモデル
 // ============================================================
 
-let corpus = '';
-let model  = {};
-let order  = 3;
-let sentenceStarts = [];
-let busy   = false;
+let segmenter = null;
+let corpus    = '';
+let tokens    = [];          // 全トークン列
+let models    = {};          // models[n] = Map<key, [{word,w}]>
+let sentStarts= [];          // 文頭トークンインデックス
+let busy      = false;
+let totalBoUsed = 0;
+let totalGenSteps = 0;
 
-// ── 読み込み ──
+// ── 起動 ──
 async function init() {
+  // TinySegmenter 初期化
+  if (typeof TinySegmenter !== 'undefined') {
+    segmenter = new TinySegmenter();
+  }
+
   try {
     const r = await fetch('ai.txt');
     if (!r.ok) throw new Error();
@@ -403,141 +398,198 @@ async function init() {
     corpus = fallbackCorpus();
     setStatus(false);
   }
+
   buildModel();
-  updateStats();
   buildChips();
   document.getElementById('sendBtn').disabled = false;
 }
 
 function setStatus(ok) {
-  document.getElementById('hbadge').textContent = ok ? 'READY' : 'FALLBACK';
-  document.getElementById('hbadge').className   = 'hbadge ' + (ok ? 'ok' : 'warn');
-  document.getElementById('hled').className     = 'dot ' + (ok ? '' : 'warn');
-  document.getElementById('hledtxt').textContent= ok ? 'ai.txt 読込完了' : 'フォールバックデータ';
+  document.getElementById('hbadge').textContent  = ok ? 'READY' : 'FALLBACK';
+  document.getElementById('hbadge').className    = 'hbadge ' + (ok ? 'ok' : 'warn');
+  document.getElementById('hled').className      = 'dot ' + (ok ? '' : 'warn');
+  document.getElementById('hledtxt').textContent = ok ? 'ai.txt 読込完了' : 'フォールバックデータ';
 }
 
-// ── モデル構築 ──
+// ── トークン化 ──
+function tokenize(text) {
+  // テキスト正規化
+  const clean = text
+    .replace(/[#＃]/g, '')
+    .replace(/\r?\n/g, '。')
+    .replace(/\s+/g, '')
+    .replace(/[""「」『』【】〔〕]/g, '');
+
+  if (segmenter) {
+    // TinySegmenter で単語分割
+    return segmenter.segment(clean).filter(t => t.trim() !== '');
+  } else {
+    // フォールバック：句読点で区切り + 1文字ずつ
+    return clean.split('').filter(c => c.trim() !== '');
+  }
+}
+
+// ── モデル構築（全次数分） ──
 function buildModel() {
-  order = parseInt(document.getElementById('rOrder').value);
-  model = {};
-  sentenceStarts = [];
+  const maxOrder = parseInt(document.getElementById('rOrder').value);
+  tokens = tokenize(corpus);
+  models = {};
+  sentStarts = [0];
 
-  const clean = cleanText(corpus);
-
-  // 文頭収集
-  sentenceStarts.push(0);
-  for (let i = 0; i < clean.length; i++) {
-    if ('。！？'.includes(clean[i]) && i+1 < clean.length)
-      sentenceStarts.push(i+1);
+  // 文頭インデックス収集
+  for (let i = 0; i < tokens.length; i++) {
+    if (['。','！','？','!','?'].includes(tokens[i]) && i+1 < tokens.length) {
+      sentStarts.push(i+1);
+    }
   }
 
-  // N-gram
-  for (let i = 0; i <= clean.length - order - 1; i++) {
-    const key  = clean.slice(i, i+order);
-    const next = clean[i+order];
-    if (!model[key]) model[key] = {};
-    model[key][next] = (model[key][next]||0) + 1;
+  // 各次数でN-gramモデルを構築
+  for (let n = 1; n <= maxOrder; n++) {
+    const freq = new Map();
+    for (let i = 0; i <= tokens.length - n - 1; i++) {
+      const key  = tokens.slice(i, i+n).join('\x00');
+      const next = tokens[i+n];
+      if (!freq.has(key)) freq.set(key, new Map());
+      const m = freq.get(key);
+      m.set(next, (m.get(next)||0) + 1);
+    }
+    // → 確率へ変換
+    const prob = new Map();
+    for (const [key, m] of freq) {
+      const total = Array.from(m.values()).reduce((a,b)=>a+b, 0);
+      prob.set(key, Array.from(m.entries()).map(([word,c])=>({word, w: c/total})));
+    }
+    models[n] = prob;
   }
-  // → 確率へ
-  for (const key in model) {
-    const total = Object.values(model[key]).reduce((a,b)=>a+b,0);
-    model[key] = Object.entries(model[key]).map(([ch,c])=>({ch,w:c/total}));
-  }
+
+  updateStats();
 }
 
-function rebuildModel() { buildModel(); updateStats(); }
-
-function cleanText(t) {
-  return t.replace(/[#\r\n]+/g,' ').replace(/\s+/g,'　');
-}
+function rebuildModel() { buildModel(); }
 
 function updateStats() {
-  const clean = cleanText(corpus);
-  document.getElementById('sChars').textContent  = fmt(clean.length);
-  document.getElementById('sStates').textContent = fmt(Object.keys(model).length);
-  document.getElementById('sSents').textContent  = (corpus.match(/[。！？]/g)||[]).length;
+  const maxN   = parseInt(document.getElementById('rOrder').value);
+  const states = models[maxN] ? models[maxN].size : 0;
+  const sents  = (corpus.match(/[。！？]/g)||[]).length;
+  const borate = totalGenSteps > 0
+    ? (totalBoUsed/totalGenSteps*100).toFixed(1)+'%'
+    : '—';
+
+  document.getElementById('sWords').textContent  = fmt(tokens.length);
+  document.getElementById('sStates').textContent = fmt(states);
+  document.getElementById('sSents').textContent  = sents;
+  document.getElementById('sBoRate').textContent = borate;
 }
 
 function fmt(n){ return n>=1000?(n/1000).toFixed(1)+'k':String(n) }
 
+// ── バックオフ付き次トークン予測 ──
+// 最大次数からスタートし、見つからなければ次数を下げる
+function predictNextWithBackoff(context) {
+  const maxOrder  = parseInt(document.getElementById('rOrder').value);
+  const minOrder  = parseInt(document.getElementById('rMinOrder').value);
+  const temp      = parseFloat(document.getElementById('rTemp').value);
+
+  for (let n = maxOrder; n >= minOrder; n--) {
+    const key = context.slice(-n).join('\x00');
+    const candidates = models[n] ? models[n].get(key) : null;
+    if (candidates && candidates.length > 0) {
+      const isBackoff = n < maxOrder;
+      if (isBackoff) totalBoUsed++;
+      totalGenSteps++;
+      return { word: sampleTemp(candidates, temp), usedOrder: n };
+    }
+  }
+
+  // 完全に見つからない場合：1-gramからランダム
+  const uni = models[1];
+  if (uni && uni.size > 0) {
+    const allCands = [];
+    for (const [, cands] of uni) allCands.push(...cands);
+    totalBoUsed++;
+    totalGenSteps++;
+    return { word: sampleTemp(allCands, temp), usedOrder: 0 };
+  }
+  return { word: '。', usedOrder: 0 };
+}
+
+// ── テキスト生成 ──
+function generateReply(input) {
+  const maxLen  = parseInt(document.getElementById('rLen').value);
+  const maxOrder= parseInt(document.getElementById('rOrder').value);
+  const inputTokens = tokenize(input);
+
+  // コンテキスト初期化：入力テキストからマッチするシードを探す
+  let context = [];
+
+  // 入力単語がモデルに存在するか探す（高次→低次）
+  outer:
+  for (let n = Math.min(maxOrder, inputTokens.length); n >= 1; n--) {
+    for (let i = 0; i <= inputTokens.length - n; i++) {
+      const slice = inputTokens.slice(i, i+n);
+      const key   = slice.join('\x00');
+      if (models[n] && models[n].has(key)) {
+        context = slice;
+        break outer;
+      }
+    }
+  }
+
+  // どこにも見つからなければ文頭ランダム
+  if (context.length === 0) {
+    const idx = sentStarts[Math.floor(Math.random()*sentStarts.length)];
+    context = tokens.slice(idx, idx + Math.min(maxOrder, tokens.length - idx));
+  }
+
+  const result  = [...context];
+  let boUsedInThis = 0;
+
+  for (let i = 0; i < maxLen; i++) {
+    const { word, usedOrder } = predictNextWithBackoff(result.slice(-maxOrder));
+    if (usedOrder === 0) boUsedInThis++;
+    result.push(word);
+
+    // 文末で自然終了
+    if (result.length > maxLen * 0.75 && ['。','！','？'].includes(word)) break;
+  }
+
+  // 文末を補完
+  if (!['。','！','？'].includes(result[result.length-1])) result.push('。');
+
+  // トークン列を文字列に戻す
+  return result.join('');
+}
+
+// ── 温度サンプリング ──
+function sampleTemp(cands, temp) {
+  if (temp <= 0.01) return cands.reduce((a,b)=>a.w>b.w?a:b).word;
+  const sc  = cands.map(c=>({word:c.word, w:Math.pow(c.w, 1/temp)}));
+  const sum = sc.reduce((a,b)=>a+b.w, 0);
+  let r = Math.random()*sum;
+  for (const c of sc){ r-=c.w; if(r<=0) return c.word; }
+  return sc[sc.length-1].word;
+}
+
 // ── チップ生成 ──
 function buildChips() {
-  const ideas = ['春の光','夜の街','孤独とは','科学の話','食べ物の香り','旅に出る','音楽について','言葉の力','宇宙の不思議','季節の変わり目'];
+  const ideas = ['春の光','夜の街','孤独とは','食べ物の香り','旅に出る','音楽について','言葉の力','宇宙の不思議','季節の変わり目','朝の駅'];
   document.getElementById('chips').innerHTML = ideas.map(s=>
     `<button class="chip" onclick="suggest('${s}')">${s}</button>`
   ).join('');
 }
 
-// ── 返答生成コア ──
-function generateReply(seed) {
-  const temp = parseFloat(document.getElementById('rTemp').value);
-  const len  = parseInt(document.getElementById('rLen').value);
-  const clean = cleanText(corpus);
-
-  // シードのマッチングを探す
-  let start = '';
-  if (seed && seed.length >= order) {
-    // 入力テキストを探す
-    const seedClean = cleanText(seed);
-    for (let i = 0; i < seedClean.length - order + 1; i++) {
-      const k = seedClean.slice(i, i+order);
-      if (model[k]) { start = k; break; }
-    }
-  }
-  if (!start) {
-    // キーワードの1文字ずつ確認
-    const seedClean = cleanText(seed || '');
-    for (const ch of seedClean) {
-      const found = Object.keys(model).find(k=>k.includes(ch));
-      if (found) { start = found; break; }
-    }
-  }
-  if (!start) {
-    // 文頭からランダム
-    const idx = sentenceStarts[Math.floor(Math.random()*sentenceStarts.length)];
-    start = clean.slice(idx, idx+order);
-    if (!model[start]) {
-      start = Object.keys(model)[Math.floor(Math.random()*Object.keys(model).length)];
-    }
-  }
-
-  let result = start;
-  let cur    = start;
-
-  for (let i = 0; i < len; i++) {
-    const candidates = model[cur];
-    if (!candidates) break;
-    const next = sampleTemp(candidates, temp);
-    result += next;
-    cur = (cur+next).slice(-order);
-    // 文末で自然に終わるよう少し延長後停止
-    if (result.length > len * 0.8 && '。！？'.includes(next)) break;
-  }
-
-  return result;
-}
-
-function sampleTemp(cands, temp) {
-  if (temp <= 0.01) return cands.reduce((a,b)=>a.w>b.w?a:b).ch;
-  const sc = cands.map(c=>({ch:c.ch, w:Math.pow(c.w, 1/temp)}));
-  const sum = sc.reduce((a,b)=>a+b.w,0);
-  let r = Math.random()*sum;
-  for (const c of sc){ r-=c.w; if(r<=0) return c.ch; }
-  return sc[sc.length-1].ch;
-}
-
 // ── UI ──
-function togglePanel() {
-  document.getElementById('modelBar').classList.toggle('open');
+function toggleSettings() {
+  document.getElementById('settingsBar').classList.toggle('open');
 }
 
 function resize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight,120)+'px';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
 }
 
 function onKey(e) {
-  if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 }
 
 function suggest(text) {
@@ -551,42 +603,35 @@ async function sendMsg() {
   const txt = inp.value.trim();
   if (!txt) return;
 
-  inp.value=''; inp.style.height='auto';
+  inp.value = ''; inp.style.height = 'auto';
   busy = true;
   document.getElementById('sendBtn').disabled = true;
 
-  // ウェルカム削除
   const w = document.getElementById('welcome');
   if (w) w.remove();
 
-  // ユーザーバブル
   addBubble(txt, 'user');
   addSys('生成中…');
 
-  // 思考中アニメ
-  const prog = document.getElementById('genprog');
-  let progVal = 0;
-  const progTimer = setInterval(()=>{
-    progVal = Math.min(progVal + Math.random()*12, 90);
-    prog.style.width = progVal + '%';
-  }, 60);
+  // プログレスアニメ
+  const prog = document.getElementById('prog');
+  let pv = 0;
+  const pt = setInterval(()=>{ pv = Math.min(pv+Math.random()*14, 88); prog.style.width=pv+'%'; }, 50);
 
-  await sleep(300 + Math.random()*400);
-
-  // 生成
+  await sleep(280 + Math.random()*350);
   const reply = generateReply(txt);
 
-  clearInterval(progTimer);
+  clearInterval(pt);
   prog.style.width = '100%';
   removeSys();
+  updateStats();
 
-  // AIバブル（タイピングアニメ）
   const bub = addBubble('', 'ai');
-  bub.classList.add('typing');
+  bub.classList.add('streaming');
   await typeText(bub, reply);
-  bub.classList.remove('typing');
+  bub.classList.remove('streaming');
 
-  setTimeout(()=>{ prog.style.width='0%'; }, 600);
+  setTimeout(()=>{ prog.style.width='0%'; }, 500);
   busy = false;
   document.getElementById('sendBtn').disabled = false;
   document.getElementById('inp').focus();
@@ -596,10 +641,7 @@ function addBubble(html, role) {
   const c = document.getElementById('msgs');
   const d = document.createElement('div');
   d.className = `msg ${role}`;
-  d.innerHTML = `
-    <div class="av ${role}">${role==='ai'?'AI':'YOU'}</div>
-    <div class="bub ${role}">${escHtml(html)}</div>
-  `;
+  d.innerHTML = `<div class="av ${role}">${role==='ai'?'AI':'YOU'}</div><div class="bub ${role}">${escHtml(html)}</div>`;
   c.appendChild(d);
   scrollDown();
   return d.querySelector('.bub');
@@ -608,54 +650,47 @@ function addBubble(html, role) {
 function addSys(text) {
   const c = document.getElementById('msgs');
   const d = document.createElement('div');
-  d.className = 'sys'; d.id = 'sys-msg';
-  d.innerHTML = `<span>${text}</span>`;
-  c.appendChild(d);
-  scrollDown();
+  d.className='sys'; d.id='sys-msg';
+  d.innerHTML=`<span>${text}</span>`;
+  c.appendChild(d); scrollDown();
 }
-
-function removeSys() {
-  const el = document.getElementById('sys-msg');
-  if (el) el.remove();
-}
+function removeSys() { const e=document.getElementById('sys-msg'); if(e) e.remove(); }
 
 async function typeText(bub, text) {
-  let html = '';
+  let out = '';
   bub.innerHTML = '<span class="cursor-blink"></span>';
-  for (let i = 0; i < text.length; i++) {
-    html += escHtml(text[i]);
-    if (i % 3 === 0) {
-      bub.innerHTML = html + '<span class="cursor-blink"></span>';
+  for (let i=0; i<text.length; i++) {
+    out += escHtml(text[i]);
+    if (i%2===0) {
+      bub.innerHTML = out + '<span class="cursor-blink"></span>';
       scrollDown();
-      await sleep(12);
+      await sleep(10);
     }
   }
-  bub.innerHTML = html;
+  bub.innerHTML = out;
   scrollDown();
 }
 
 function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(/\n/g,'<br>');
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-
 function scrollDown() {
   const c = document.getElementById('chat');
   c.scrollTop = c.scrollHeight;
 }
-
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-// ── フォールバック ──
+// ── フォールバックコーパス ──
 function fallbackCorpus() {
-  return `春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。山の向こうから吹いてくる風は若葉の香りをたっぷりと含んでいた。
+  return `春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。山の向こうから吹いてくる風は若葉の香りをたっぷりと含んでいた。川のせせらぎが岩に当たって白い泡を立てながら流れていく。
 夏の夜空には無数の星が瞬いている。蛍の光が暗い草むらの中でゆっくりと浮かび上がる。湿った大気の中で虫たちの鳴き声が重なり合って複雑な音楽を奏でていた。
 秋の森では葉が赤や黄色に染まり始めていた。落ち葉を踏みしめる音が静かな山道に響き渡る。霧が深く立ち込めて木々の姿を幻想的に変えていった。
 冬の朝は凛とした空気が体を引き締める。雪が静かに降り積もって世界を白く覆っていく。凍った地面に足跡がくっきりと残っていた。
-言葉は思考を表現するためのものであるが同時に思考そのものを形作るものでもある。未来は確定していないからこそ希望を持つことができる。
+言葉は思考を表現するためのものであるが同時に思考そのものを形作るものでもある。未来は確定していないからこそ希望を持つことができる。小さな選択の積み重ねがやがて人生という大きな物語を作り出していく。
 音楽は言葉の届かない場所まで届くことがある。旋律が記憶と結びついて遠い過去を一瞬で呼び戻す。文章を書くことは自分の内側を言葉という形に変換する作業だ。
 出汁の香りが台所に満ちるとどこか懐かしい気持ちになる。野菜を炒める音がリズミカルに響いて食欲をそそる香りが広がっていく。
-海の水平線を眺めていると時間の感覚がなくなっていく。波が繰り返し岸に打ち寄せては砂を削り形を変えていく。旅とは場所を移動することではなく自分の中に新しい何かを持ち帰ることなのかもしれない。`;
+海の水平線を眺めていると時間の感覚がなくなっていく。波が繰り返し岸に打ち寄せては砂を削り形を変えていく。旅とは場所を移動することではなく自分の中に新しい何かを持ち帰ることなのかもしれない。
+誰かに本当のことを話せる瞬間というのはそう多くはない。言葉にしなくてもわかり合えることもあれば言葉を尽くしても伝わらないこともある。`;
 }
 
 // ── 起動 ──
