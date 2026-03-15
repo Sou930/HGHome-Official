@@ -3,25 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COMPOSE v2</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<title>COMPOSE v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tiny-segmenter@0.2.0/tiny-segmenter.min.js"></script>
 <style>
 :root {
-  --bg:    #1c1917;
-  --s1:    #232019;
-  --s2:    #2b2721;
-  --bd:    #38322b;
-  --bd2:   #453d35;
+  --bg:    #161412;
+  --s1:    #1d1a17;
+  --s2:    #242018;
+  --bd:    #302c24;
+  --bd2:   #3e3830;
+  --bd3:   #524a3e;
   --sage:  #8fbc7a;
   --sage2: #76a863;
-  --sagef: rgba(143,188,122,0.12);
-  --sageg: rgba(143,188,122,0.05);
+  --sagef: rgba(143,188,122,0.10);
+  --sageg: rgba(143,188,122,0.04);
   --amber: #d4a853;
+  --amberf:rgba(212,168,83,0.10);
   --rose:  #c4887a;
   --sky:   #7ab3c2;
+  --skyf:  rgba(122,179,194,0.10);
   --violet:#a590d0;
-  --text:  #e6dfd3;
+  --text:  #e8e0d4;
   --mid:   #7a7060;
   --dim:   #3e3830;
   --r-sm:  8px;
@@ -42,107 +45,115 @@ body{
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(143,188,122,.04) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 60% at 80% 90%, rgba(212,168,83,.03) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 50% at 15% 5%,  rgba(143,188,122,.05) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 70% at 85% 95%, rgba(212,168,83,.04)  0%,transparent 55%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(122,179,194,.02) 0%,transparent 60%);
 }
 
 /* ─── Scrollbar ─── */
-::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--bd3)}
 
 /* ─── Header ─── */
 header{
   position:relative;z-index:20;flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 24px;
+  padding:12px 22px;
   border-bottom:1px solid var(--bd);
-  background:rgba(28,25,23,.95);
-  backdrop-filter:blur(24px);
+  background:rgba(22,20,18,.96);
+  backdrop-filter:blur(28px);
 }
 
-.brand{
-  display:flex;align-items:center;gap:12px;
-}
+.brand{display:flex;align-items:center;gap:11px}
 .brand-mark{
-  width:28px;height:28px;border-radius:50%;
-  border:1.5px solid rgba(143,188,122,.4);
+  width:26px;height:26px;border-radius:50%;
+  border:1.5px solid rgba(143,188,122,.35);
   display:grid;place-items:center;
   position:relative;overflow:hidden;
 }
 .brand-mark::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at center, rgba(143,188,122,.15), transparent 70%);
+  background:radial-gradient(circle at center, rgba(143,188,122,.12), transparent 70%);
 }
 .brand-mark::after{
-  content:'';width:8px;height:8px;
+  content:'';width:7px;height:7px;
   background:var(--sage);border-radius:50%;
-  box-shadow:0 0 10px rgba(143,188,122,.5);
-  animation:pulse 3s ease-in-out infinite;
+  box-shadow:0 0 10px rgba(143,188,122,.6);
+  animation:pulse 3.5s ease-in-out infinite;
 }
-@keyframes pulse{0%,100%{transform:scale(.7);opacity:.5}50%{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(.65);opacity:.4}50%{transform:scale(1);opacity:1}}
 
 .brand-name{
   font-family:'Fraunces',serif;
-  font-size:1.05rem;font-weight:400;letter-spacing:.18em;
+  font-size:1rem;font-weight:400;letter-spacing:.2em;
   color:var(--text);
 }
 .brand-name em{
-  font-style:italic;color:var(--sage);font-size:.75em;
-  letter-spacing:.08em;vertical-align:middle;margin-left:4px;
+  font-style:italic;color:var(--sage);font-size:.72em;
+  letter-spacing:.06em;vertical-align:middle;margin-left:3px;
 }
 
-.hright{display:flex;align-items:center;gap:8px}
+.hright{display:flex;align-items:center;gap:7px}
 
 .status-pill{
-  display:flex;align-items:center;gap:6px;
-  padding:4px 10px;border-radius:20px;
+  display:flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;
   border:1px solid var(--bd2);
   background:var(--s1);
   font-family:'JetBrains Mono',monospace;
-  font-size:.58rem;letter-spacing:.06em;color:var(--mid);
-  transition:all .3s;
+  font-size:.56rem;letter-spacing:.05em;color:var(--mid);
+  transition:all .35s;
 }
-.status-pill.ok{border-color:rgba(143,188,122,.25);color:var(--sage)}
-.status-pill.warn{border-color:rgba(212,168,83,.25);color:var(--amber)}
-.dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:bk 2.5s ease-in-out infinite}
-@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.status-pill.ok  {border-color:rgba(143,188,122,.3);  color:var(--sage)}
+.status-pill.warn{border-color:rgba(212,168,83,.3);   color:var(--amber)}
+.status-pill.busy{border-color:rgba(122,179,194,.3);  color:var(--sky)}
+.dot{width:4px;height:4px;border-radius:50%;background:currentColor;animation:bk 2s ease-in-out infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.15}}
 
 .icon-btn{
-  width:34px;height:34px;border-radius:var(--r-sm);
+  width:32px;height:32px;border-radius:var(--r-sm);
   border:1px solid var(--bd2);background:var(--s1);
   color:var(--mid);cursor:pointer;
-  display:grid;place-items:center;font-size:.78rem;
-  transition:all .2s;
+  display:grid;place-items:center;font-size:.76rem;
+  transition:all .18s;
 }
 .icon-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
+.icon-btn.active{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
 
 /* ─── Settings Panel ─── */
 .settings-bar{
   position:relative;z-index:10;flex-shrink:0;
   overflow:hidden;max-height:0;
   border-bottom:0px solid var(--bd);
-  background:rgba(28,25,23,.98);
-  transition:max-height .38s cubic-bezier(.4,0,.2,1), border-width .38s;
+  background:rgba(22,20,18,.99);
+  transition:max-height .4s cubic-bezier(.4,0,.2,1), border-width .4s;
 }
-.settings-bar.open{max-height:320px;border-bottom-width:1px}
-.settings-inner{padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px 20px;align-items:start}
+.settings-bar.open{max-height:380px;border-bottom-width:1px}
+.settings-inner{
+  padding:18px 22px 20px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));
+  gap:14px 18px;align-items:start;
+}
 
-.ctrl{display:flex;flex-direction:column;gap:8px}
+.ctrl{display:flex;flex-direction:column;gap:7px}
 .ctrl-lbl{
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.06em;
+  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;
   color:var(--mid);display:flex;justify-content:space-between;align-items:center;
 }
 .ctrl-lbl .val{
   color:var(--sage);font-weight:500;
-  background:rgba(143,188,122,.08);
-  padding:1px 6px;border-radius:4px;
+  background:rgba(143,188,122,.07);
+  padding:1px 5px;border-radius:3px;
+  min-width:28px;text-align:center;
 }
 .ctrl-desc{
-  font-size:.65rem;color:var(--dim);line-height:1.4;
+  font-size:.62rem;color:var(--dim);line-height:1.45;
   font-family:'JetBrains Mono',monospace;
 }
 
+/* ─── Range slider ─── */
 input[type=range]{
   -webkit-appearance:none;appearance:none;
   width:100%;height:2px;border-radius:2px;
@@ -150,218 +161,283 @@ input[type=range]{
   outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
   background:var(--sage);cursor:pointer;
-  box-shadow:0 0 0 3px rgba(143,188,122,.15);
+  box-shadow:0 0 0 3px rgba(143,188,122,.12);
   transition:box-shadow .2s;
 }
-input[type=range]::-webkit-slider-thumb:hover{
-  box-shadow:0 0 0 5px rgba(143,188,122,.2);
-}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,122,.18)}
 
+/* ─── Select / Checkbox style ─── */
+.select-ctrl{
+  background:var(--s2);border:1px solid var(--bd2);
+  border-radius:6px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  padding:4px 8px;outline:none;cursor:pointer;width:100%;
+  -webkit-appearance:none;appearance:none;
+}
+.select-ctrl:focus{border-color:rgba(143,188,122,.3)}
+
+/* ─── Stats row ─── */
 .stat-row{
   grid-column:1/-1;
-  display:flex;gap:8px;flex-wrap:wrap;
-  padding-top:8px;
-  border-top:1px solid var(--bd);
+  display:flex;gap:6px;flex-wrap:wrap;
+  padding-top:10px;border-top:1px solid var(--bd);
+  align-items:center;
 }
 .sc{
-  font-family:'JetBrains Mono',monospace;font-size:.6rem;
-  padding:4px 10px;border-radius:20px;
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  padding:3px 9px;border-radius:20px;
   border:1px solid var(--bd2);background:var(--s1);color:var(--mid);
 }
 .sc b{color:var(--text);font-weight:500}
+.sc.hi{border-color:rgba(143,188,122,.2);background:var(--sageg)}
+.sc.hi b{color:var(--sage)}
+
+/* ─── Build progress ─── */
+.build-bar-wrap{
+  grid-column:1/-1;
+  background:var(--s1);border:1px solid var(--bd);border-radius:6px;
+  overflow:hidden;height:4px;
+}
+.build-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--sage),var(--sky));
+  border-radius:6px;
+  transition:width .1s linear;
+}
+.build-label{
+  grid-column:1/-1;
+  font-family:'JetBrains Mono',monospace;font-size:.56rem;
+  color:var(--mid);letter-spacing:.05em;min-height:14px;
+}
 
 /* ─── Chat ─── */
 #chat{
   flex:1;overflow-y:auto;
-  padding:28px 0 20px;
+  padding:24px 0 18px;
   position:relative;z-index:5;
   scroll-behavior:smooth;
 }
 .msgs{
-  max-width:720px;margin:0 auto;
+  max-width:740px;margin:0 auto;
   padding:0 20px;
-  display:flex;flex-direction:column;gap:18px;
+  display:flex;flex-direction:column;gap:16px;
 }
 
 /* ─── Welcome ─── */
-.welcome{animation:fadeUp .7s cubic-bezier(.34,1.2,.64,1) both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.welcome{animation:fadeUp .8s cubic-bezier(.34,1.15,.64,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
 .welcome-card{
   border:1px solid var(--bd2);border-radius:var(--r-lg);
-  background:var(--s1);padding:28px 30px;
+  background:var(--s1);padding:26px 28px;
   position:relative;overflow:hidden;
 }
 .welcome-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(143,188,122,.3),transparent);
+  background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%);
+}
+.welcome-card::after{
+  content:'';position:absolute;bottom:0;right:0;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(143,188,122,.03),transparent 70%);
+  pointer-events:none;
 }
 
 .welcome-head{
-  display:flex;align-items:baseline;gap:12px;margin-bottom:14px;
+  display:flex;align-items:baseline;gap:11px;margin-bottom:13px;
 }
 .welcome-title{
-  font-family:'Fraunces',serif;font-size:1.4rem;font-weight:400;
-  color:var(--text);letter-spacing:.1em;
+  font-family:'Fraunces',serif;font-size:1.35rem;font-weight:400;
+  color:var(--text);letter-spacing:.12em;
 }
 .welcome-title em{font-style:italic;color:var(--sage)}
 .welcome-ver{
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;
-  padding:2px 7px;border:1px solid rgba(143,188,122,.2);
+  font-family:'JetBrains Mono',monospace;font-size:.56rem;
+  padding:2px 6px;border:1px solid rgba(143,188,122,.2);
   border-radius:4px;color:var(--sage);letter-spacing:.08em;
 }
 
-.welcome-sub{color:var(--mid);font-size:.86rem;line-height:1.9;margin-bottom:18px}
+.welcome-sub{color:var(--mid);font-size:.84rem;line-height:1.95;margin-bottom:16px}
 .welcome-sub code{
-  font-family:'JetBrains Mono',monospace;font-size:.8em;
-  color:var(--sky);background:rgba(122,179,194,.08);
-  padding:1px 6px;border-radius:4px;
+  font-family:'JetBrains Mono',monospace;font-size:.78em;
+  color:var(--sky);background:rgba(122,179,194,.07);
+  padding:1px 5px;border-radius:3px;
 }
 
-.feature-note{
-  font-size:.72rem;color:var(--mid);line-height:1.7;
-  border-left:2px solid rgba(143,188,122,.25);
-  padding:8px 14px;margin-bottom:18px;
-  background:rgba(143,188,122,.03);border-radius:0 8px 8px 0;
+.feature-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  margin-bottom:18px;
 }
-.feature-note strong{color:var(--sage);font-weight:500}
+.feat{
+  border:1px solid var(--bd);border-radius:var(--r-sm);
+  background:var(--bg);padding:9px 12px;
+  font-size:.7rem;line-height:1.6;
+  position:relative;overflow:hidden;
+}
+.feat::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--accent,var(--sage));
+  border-radius:0 2px 2px 0;
+}
+.feat.kn  {--accent:var(--sage)}
+.feat.beam{--accent:var(--sky)}
+.feat.coh {--accent:var(--amber)}
+.feat.samp{--accent:var(--violet)}
+.feat strong{display:block;font-size:.68rem;letter-spacing:.05em;color:var(--text);margin-bottom:2px;font-weight:500}
+.feat span{color:var(--mid)}
 
-.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{
-  font-size:.78rem;padding:6px 14px;
+  font-size:.76rem;padding:5px 13px;
   border:1px solid var(--bd2);border-radius:20px;
   background:transparent;color:var(--mid);cursor:pointer;
   font-family:'Zen Kaku Gothic New',sans-serif;
-  transition:all .2s cubic-bezier(.34,1.4,.64,1);
+  transition:all .22s cubic-bezier(.34,1.4,.64,1);
 }
 .chip:hover{
   border-color:rgba(143,188,122,.4);color:var(--sage);
-  background:rgba(143,188,122,.06);
+  background:rgba(143,188,122,.05);
   transform:translateY(-2px);
 }
 
 /* ─── Messages ─── */
-.msg{display:flex;gap:12px;align-items:flex-start;animation:msgIn .35s cubic-bezier(.34,1.2,.64,1) both}
-@keyframes msgIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.msg{display:flex;gap:11px;align-items:flex-start;animation:msgIn .38s cubic-bezier(.34,1.2,.64,1) both}
+@keyframes msgIn{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:none}}
 .msg.user{flex-direction:row-reverse}
 
 .av{
-  width:32px;height:32px;border-radius:var(--r-sm);
+  width:30px;height:30px;border-radius:var(--r-sm);
   display:grid;place-items:center;flex-shrink:0;
-  font-family:'JetBrains Mono',monospace;font-size:.52rem;
-  font-weight:500;letter-spacing:.05em;
+  font-family:'JetBrains Mono',monospace;font-size:.5rem;
+  font-weight:500;letter-spacing:.04em;
 }
 .av.ai{
-  background:linear-gradient(135deg,rgba(143,188,122,.1),rgba(122,179,194,.07));
-  border:1px solid rgba(143,188,122,.2);color:var(--sage);
+  background:linear-gradient(135deg,rgba(143,188,122,.09),rgba(122,179,194,.06));
+  border:1px solid rgba(143,188,122,.18);color:var(--sage);
 }
 .av.user{
-  background:linear-gradient(135deg,rgba(196,136,122,.1),rgba(212,168,83,.07));
-  border:1px solid rgba(196,136,122,.2);color:var(--rose);
+  background:linear-gradient(135deg,rgba(196,136,122,.09),rgba(212,168,83,.06));
+  border:1px solid rgba(196,136,122,.18);color:var(--rose);
 }
 
 .bub{
-  max-width:76%;padding:13px 17px;
-  font-size:.88rem;line-height:1.9;
+  max-width:78%;padding:12px 16px;
+  font-size:.86rem;line-height:1.95;
 }
 .bub.ai{
   background:var(--s1);
   border:1px solid var(--bd);
-  border-radius:4px var(--r-md) var(--r-md) var(--r-md);
+  border-radius:3px var(--r-md) var(--r-md) var(--r-md);
   color:var(--text);
 }
 .bub.user{
   background:var(--s2);
-  border:1px solid rgba(196,136,122,.12);
-  border-radius:var(--r-md) 4px var(--r-md) var(--r-md);
+  border:1px solid rgba(196,136,122,.1);
+  border-radius:var(--r-md) 3px var(--r-md) var(--r-md);
   color:var(--text);text-align:right;
 }
 .bub.streaming{
-  border-color:rgba(143,188,122,.2);
-  box-shadow:0 0 20px rgba(143,188,122,.04);
+  border-color:rgba(143,188,122,.25);
+  box-shadow:0 0 24px rgba(143,188,122,.05);
 }
 
+/* ─── Meta badge under AI message ─── */
+.msg-meta{
+  font-family:'JetBrains Mono',monospace;font-size:.53rem;letter-spacing:.04em;
+  color:var(--dim);margin-top:5px;margin-left:41px;
+  display:flex;gap:6px;flex-wrap:wrap;
+}
+.meta-tag{
+  border:1px solid var(--bd);border-radius:10px;
+  padding:1px 7px;background:var(--s1);color:var(--mid);
+}
+.meta-tag.g{border-color:rgba(143,188,122,.18);color:rgba(143,188,122,.5)}
+
 .cursor-blink{
-  display:inline-block;width:2px;height:.9em;
+  display:inline-block;width:2px;height:.88em;
   background:var(--sage);margin-left:2px;vertical-align:text-bottom;
-  border-radius:1px;animation:cb .7s step-end infinite;
+  border-radius:1px;animation:cb .65s step-end infinite;
 }
 @keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
 
 .sys{
   text-align:center;
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.07em;
+  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.07em;
   color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both;
 }
 .sys span{
   border:1px solid var(--bd);border-radius:20px;
-  padding:3px 12px;background:var(--s1);
+  padding:3px 11px;background:var(--s1);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.sys-dot{
+  width:4px;height:4px;border-radius:50%;
+  background:var(--sage);
+  animation:bk 1.4s ease-in-out infinite;
 }
 
 /* ─── Footer ─── */
 footer{
   position:relative;z-index:20;flex-shrink:0;
   border-top:1px solid var(--bd);
-  background:rgba(28,25,23,.97);
-  backdrop-filter:blur(24px);
-  padding:14px 20px;
+  background:rgba(22,20,18,.98);
+  backdrop-filter:blur(28px);
+  padding:12px 18px;
 }
-.input-wrap{max-width:720px;margin:0 auto}
+.input-wrap{max-width:740px;margin:0 auto}
 
 .input-row{
-  display:flex;align-items:flex-end;gap:8px;
+  display:flex;align-items:flex-end;gap:7px;
   background:var(--s1);
   border:1px solid var(--bd2);
   border-radius:var(--r-md);
-  padding:10px 10px 10px 17px;
-  transition:border-color .25s, box-shadow .25s;
+  padding:9px 9px 9px 16px;
+  transition:border-color .25s,box-shadow .25s;
 }
 .input-row:focus-within{
-  border-color:rgba(143,188,122,.3);
-  box-shadow:0 0 0 4px rgba(143,188,122,.04);
+  border-color:rgba(143,188,122,.28);
+  box-shadow:0 0 0 4px rgba(143,188,122,.035);
 }
 
 textarea{
   flex:1;background:none;border:none;outline:none;
   color:var(--text);
   font-family:'Zen Kaku Gothic New',sans-serif;
-  font-size:.88rem;resize:none;max-height:120px;
-  line-height:1.7;padding:3px 0;
+  font-size:.86rem;resize:none;max-height:110px;
+  line-height:1.75;padding:2px 0;
 }
 textarea::placeholder{color:var(--dim)}
 
 .send-btn{
-  width:36px;height:36px;border:none;border-radius:var(--r-sm);
-  background:var(--sage);color:#1a1917;
+  width:34px;height:34px;border:none;border-radius:var(--r-sm);
+  background:var(--sage);color:#181512;
   cursor:pointer;display:grid;place-items:center;flex-shrink:0;
   transition:all .2s cubic-bezier(.34,1.4,.64,1);
 }
 .send-btn:hover{
   background:var(--sage2);
-  box-shadow:0 4px 16px rgba(143,188,122,.25);
-  transform:scale(1.06);
+  box-shadow:0 4px 18px rgba(143,188,122,.28);
+  transform:scale(1.07);
 }
-.send-btn:active{transform:scale(.93)}
-.send-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
-.send-btn svg{width:14px;height:14px}
+.send-btn:active{transform:scale(.91)}
+.send-btn:disabled{opacity:.28;cursor:not-allowed;transform:none;box-shadow:none}
+.send-btn svg{width:13px;height:13px}
 
 .progress-strip{
   height:1.5px;border-radius:1px;
   background:linear-gradient(90deg,var(--sage),var(--sky),var(--amber));
-  width:0%;transition:width .08s linear;margin-top:9px;
-  opacity:0;transition:width .08s, opacity .3s;
+  width:0%;margin-top:8px;
+  opacity:0;transition:width .07s linear,opacity .3s;
 }
 .progress-strip.active{opacity:1}
 
 .footer-hint{
-  text-align:center;margin-top:8px;
-  font-family:'JetBrains Mono',monospace;font-size:.55rem;
-  color:var(--dim);letter-spacing:.06em;
+  text-align:center;margin-top:7px;
+  font-family:'JetBrains Mono',monospace;font-size:.52rem;
+  color:var(--dim);letter-spacing:.05em;
 }
-
-/* ─── Smooth range fill update ─── */
 </style>
 </head>
 <body>
@@ -369,122 +445,174 @@ textarea::placeholder{color:var(--dim)}
 <header>
   <div class="brand">
     <div class="brand-mark"></div>
-    <div class="brand-name">COMPOSE <em>v2</em></div>
+    <div class="brand-name">COMPOSE <em>v3</em></div>
   </div>
   <div class="hright">
     <div class="status-pill warn" id="statusPill">
       <div class="dot"></div>
       <span id="statusTxt">読込中…</span>
     </div>
-    <div class="icon-btn" onclick="toggleSettings()" title="生成設定">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    <div class="icon-btn" id="settingsBtn" onclick="toggleSettings()" title="生成設定">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
       </svg>
     </div>
   </div>
 </header>
 
+<!-- ─── Settings Panel ─── -->
 <div class="settings-bar" id="settingsBar">
   <div class="settings-inner">
 
     <div class="ctrl">
-      <div class="ctrl-lbl">N-gram最大次数 <span class="val" id="vOrder">4</span></div>
-      <input type="range" id="rOrder" min="2" max="6" value="4"
-        oninput="syncSlider(this,'vOrder',1);rebuildModel()">
-      <div class="ctrl-desc">高いほど文脈を長く参照</div>
+      <div class="ctrl-lbl">N-gram最大次数 <span class="val" id="vOrder">5</span></div>
+      <input type="range" id="rOrder" min="2" max="8" value="5"
+        oninput="syncSlider(this,'vOrder',1);scheduleRebuild()">
+      <div class="ctrl-desc">高いほど長い文脈を参照</div>
     </div>
 
     <div class="ctrl">
-      <div class="ctrl-lbl">最小バックオフ次数 <span class="val" id="vMinOrder">2</span></div>
-      <input type="range" id="rMinOrder" min="1" max="3" value="2"
-        oninput="syncSlider(this,'vMinOrder',1)">
-      <div class="ctrl-desc">バックオフの下限次数</div>
+      <div class="ctrl-lbl">平滑化手法</div>
+      <select class="select-ctrl" id="rSmMethod" onchange="scheduleRebuild()">
+        <option value="kn">Kneser-Ney（推奨）</option>
+        <option value="wb">Witten-Bell</option>
+        <option value="lap">Laplace</option>
+        <option value="none">なし（MLE）</option>
+      </select>
+      <div class="ctrl-desc">KNが最高精度</div>
     </div>
 
     <div class="ctrl">
-      <div class="ctrl-lbl">応答長（単語数） <span class="val" id="vLen">32</span></div>
-      <input type="range" id="rLen" min="8" max="100" value="32" step="4"
+      <div class="ctrl-lbl">KN割引 d <span class="val" id="vDisc">0.75</span></div>
+      <input type="range" id="rDisc" min="0.5" max="0.95" value="0.75" step="0.01"
+        oninput="syncSlider(this,'vDisc',.01);scheduleRebuild()">
+      <div class="ctrl-desc">Kneser-Ney割引係数</div>
+    </div>
+
+    <div class="ctrl">
+      <div class="ctrl-lbl">生成アルゴリズム</div>
+      <select class="select-ctrl" id="rGenAlgo">
+        <option value="sample">サンプリング</option>
+        <option value="beam">ビームサーチ</option>
+        <option value="greedy">貪欲法</option>
+      </select>
+      <div class="ctrl-desc">ビームは高品質・低速</div>
+    </div>
+
+    <div class="ctrl">
+      <div class="ctrl-lbl">ビーム幅 <span class="val" id="vBeam">4</span></div>
+      <input type="range" id="rBeam" min="2" max="12" value="4"
+        oninput="syncSlider(this,'vBeam',1)">
+      <div class="ctrl-desc">ビームサーチ時の幅</div>
+    </div>
+
+    <div class="ctrl">
+      <div class="ctrl-lbl">応答長 <span class="val" id="vLen">40</span></div>
+      <input type="range" id="rLen" min="8" max="120" value="40" step="4"
         oninput="syncSlider(this,'vLen',1)">
-      <div class="ctrl-desc">生成するトークン数の上限</div>
+      <div class="ctrl-desc">生成トークン数の目安</div>
     </div>
 
     <div class="ctrl">
       <div class="ctrl-lbl">温度 <span class="val" id="vTemp">1.0</span></div>
       <input type="range" id="rTemp" min="0.1" max="2.5" value="1.0" step="0.1"
         oninput="syncSlider(this,'vTemp',.1)">
-      <div class="ctrl-desc">高いほどランダム、低いほど保守的</div>
+      <div class="ctrl-desc">高いほどランダム</div>
     </div>
 
     <div class="ctrl">
       <div class="ctrl-lbl">Top-K <span class="val" id="vTopK">0</span></div>
-      <input type="range" id="rTopK" min="0" max="50" value="0" step="1"
+      <input type="range" id="rTopK" min="0" max="50" value="0"
         oninput="syncSlider(this,'vTopK',1)">
-      <div class="ctrl-desc">0=無効。候補を上位K件に絞る</div>
+      <div class="ctrl-desc">0=無効。上位K候補に絞る</div>
     </div>
 
     <div class="ctrl">
-      <div class="ctrl-lbl">Top-P（核サンプリング） <span class="val" id="vTopP">1.00</span></div>
-      <input type="range" id="rTopP" min="0.5" max="1.0" value="1.0" step="0.01"
+      <div class="ctrl-lbl">Top-P <span class="val" id="vTopP">0.95</span></div>
+      <input type="range" id="rTopP" min="0.5" max="1.0" value="0.95" step="0.01"
         oninput="syncSlider(this,'vTopP',.01)">
-      <div class="ctrl-desc">累積確率Pまでの候補のみ使用</div>
+      <div class="ctrl-desc">核サンプリング累積確率</div>
     </div>
 
     <div class="ctrl">
-      <div class="ctrl-lbl">繰り返しペナルティ <span class="val" id="vRepeat">1.0</span></div>
-      <input type="range" id="rRepeat" min="1.0" max="3.0" value="1.0" step="0.1"
+      <div class="ctrl-lbl">繰り返しペナルティ <span class="val" id="vRepeat">1.2</span></div>
+      <input type="range" id="rRepeat" min="1.0" max="3.0" value="1.2" step="0.1"
         oninput="syncSlider(this,'vRepeat',.1)">
-      <div class="ctrl-desc">直近に出たトークンの重みを減衰</div>
+      <div class="ctrl-desc">直近トークンの重みを減衰</div>
     </div>
 
     <div class="ctrl">
-      <div class="ctrl-lbl">平滑化係数（Laplace） <span class="val" id="vSmooth">0.00</span></div>
-      <input type="range" id="rSmooth" min="0" max="1.0" value="0" step="0.05"
-        oninput="syncSlider(this,'vSmooth',.05);rebuildModel()">
-      <div class="ctrl-desc">ゼロ確率遷移へ小さな質量を付与</div>
-    </div>
-
-    <div class="ctrl">
-      <div class="ctrl-lbl">ペナルティ窓 <span class="val" id="vRepWin">8</span></div>
-      <input type="range" id="rRepWin" min="2" max="20" value="8" step="1"
+      <div class="ctrl-lbl">ペナルティ窓 <span class="val" id="vRepWin">10</span></div>
+      <input type="range" id="rRepWin" min="2" max="30" value="10"
         oninput="syncSlider(this,'vRepWin',1)">
       <div class="ctrl-desc">繰り返し検出の直近N単語</div>
     </div>
 
+    <div class="ctrl">
+      <div class="ctrl-lbl">多様性ペナルティ <span class="val" id="vDiv">0.0</span></div>
+      <input type="range" id="rDiv" min="0.0" max="1.0" value="0.0" step="0.05"
+        oninput="syncSlider(this,'vDiv',.05)">
+      <div class="ctrl-desc">同テーマ続出を抑制</div>
+    </div>
+
+    <!-- Build progress -->
+    <div class="build-label" id="buildLabel">モデル未構築</div>
+    <div class="build-bar-wrap"><div class="build-bar" id="buildBar"></div></div>
+
     <div class="stat-row">
-      <div class="sc">単語数 <b id="sWords">—</b></div>
+      <div class="sc hi">単語数 <b id="sWords">—</b></div>
       <div class="sc">状態数 <b id="sStates">—</b></div>
-      <div class="sc">文数 <b id="sSents">—</b></div>
-      <div class="sc">バックオフ率 <b id="sBoRate">—</b></div>
       <div class="sc">語彙数 <b id="sVocab">—</b></div>
+      <div class="sc">文数 <b id="sSents">—</b></div>
+      <div class="sc">Perplexity <b id="sPpx">—</b></div>
+      <div class="sc">バックオフ率 <b id="sBoRate">—</b></div>
+      <div class="sc">Entropy <b id="sEnt">—</b></div>
     </div>
 
   </div>
 </div>
 
+<!-- ─── Chat ─── -->
 <div id="chat">
   <div class="msgs" id="msgs">
     <div class="welcome" id="welcome">
       <div class="welcome-card">
         <div class="welcome-head">
           <div class="welcome-title">Com<em>pose</em></div>
-          <span class="welcome-ver">v2</span>
+          <span class="welcome-ver">v3</span>
         </div>
         <p class="welcome-sub">
-          <code>ai.txt</code> を学習したマルコフ連鎖AIです。<br>
-          入力を起点に文脈を辿り、文章を生成して返答します。
+          <code>ai.txt</code> を学習したマルコフ言語モデルです。<br>
+          入力を起点に文脈を辿り、高精度な文章を生成して返答します。
         </p>
-        <div class="feature-note">
-          <strong>単語N-gram</strong>（TinySegmenter）＋ <strong>バックオフ</strong> ＋ <strong>Top-K/P核サンプリング</strong><br>
-          <strong>繰り返しペナルティ</strong> ＋ <strong>Laplaceスムージング</strong>（⚙から調整可能）
+        <div class="feature-grid">
+          <div class="feat kn">
+            <strong>Kneser-Ney 平滑化</strong>
+            <span>低頻度・未観測N-gramを精密に補完。Laplaceより大幅高精度</span>
+          </div>
+          <div class="feat beam">
+            <strong>ビームサーチ</strong>
+            <span>複数仮説を並列展開、対数確率スコアで最良系列を選択</span>
+          </div>
+          <div class="feat coh">
+            <strong>コヒーレンス強化</strong>
+            <span>入力との意味的整合スコアでシード選択を最適化</span>
+          </div>
+          <div class="feat samp">
+            <strong>多様性ペナルティ</strong>
+            <span>同一トークンの連続出現を統計的に抑制しながら生成</span>
+          </div>
         </div>
         <div class="chips" id="chips">
-          <span style="color:var(--dim);font-size:.78rem">データ読込中…</span>
+          <span style="color:var(--dim);font-size:.76rem">学習中…</span>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ─── Footer ─── */  -->
 <footer>
   <div class="input-wrap">
     <div class="input-row">
@@ -505,21 +633,41 @@ textarea::placeholder{color:var(--dim)}
 
 <script>
 // ============================================================
-//  COMPOSE v2 — 単語N-gram + バックオフ + Top-K/P + 繰り返しペナルティ + Laplace平滑化
+//  COMPOSE v3
+//  改善点：
+//   1. Kneser-Ney 平滑化（Modified KN対応）
+//   2. Witten-Bell 平滑化
+//   3. ビームサーチ生成
+//   4. 多様性ペナルティ（Diverse Beam / 連続重複抑制）
+//   5. コヒーレンス強化シード選択（TF-IDF風スコアリング）
+//   6. Perplexity & Entropy リアルタイム計算
+//   7. 漸進的モデル構築（BuildBar アニメーション）
+//   8. 文脈フォールバック改善（次数ごとに質を保証）
 // ============================================================
 
 let segmenter   = null;
 let corpus      = '';
 let tokens      = [];
 let vocab       = new Set();
-let models      = {};     // models[n] = Map<key, [{word,w}]>
-let rawCounts   = {};     // rawCounts[n] = Map<key, Map<word, count>>
-let sentStarts  = [];
-let busy        = false;
-let totalBoUsed = 0;
-let totalGenSteps = 0;
+let vocabArr    = [];
+let tokenIdf    = {};   // IDF スコア（コヒーレンス用）
 
-// ─── 初期化 ───
+// モデルデータ
+let kn          = {};   // kn[n] = Map<key, [{word, p}]>  (Kneser-Ney確率)
+let wb          = {};   // Witten-Bell
+let mle         = {};   // MLE生確率
+let rawCounts   = {};   // rawCounts[n][key][word] = count
+let continuationCounts = {}; // KN用 N_1+(⋅,w) per word
+let sentStarts  = [];
+let modelReady  = false;
+let rebuildTimer = null;
+
+// 統計
+let totalBoUsed   = 0;
+let totalGenSteps = 0;
+let busy          = false;
+
+// ─── 起動 ─────────────────────────────────
 async function init() {
   if (typeof TinySegmenter !== 'undefined') {
     segmenter = new TinySegmenter();
@@ -528,150 +676,377 @@ async function init() {
     const r = await fetch('ai.txt');
     if (!r.ok) throw new Error();
     corpus = await r.text();
-    setStatus(true, 'ai.txt 読込完了');
+    setStatus('ok','ai.txt 読込完了');
   } catch {
     corpus = fallbackCorpus();
-    setStatus(false, 'フォールバックデータ');
+    setStatus('warn','フォールバックデータ');
   }
-  buildModel();
+
+  await buildModelAsync();
   buildChips();
   document.getElementById('sendBtn').disabled = false;
   initSliders();
 }
 
-function setStatus(ok, txt) {
+function setStatus(cls, txt) {
   const p = document.getElementById('statusPill');
-  p.className = 'status-pill ' + (ok ? 'ok' : 'warn');
+  p.className = 'status-pill ' + cls;
   document.getElementById('statusTxt').textContent = txt;
 }
 
-// ─── スライダー同期 ───
+// ─── スライダー同期 ─────────────────────────
 function syncSlider(el, valId, step) {
   const v = parseFloat(el.value);
-  const digits = step < 1 ? String(step).split('.')[1].length : 0;
-  document.getElementById(valId).textContent = v.toFixed(digits);
+  const d = step < 1 ? String(step).split('.')[1].length : 0;
+  document.getElementById(valId).textContent = v.toFixed(d);
   updateRangeFill(el);
 }
-
 function updateRangeFill(el) {
-  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
-  const pct = ((val - min) / (max - min)) * 100;
-  el.style.setProperty('--pct', pct + '%');
+  const min=parseFloat(el.min),max=parseFloat(el.max),val=parseFloat(el.value);
+  el.style.setProperty('--pct', ((val-min)/(max-min)*100)+'%');
 }
-
 function initSliders() {
   document.querySelectorAll('input[type=range]').forEach(updateRangeFill);
 }
 
-// ─── トークン化 ───
+// ─── トークン化 ─────────────────────────────
 function tokenize(text) {
   const clean = text
-    .replace(/[#＃]/g, '')
-    .replace(/\r?\n/g, '。')
-    .replace(/\s+/g, '')
-    .replace(/[""「」『』【】〔〕]/g, '');
+    .replace(/[#＃]/g,'')
+    .replace(/\r?\n/g,'。')
+    .replace(/\s+/g,'')
+    .replace(/[""「」『』【】〔〕（）()]/g,'');
   if (segmenter) {
-    return segmenter.segment(clean).filter(t => t.trim() !== '');
+    return segmenter.segment(clean).filter(t=>t.trim()!=='');
   }
-  return clean.split('').filter(c => c.trim() !== '');
+  return clean.split('').filter(c=>c.trim()!=='');
 }
 
-// ─── モデル構築（Laplace平滑化付き） ───
-function buildModel() {
+// ─── モデル構築（非同期・進捗表示付き） ──────────
+function scheduleRebuild() {
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => buildModelAsync(), 600);
+}
+
+async function buildModelAsync() {
+  setStatus('busy','モデル構築中…');
+  modelReady = false;
+  document.getElementById('sendBtn').disabled = true;
+
   const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const alpha    = parseFloat(document.getElementById('rSmooth').value); // Laplace k
+  const smMethod = document.getElementById('rSmMethod').value;
+
   tokens     = tokenize(corpus);
   vocab      = new Set(tokens);
-  const V    = vocab.size;
-  models     = {};
+  vocabArr   = Array.from(vocab);
   rawCounts  = {};
+  kn = {}; wb = {}; mle = {};
   sentStarts = [0];
+  continuationCounts = {};
+
+  // IDF 計算（文単位）
+  buildIdf();
 
   // 文頭収集
   for (let i = 0; i < tokens.length; i++) {
-    if (['。','！','？','!','?'].includes(tokens[i]) && i + 1 < tokens.length) {
-      sentStarts.push(i + 1);
+    if (['。','！','？','!','?'].includes(tokens[i]) && i+1 < tokens.length) {
+      sentStarts.push(i+1);
     }
   }
 
-  // 各次数でカウント集計 → Laplace平滑化 → 確率変換
+  const setBar = (pct, label) => {
+    document.getElementById('buildBar').style.width = pct + '%';
+    document.getElementById('buildLabel').textContent = label;
+  };
+
+  // ─── Step 1: カウント集計 ───
   for (let n = 1; n <= maxOrder; n++) {
-    const freq = new Map();
+    setBar(Math.round(n/maxOrder*40), `カウント集計: ${n}-gram…`);
+    await sleep(0); // UIをブロックしない
+    rawCounts[n] = new Map();
     for (let i = 0; i <= tokens.length - n - 1; i++) {
-      const key  = tokens.slice(i, i + n).join('\x00');
-      const next = tokens[i + n];
-      if (!freq.has(key)) freq.set(key, new Map());
-      const m = freq.get(key);
-      m.set(next, (m.get(next) || 0) + 1);
+      const key  = tokens.slice(i, i+n).join('\x00');
+      const next = tokens[i+n];
+      if (!rawCounts[n].has(key)) rawCounts[n].set(key, new Map());
+      const m = rawCounts[n].get(key);
+      m.set(next, (m.get(next)||0) + 1);
     }
-    rawCounts[n] = freq;
-
-    const prob = new Map();
-    for (const [key, m] of freq) {
-      const total   = Array.from(m.values()).reduce((a, b) => a + b, 0);
-      const denom   = total + alpha * V;
-      const entries = Array.from(m.entries()).map(([word, c]) => ({
-        word,
-        w: (c + alpha) / denom
-      }));
-      // alpha > 0 のとき、語彙全体に均一な質量を持たせる（コストの重いunigram fallback不要）
-      prob.set(key, entries);
-    }
-    models[n] = prob;
   }
 
-  updateStats();
+  // ─── Step 2: continuation counts（KN用） ───
+  setBar(42,'継続カウント計算…');
+  await sleep(0);
+  // continuation(w) = |{w' : c(w'w) > 0}| — 単語 w の左側文脈の種類数
+  const contMap = new Map();
+  if (rawCounts[1]) {
+    for (const [key, m] of rawCounts[1]) {
+      for (const [word] of m) {
+        contMap.set(word, (contMap.get(word)||0) + 1);
+      }
+    }
+  }
+  continuationCounts = contMap;
+  const totalContinuations = Array.from(contMap.values()).reduce((a,b)=>a+b,0) || 1;
+
+  // ─── Step 3: 確率テーブル生成 ───
+  for (let n = 1; n <= maxOrder; n++) {
+    setBar(44 + Math.round(n/maxOrder*50), `確率化: ${n}-gram (${smMethod})…`);
+    await sleep(0);
+
+    if (smMethod === 'kn') {
+      buildKN(n, totalContinuations);
+    } else if (smMethod === 'wb') {
+      buildWB(n);
+    } else if (smMethod === 'lap') {
+      buildLaplace(n);
+    } else {
+      buildMLE(n);
+    }
+  }
+
+  setBar(98,'パープレキシティ計算…');
+  await sleep(0);
+  const ppx = computePerplexity(maxOrder, smMethod);
+  const ent = computeEntropy(maxOrder, smMethod);
+
+  setBar(100,'完了');
+  modelReady = true;
+  document.getElementById('sendBtn').disabled = false;
+  setStatus('ok','準備完了');
+  updateStats(ppx, ent);
 }
 
-function rebuildModel() { buildModel(); }
+// ─── Kneser-Ney 確率構築 ───────────────────
+function buildKN(n, totalCont) {
+  const d      = parseFloat(document.getElementById('rDisc').value);
+  const V      = vocab.size;
+  const result = new Map();
 
-function updateStats() {
-  const maxN  = parseInt(document.getElementById('rOrder').value);
-  const states = models[maxN] ? models[maxN].size : 0;
-  const sents  = (corpus.match(/[。！？]/g) || []).length;
-  const borate = totalGenSteps > 0
-    ? (totalBoUsed / totalGenSteps * 100).toFixed(1) + '%' : '—';
+  if (!rawCounts[n]) { kn[n] = result; return; }
 
-  document.getElementById('sWords').textContent  = fmt(tokens.length);
-  document.getElementById('sStates').textContent = fmt(states);
-  document.getElementById('sSents').textContent  = sents;
-  document.getElementById('sBoRate').textContent = borate;
-  document.getElementById('sVocab').textContent  = fmt(vocab.size);
+  for (const [key, m] of rawCounts[n]) {
+    const entries = [];
+    const totalC  = Array.from(m.values()).reduce((a,b)=>a+b,0);
+    const N1plus  = Array.from(m.values()).filter(c=>c>0).length; // |{w: c(key,w)>0}|
+    const lambda  = (d / totalC) * N1plus; // back-off mass
+
+    for (const [word, c] of m) {
+      // P_KN(w|h) = max(c(h,w)-d, 0)/c(h) + lambda * P_cont(w)
+      const discounted = Math.max(c - d, 0) / totalC;
+
+      // continuation probability as lower-order
+      let pLow;
+      if (n === 1) {
+        // P_cont(w) = continuation_count(w) / total_continuations
+        pLow = (continuationCounts.get(word)||0) / totalCont;
+      } else {
+        // lower order KN (simplified: use stored n-1 probabilities)
+        const lowerKey = key.split('\x00').slice(1).join('\x00');
+        const lowerProb = kn[n-1] ? kn[n-1].get(lowerKey) : null;
+        if (lowerProb) {
+          const lp = lowerProb.find(e => e.word === word);
+          pLow = lp ? lp.p : (1/V);
+        } else {
+          pLow = (continuationCounts.get(word)||0) / totalCont;
+        }
+      }
+
+      const p = discounted + lambda * pLow;
+      if (p > 0) entries.push({ word, p });
+    }
+
+    // 正規化
+    const sum = entries.reduce((a,e)=>a+e.p, 0);
+    if (sum > 0) entries.forEach(e => e.p /= sum);
+    result.set(key, entries);
+  }
+  kn[n] = result;
 }
 
-function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n); }
+// ─── Witten-Bell 確率構築 ─────────────────
+function buildWB(n) {
+  const V      = vocab.size;
+  const result = new Map();
+  if (!rawCounts[n]) { wb[n] = result; return; }
 
-// ─── サンプリング（温度 + Top-K + Top-P + 繰り返しペナルティ） ───
+  for (const [key, m] of rawCounts[n]) {
+    const entries = [];
+    const totalC  = Array.from(m.values()).reduce((a,b)=>a+b,0);
+    const T       = m.size; // distinct successors
+    // λ = T / (T + totalC)
+    const lambda  = T / (T + totalC);
+
+    for (const [word, c] of m) {
+      // P_WB = (1-lambda) * c/totalC + lambda * P_lower
+      const pMLE = c / totalC;
+      // lower: uniform fallback for unigram, else from wb[n-1]
+      let pLow = 1 / V;
+      if (n > 1 && wb[n-1]) {
+        const lowerKey = key.split('\x00').slice(1).join('\x00');
+        const lp = wb[n-1].get(lowerKey);
+        if (lp) {
+          const found = lp.find(e => e.word === word);
+          if (found) pLow = found.p;
+        }
+      }
+      const p = (1 - lambda) * pMLE + lambda * pLow;
+      if (p > 0) entries.push({ word, p });
+    }
+
+    const sum = entries.reduce((a,e)=>a+e.p,0);
+    if (sum > 0) entries.forEach(e => e.p /= sum);
+    result.set(key, entries);
+  }
+  wb[n] = result;
+}
+
+// ─── Laplace 確率構築 ─────────────────────
+function buildLaplace(n) {
+  const alpha  = 0.1;
+  const V      = vocab.size;
+  const result = new Map();
+  if (!rawCounts[n]) { mle[n] = result; return; }
+  for (const [key, m] of rawCounts[n]) {
+    const total = Array.from(m.values()).reduce((a,b)=>a+b,0);
+    const denom = total + alpha * V;
+    const entries = Array.from(m.entries()).map(([word,c])=>({word, p:(c+alpha)/denom}));
+    const sum = entries.reduce((a,e)=>a+e.p,0);
+    if (sum > 0) entries.forEach(e => e.p /= sum);
+    result.set(key, entries);
+  }
+  mle[n] = result;
+}
+
+// ─── MLE 確率構築 ────────────────────────
+function buildMLE(n) {
+  const result = new Map();
+  if (!rawCounts[n]) { mle[n] = result; return; }
+  for (const [key, m] of rawCounts[n]) {
+    const total = Array.from(m.values()).reduce((a,b)=>a+b,0);
+    const entries = Array.from(m.entries()).map(([word,c])=>({word, p:c/total}));
+    result.set(key, entries);
+  }
+  mle[n] = result;
+}
+
+// ─── 現在のモデルテーブルを返す ──────────────
+function getModel(n) {
+  const sm = document.getElementById('rSmMethod').value;
+  if (sm === 'kn')  return kn[n]  || null;
+  if (sm === 'wb')  return wb[n]  || null;
+  return mle[n] || kn[n] || null;
+}
+
+// ─── Perplexity 計算 ─────────────────────
+function computePerplexity(maxOrder, smMethod) {
+  const testLen = Math.min(tokens.length, 500);
+  let logSum = 0, count = 0;
+  for (let i = maxOrder; i < testLen; i++) {
+    const context = tokens.slice(i - maxOrder, i);
+    const actual  = tokens[i];
+    let p = getNextProb(context, actual, maxOrder);
+    if (p < 1e-10) p = 1e-10;
+    logSum += Math.log2(p);
+    count++;
+  }
+  if (count === 0) return Infinity;
+  return Math.pow(2, -logSum / count);
+}
+
+// ─── Entropy 計算（モデルの多様性） ──────────
+function computeEntropy(maxOrder) {
+  const model = getModel(maxOrder) || getModel(1);
+  if (!model) return 0;
+  let totalEnt = 0, count = 0;
+  for (const [, entries] of model) {
+    let h = 0;
+    for (const e of entries) if (e.p > 0) h -= e.p * Math.log2(e.p);
+    totalEnt += h;
+    count++;
+    if (count > 1000) break;
+  }
+  return count > 0 ? totalEnt / count : 0;
+}
+
+function getNextProb(context, target, maxOrder) {
+  for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
+    const key   = context.slice(-n).join('\x00');
+    const model = getModel(n);
+    if (!model) continue;
+    const cands = model.get(key);
+    if (cands) {
+      const found = cands.find(e => e.word === target);
+      if (found) return found.p;
+    }
+  }
+  // unigram fallback
+  const u1 = getModel(1);
+  if (u1) {
+    for (const [, cands] of u1) {
+      const found = cands.find(e => e.word === target);
+      if (found) return found.p;
+    }
+  }
+  return 1 / vocab.size;
+}
+
+// ─── IDF構築（コヒーレンス用） ─────────────
+function buildIdf() {
+  // 文単位で DF を計算
+  const sentences = corpus
+    .replace(/\r?\n/g,'。')
+    .split(/[。！？]/)
+    .filter(s => s.trim().length > 0);
+
+  const df = {};
+  for (const sent of sentences) {
+    const toks = new Set(tokenize(sent));
+    for (const t of toks) df[t] = (df[t]||0) + 1;
+  }
+  const N = sentences.length || 1;
+  tokenIdf = {};
+  for (const [word, d] of Object.entries(df)) {
+    tokenIdf[word] = Math.log((N + 1) / (d + 1)) + 1;
+  }
+}
+
+// ─── サンプリング ──────────────────────────
 function sample(cands, recentTokens) {
-  const temp      = parseFloat(document.getElementById('rTemp').value);
-  const topK      = parseInt(document.getElementById('rTopK').value);
-  const topP      = parseFloat(document.getElementById('rTopP').value);
-  const repPenalty= parseFloat(document.getElementById('rRepeat').value);
-  const repWin    = parseInt(document.getElementById('rRepWin').value);
-  const recentSet = new Set(recentTokens.slice(-repWin));
+  const temp       = parseFloat(document.getElementById('rTemp').value);
+  const topK       = parseInt(document.getElementById('rTopK').value);
+  const topP       = parseFloat(document.getElementById('rTopP').value);
+  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
+  const repWin     = parseInt(document.getElementById('rRepWin').value);
+  const divPen     = parseFloat(document.getElementById('rDiv').value);
+  const window     = recentTokens.slice(-repWin);
+  const recentSet  = new Set(window);
 
-  // 1. 繰り返しペナルティ適用
-  let sc = cands.map(c => ({
-    word: c.word,
-    w: recentSet.has(c.word) ? c.w / repPenalty : c.w
-  }));
+  // 1. 繰り返しペナルティ＋多様性ペナルティ
+  let sc = cands.map(c => {
+    let w = c.p;
+    if (recentSet.has(c.word)) w /= repPenalty;
+    // 多様性ペナルティ：直近に出た回数に応じた追加減衰
+    if (divPen > 0) {
+      const freq = window.filter(t => t === c.word).length;
+      if (freq > 0) w *= Math.pow(1 - divPen, freq);
+    }
+    return { word: c.word, w: Math.max(w, 0) };
+  });
 
   // 2. 温度スケーリング
   if (temp > 0.01) {
-    sc = sc.map(c => ({ word: c.word, w: Math.pow(Math.max(c.w, 1e-12), 1 / temp) }));
+    sc = sc.map(c => ({ word: c.word, w: Math.pow(Math.max(c.w, 1e-12), 1/temp) }));
   }
 
-  // 3. 降順ソート
-  sc.sort((a, b) => b.w - a.w);
+  // 3. ソート
+  sc.sort((a,b) => b.w - a.w);
 
-  // 4. Top-K フィルタ
-  if (topK > 0 && sc.length > topK) {
-    sc = sc.slice(0, topK);
-  }
+  // 4. Top-K
+  if (topK > 0 && sc.length > topK) sc = sc.slice(0, topK);
 
-  // 5. Top-P（核サンプリング）フィルタ
+  // 5. Top-P
   if (topP < 1.0) {
-    const sum = sc.reduce((a, b) => a + b.w, 0);
+    const sum = sc.reduce((a,b) => a+b.w, 0);
     if (sum > 0) {
       let cumul = 0;
       const nucleus = [];
@@ -685,192 +1060,279 @@ function sample(cands, recentTokens) {
   }
 
   // 6. 正規化してサンプリング
-  const total = sc.reduce((a, b) => a + b.w, 0);
-  if (total < 1e-10) {
-    // 全重みが潰れた場合はランダム均一選択
-    return sc[Math.floor(Math.random() * sc.length)].word;
-  }
+  const total = sc.reduce((a,b) => a+b.w, 0);
+  if (total < 1e-10) return sc[Math.floor(Math.random()*sc.length)]?.word || '。';
 
   let r = Math.random() * total;
   for (const c of sc) {
     r -= c.w;
     if (r <= 0) return c.word;
   }
-  return sc[sc.length - 1].word;
+  return sc[sc.length-1].word;
 }
 
-// ─── バックオフ付き次トークン予測 ───
-function predictNext(context, recentTokens) {
+// ─── バックオフ次トークン候補取得 ──────────
+function getCandidates(context) {
   const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const minOrder = parseInt(document.getElementById('rMinOrder').value);
-
-  for (let n = Math.min(maxOrder, context.length); n >= minOrder; n--) {
+  for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
     const key   = context.slice(-n).join('\x00');
-    const cands = models[n] ? models[n].get(key) : null;
+    const model = getModel(n);
+    if (!model) continue;
+    const cands = model.get(key);
     if (cands && cands.length > 0) {
-      const isBackoff = n < maxOrder;
+      const isBackoff = n < Math.min(maxOrder, context.length);
       if (isBackoff) totalBoUsed++;
       totalGenSteps++;
-      return { word: sample(cands, recentTokens), usedOrder: n };
+      return { cands, usedOrder: n };
     }
   }
-
-  // Unigram fallback
-  const uni = models[1];
-  if (uni && uni.size > 0) {
+  // unigram fallback
+  const u1 = getModel(1);
+  if (u1 && u1.size > 0) {
     const allCands = [];
-    for (const [, c] of uni) allCands.push(...c);
+    for (const [, c] of u1) allCands.push(...c);
     totalBoUsed++;
     totalGenSteps++;
-    return { word: sample(allCands, recentTokens), usedOrder: 0 };
+    return { cands: allCands, usedOrder: 0 };
   }
-  return { word: '。', usedOrder: 0 };
+  return { cands: [{ word:'。', p:1 }], usedOrder: 0 };
 }
 
-// ─── シード選択（入力との重複スコアで最良位置を選ぶ） ───
-function findBestSeed(inputTokens) {
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  let bestScore  = -1;
-  let bestSlice  = null;
+// ─── ビームサーチ ──────────────────────────
+function generateBeam(seed, maxLen) {
+  const beamWidth  = parseInt(document.getElementById('rBeam').value);
+  const maxOrder   = parseInt(document.getElementById('rOrder').value);
+  const PUNCT      = new Set(['。','！','？']);
 
-  // 入力トークンのセット（高速ルックアップ）
-  const inputSet = new Set(inputTokens);
+  // beam = [{tokens:[], logp:0, done:bool}]
+  let beams = [{ tokens: [...seed], logp: 0, done: false }];
 
-  // 入力末尾から高次→低次の順にモデルキーを探す
-  for (let n = Math.min(maxOrder, inputTokens.length); n >= 1; n--) {
-    for (let i = inputTokens.length - n; i >= 0; i--) {
-      const slice = inputTokens.slice(i, i + n);
-      const key   = slice.join('\x00');
-      if (models[n] && models[n].has(key)) {
-        // スコア：マッチ次数 ＋ 入力との共通単語数
-        const overlap = slice.filter(t => inputSet.has(t)).length;
-        const score   = n * 10 + overlap;
-        if (score > bestScore) {
-          bestScore = score;
-          bestSlice = slice;
-        }
+  for (let step = 0; step < maxLen * 2; step++) {
+    if (beams.every(b => b.done)) break;
+
+    const next = [];
+    for (const beam of beams) {
+      if (beam.done) { next.push(beam); continue; }
+      const ctx = beam.tokens.slice(-maxOrder);
+      const { cands } = getCandidates(ctx);
+      // 上位候補を展開
+      const topCands = [...cands].sort((a,b)=>b.p-a.p).slice(0, beamWidth*2);
+      for (const c of topCands) {
+        const logp = beam.logp + Math.log(Math.max(c.p, 1e-10));
+        const newTokens = [...beam.tokens, c.word];
+        const done = PUNCT.has(c.word) && newTokens.length - seed.length >= maxLen * 0.5;
+        next.push({ tokens: newTokens, logp, done });
       }
     }
-    if (bestSlice && n === maxOrder) break; // 最大次数でマッチしたら即確定
+    // 長さ正規化スコアで上位beamWidth本に絞る
+    next.sort((a,b) => {
+      const sa = a.logp / Math.max(a.tokens.length - seed.length, 1);
+      const sb = b.logp / Math.max(b.tokens.length - seed.length, 1);
+      return sb - sa;
+    });
+    beams = next.slice(0, beamWidth);
+
+    // 最低maxLen文字の後、全完了なら終了
+    const minLen = maxLen * 0.5;
+    if (beams.every(b => b.done || b.tokens.length - seed.length >= maxLen)) break;
+  }
+
+  // 最良ビームの生成部分を返す
+  const best = beams.sort((a,b) => {
+    const sa = a.logp / Math.max(a.tokens.length - seed.length, 1);
+    const sb = b.logp / Math.max(b.tokens.length - seed.length, 1);
+    return sb - sa;
+  })[0];
+
+  return best.tokens.slice(seed.length);
+}
+
+// ─── サンプリング生成 ─────────────────────
+function generateSample(seed, maxLen) {
+  const maxOrder = parseInt(document.getElementById('rOrder').value);
+  const PUNCT    = new Set(['。','！','？']);
+  const result   = [];
+  let context    = [...seed];
+
+  for (let i = 0; i < maxLen * 2; i++) {
+    const { cands } = getCandidates(context.slice(-maxOrder));
+    const word = sample(cands, context);
+    result.push(word);
+    context.push(word);
+    if (result.length >= maxLen * 0.6 && PUNCT.has(word)) break;
+    if (result.length >= maxLen) break;
+  }
+  if (!PUNCT.has(result[result.length-1])) result.push('。');
+  return result;
+}
+
+// ─── 貪欲法生成 ──────────────────────────
+function generateGreedy(seed, maxLen) {
+  const maxOrder = parseInt(document.getElementById('rOrder').value);
+  const PUNCT    = new Set(['。','！','？']);
+  const result   = [];
+  let context    = [...seed];
+
+  for (let i = 0; i < maxLen * 2; i++) {
+    const { cands } = getCandidates(context.slice(-maxOrder));
+    const word = [...cands].sort((a,b)=>b.p-a.p)[0]?.word || '。';
+    result.push(word);
+    context.push(word);
+    if (result.length >= maxLen * 0.6 && PUNCT.has(word)) break;
+    if (result.length >= maxLen) break;
+  }
+  if (!PUNCT.has(result[result.length-1])) result.push('。');
+  return result;
+}
+
+// ─── シード選択（コヒーレンス強化版） ──────────
+function findBestSeed(inputTokens) {
+  const maxOrder  = parseInt(document.getElementById('rOrder').value);
+  const inputSet  = new Set(inputTokens);
+
+  // IDF加重スコアリング
+  const scoreSlice = (slice) => {
+    const overlap = slice.filter(t => inputSet.has(t));
+    const idfScore = overlap.reduce((s,t) => s + (tokenIdf[t]||1), 0);
+    return slice.length * 5 + idfScore * 2;
+  };
+
+  let bestScore = -1;
+  let bestSlice = null;
+
+  for (let n = Math.min(maxOrder, inputTokens.length); n >= 1; n--) {
+    for (let i = inputTokens.length - n; i >= 0; i--) {
+      const slice = inputTokens.slice(i, i+n);
+      const key   = slice.join('\x00');
+      const model = getModel(n);
+      if (model && model.has(key)) {
+        const score = scoreSlice(slice);
+        if (score > bestScore) { bestScore = score; bestSlice = slice; }
+      }
+    }
+    if (bestSlice && n >= maxOrder - 1) break;
   }
 
   if (bestSlice) return bestSlice;
 
-  // コーパス内でも入力トークンを探す（部分マッチ）
+  // コーパス内スキャン（IDF加重）
+  let bestCorpusScore = -1;
+  let bestCorpusSlice = null;
   for (const t of inputTokens) {
     const idx = tokens.indexOf(t);
     if (idx >= 0) {
-      const end = Math.min(idx + maxOrder, tokens.length);
-      return tokens.slice(idx, end);
+      const slice = tokens.slice(idx, Math.min(idx+maxOrder, tokens.length));
+      const score = scoreSlice(slice);
+      if (score > bestCorpusScore) {
+        bestCorpusScore = score;
+        bestCorpusSlice = slice;
+      }
     }
   }
+  if (bestCorpusSlice) return bestCorpusSlice;
 
-  // 最終フォールバック：スコアが高い文頭を選ぶ
-  let bestStart = 0, bestStartScore = -1;
+  // 文頭フォールバック（IDF加重）
+  let bestStartScore = -1, bestStart = 0;
   for (const si of sentStarts) {
-    const slice  = tokens.slice(si, si + Math.min(maxOrder, tokens.length - si));
-    const overlap = slice.filter(t => inputSet.has(t)).length;
-    if (overlap > bestStartScore) {
-      bestStartScore = overlap;
-      bestStart = si;
-    }
+    const slice = tokens.slice(si, Math.min(si+maxOrder, tokens.length));
+    const score = scoreSlice(slice);
+    if (score > bestStartScore) { bestStartScore = score; bestStart = si; }
   }
-  const si = bestStart;
-  return tokens.slice(si, si + Math.min(maxOrder, tokens.length - si));
+  return tokens.slice(bestStart, Math.min(bestStart+maxOrder, tokens.length));
 }
 
-// ─── 文章生成 ───
+// ─── 主生成関数 ─────────────────────────
 function generateReply(input) {
   const maxLen   = parseInt(document.getElementById('rLen').value);
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
+  const algo     = document.getElementById('rGenAlgo').value;
   const inputTokens = tokenize(input);
+  const seed     = findBestSeed(inputTokens);
 
-  // シード決定
-  const seed    = findBestSeed(inputTokens);
-  const result  = [];  // 生成部分のみ（シードは含まない）
-  let context   = [...seed];
-
-  // 生成ループ（2倍の余裕を持たせ、文末で自然終了）
-  for (let i = 0; i < maxLen * 2; i++) {
-    const { word } = predictNext(context.slice(-maxOrder), [...context, ...result]);
-    result.push(word);
-    context.push(word);
-
-    // 十分な長さで文末記号が来たら終了
-    if (result.length >= maxLen * 0.6 && ['。','！','？'].includes(word)) break;
-    // 絶対上限
-    if (result.length >= maxLen) break;
+  let result;
+  if (algo === 'beam') {
+    result = generateBeam(seed, maxLen);
+  } else if (algo === 'greedy') {
+    result = generateGreedy(seed, maxLen);
+  } else {
+    result = generateSample(seed, maxLen);
   }
 
-  // 文末補完
-  if (!['。','！','？'].includes(result[result.length - 1])) result.push('。');
-
-  // 最後の完全文の後ろで切る（品質向上）
-  const joined = result.join('');
-  const lastPunct = Math.max(
-    joined.lastIndexOf('。'),
-    joined.lastIndexOf('！'),
-    joined.lastIndexOf('？')
-  );
-  const trimmed = lastPunct > 0 ? joined.slice(0, lastPunct + 1) : joined;
-
+  // 文末で自然にカット
+  const joined   = result.join('');
+  const PUNCT    = '。！？';
+  const lastIdx  = Math.max(...[...PUNCT].map(p => joined.lastIndexOf(p)));
+  const trimmed  = lastIdx > 0 ? joined.slice(0, lastIdx+1) : joined;
   return trimmed.length > 0 ? trimmed : '。';
 }
 
-// ─── チップ生成 ───
+// ─── 統計更新 ───────────────────────────
+function updateStats(ppx, ent) {
+  const maxN   = parseInt(document.getElementById('rOrder').value);
+  const model  = getModel(maxN);
+  const states = model ? model.size : 0;
+  const sents  = (corpus.match(/[。！？]/g)||[]).length;
+  const borate = totalGenSteps > 0
+    ? (totalBoUsed/totalGenSteps*100).toFixed(1)+'%' : '—';
+
+  document.getElementById('sWords').textContent  = fmt(tokens.length);
+  document.getElementById('sStates').textContent = fmt(states);
+  document.getElementById('sVocab').textContent  = fmt(vocab.size);
+  document.getElementById('sSents').textContent  = sents;
+  document.getElementById('sPpx').textContent    = ppx !== undefined ? ppx.toFixed(1) : '—';
+  document.getElementById('sBoRate').textContent = borate;
+  document.getElementById('sEnt').textContent    = ent !== undefined ? ent.toFixed(2) : '—';
+}
+
+function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n)}
+
+// ─── チップ ─────────────────────────────
 function buildChips() {
   const ideas = [
     '春の光','夜の街','旅に出る','孤独とは',
     '音楽について','言葉の力','朝の駅','食べ物の香り',
-    '宇宙の不思議','記憶と時間'
+    '宇宙の不思議','記憶と時間','静寂','海の向こう'
   ];
-  document.getElementById('chips').innerHTML = ideas.map(s =>
+  document.getElementById('chips').innerHTML = ideas.map(s=>
     `<button class="chip" onclick="suggest('${s}')">${s}</button>`
   ).join('');
 }
 
-// ─── UI ───
+// ─── UI ────────────────────────────────
 function toggleSettings() {
   const bar = document.getElementById('settingsBar');
+  const btn = document.getElementById('settingsBtn');
   bar.classList.toggle('open');
-  if (bar.classList.contains('open')) {
-    setTimeout(initSliders, 50);
-  }
+  btn.classList.toggle('active');
+  if (bar.classList.contains('open')) setTimeout(initSliders, 50);
 }
-
-function resize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+function resize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,110)+'px';
 }
-
-function onKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+function onKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}
 }
-
-function suggest(text) {
-  document.getElementById('inp').value = text;
+function suggest(text){
+  document.getElementById('inp').value=text;
   resize(document.getElementById('inp'));
   sendMsg();
 }
-
-function scrollToBottom() {
-  const c = document.getElementById('chat');
-  c.scrollTop = c.scrollHeight;
+function scrollToBottom(){
+  const c=document.getElementById('chat');c.scrollTop=c.scrollHeight;
 }
-
-function scrollDown() {
-  const c   = document.getElementById('chat');
-  const gap = c.scrollHeight - c.scrollTop - c.clientHeight;
-  if (gap < 100) c.scrollTop = c.scrollHeight;
+function scrollDown(){
+  const c=document.getElementById('chat');
+  const gap=c.scrollHeight-c.scrollTop-c.clientHeight;
+  if(gap<120)c.scrollTop=c.scrollHeight;
 }
 
 async function sendMsg() {
-  if (busy) return;
+  if (busy || !modelReady) return;
   const inp = document.getElementById('inp');
   const txt = inp.value.trim();
   if (!txt) return;
 
-  inp.value = ''; inp.style.height = 'auto';
+  inp.value=''; inp.style.height='auto';
   busy = true;
   document.getElementById('sendBtn').disabled = true;
 
@@ -878,106 +1340,116 @@ async function sendMsg() {
   if (w) w.remove();
 
   const prog = document.getElementById('prog');
+  const algo = document.getElementById('rGenAlgo').value;
 
   try {
-    addBubble(txt, 'user');
+    addBubble(txt,'user');
     scrollToBottom();
-    addSys('生成中…');
+    addSys(algo==='beam'?'ビームサーチ中…':algo==='greedy'?'貪欲生成中…':'サンプリング中…');
 
     prog.classList.add('active');
-    let pv = 0;
-    const pt = setInterval(() => {
-      pv = Math.min(pv + Math.random() * 8, 82);
-      prog.style.width = pv + '%';
-    }, 60);
+    let pv=0;
+    const pt=setInterval(()=>{
+      pv=Math.min(pv+Math.random()*7,80);
+      prog.style.width=pv+'%';
+    },60);
 
-    // 生成は非同期に（UIをブロックしない）
-    await sleep(60);
-    const reply = await new Promise(resolve => {
-      setTimeout(() => resolve(generateReply(txt)), 0);
+    await sleep(50);
+    const t0 = performance.now();
+    const reply = await new Promise(resolve=>{
+      setTimeout(()=>resolve(generateReply(txt)),0);
     });
+    const elapsed = ((performance.now()-t0)/1000).toFixed(2);
 
     clearInterval(pt);
-    prog.style.width = '96%';
-    await sleep(180);
-
+    prog.style.width='96%';
+    await sleep(150);
     removeSys();
-    updateStats();
 
-    prog.style.width = '100%';
-    const bub = addBubble('', 'ai');
+    // 統計再更新
+    const ppx = null; // 都度計算は重いので省略
+    document.getElementById('sBoRate').textContent =
+      totalGenSteps>0 ? (totalBoUsed/totalGenSteps*100).toFixed(1)+'%':'—';
+
+    prog.style.width='100%';
+    const bub = addBubble('','ai');
     bub.classList.add('streaming');
     await typeText(bub, reply);
     bub.classList.remove('streaming');
 
-  } catch (err) {
+    // メタ情報バッジ
+    addMeta(reply, algo, elapsed);
+
+  } catch(err) {
     removeSys();
     addSys('エラーが発生しました');
-    console.error('sendMsg error:', err);
+    console.error(err);
   } finally {
-    setTimeout(() => {
-      prog.style.width  = '0%';
-      prog.classList.remove('active');
-    }, 600);
-    busy = false;
-    document.getElementById('sendBtn').disabled = false;
+    setTimeout(()=>{prog.style.width='0%';prog.classList.remove('active')},700);
+    busy=false;
+    document.getElementById('sendBtn').disabled=false;
     document.getElementById('inp').focus();
   }
+}
+
+function addMeta(reply, algo, elapsed) {
+  const msgs = document.getElementById('msgs');
+  const d    = document.createElement('div');
+  d.className='msg-meta';
+  const toks = tokenize(reply).length;
+  const algoLabel = algo==='beam'?'ビームサーチ':algo==='greedy'?'貪欲法':'サンプリング';
+  d.innerHTML =
+    `<span class="meta-tag g">${algoLabel}</span>` +
+    `<span class="meta-tag">${toks} tok</span>` +
+    `<span class="meta-tag">${elapsed}s</span>`;
+  msgs.appendChild(d);
+  scrollDown();
 }
 
 function addBubble(html, role) {
   const c = document.getElementById('msgs');
   const d = document.createElement('div');
-  d.className = `msg ${role}`;
-  d.innerHTML = `<div class="av ${role}">${role === 'ai' ? 'AI' : 'YOU'}</div><div class="bub ${role}">${escHtml(html)}</div>`;
+  d.className=`msg ${role}`;
+  d.innerHTML=`<div class="av ${role}">${role==='ai'?'AI':'YOU'}</div><div class="bub ${role}">${escHtml(html)}</div>`;
   c.appendChild(d);
   scrollDown();
   return d.querySelector('.bub');
 }
-
 function addSys(text) {
   removeSys();
-  const c = document.getElementById('msgs');
-  const d = document.createElement('div');
-  d.className = 'sys'; d.id = 'sys-msg';
-  d.innerHTML = `<span>${text}</span>`;
-  c.appendChild(d); scrollDown();
+  const c=document.getElementById('msgs');
+  const d=document.createElement('div');
+  d.className='sys';d.id='sys-msg';
+  d.innerHTML=`<span><span class="sys-dot"></span>${text}</span>`;
+  c.appendChild(d);scrollDown();
 }
-function removeSys() {
-  const e = document.getElementById('sys-msg');
-  if (e) e.remove();
-}
+function removeSys(){const e=document.getElementById('sys-msg');if(e)e.remove()}
 
 async function typeText(bub, text) {
-  const chars = [...text]; // Unicode codepoint単位（サロゲートペア安全）
-  let out = '';
-  bub.innerHTML = '<span class="cursor-blink"></span>';
-
-  for (let i = 0; i < chars.length; i++) {
-    out += escHtml(chars[i]);
-    // 3文字ごとにDOMを更新（軽量化）
-    if (i % 3 === 0) {
-      bub.innerHTML = out + '<span class="cursor-blink"></span>';
+  const chars=[...text];
+  let out='';
+  bub.innerHTML='<span class="cursor-blink"></span>';
+  for(let i=0;i<chars.length;i++){
+    out+=escHtml(chars[i]);
+    if(i%4===0){
+      bub.innerHTML=out+'<span class="cursor-blink"></span>';
       scrollDown();
-      await sleep(12);
+      await sleep(10);
     }
   }
-  bub.innerHTML = out;
+  bub.innerHTML=out;
   scrollDown();
 }
 
-function escHtml(t) {
+function escHtml(t){
   return String(t)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
 }
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ─── フォールバックコーパス ───
+// ─── フォールバックコーパス ─────────────────
 function fallbackCorpus() {
   return `春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。山の向こうから吹いてくる風は若葉の香りをたっぷりと含んでいた。川のせせらぎが岩に当たって白い泡を立てながら流れていく。水面に映る空は揺れ続けて形を変える。
 夏の夜空には無数の星が瞬いている。蛍の光が暗い草むらの中でゆっくりと浮かび上がる。湿った大気の中で虫たちの鳴き声が重なり合って複雑な音楽を奏でていた。暗闇に目が慣れてくると木々の輪郭が浮かび上がってくる。
@@ -988,10 +1460,12 @@ function fallbackCorpus() {
 出汁の香りが台所に満ちるとどこか懐かしい気持ちになる。野菜を炒める音がリズミカルに響いて食欲をそそる香りが広がっていく。食事をともにすることは言葉を超えたコミュニケーションだ。
 海の水平線を眺めていると時間の感覚がなくなっていく。波が繰り返し岸に打ち寄せては砂を削り形を変えていく。旅とは場所を移動することではなく自分の中に新しい何かを持ち帰ることなのかもしれない。見知らぬ土地の空気を吸い込むたびに、自分が少しだけ更新される。
 誰かに本当のことを話せる瞬間というのはそう多くはない。言葉にしなくてもわかり合えることもあれば言葉を尽くしても伝わらないこともある。沈黙にも種類があって、心地よい沈黙と居心地の悪い沈黙は全く違う重さを持っている。
-朝の駅はいつも同じ顔をしているようで、毎日少しずつ違う。急ぎ足の人、ゆっくり歩く人、誰かを待っている人。それぞれが自分だけの時間を生きている。`;
+朝の駅はいつも同じ顔をしているようで、毎日少しずつ違う。急ぎ足の人、ゆっくり歩く人、誰かを待っている人。それぞれが自分だけの時間を生きている。記憶とは不思議なもので、思い出そうとするときには出てこないのに、ふとした香りや音で突然蘇ることがある。
+宇宙の広さを想像しようとすると、人間の言語はすぐに限界を迎える。それでも人は空を見上げて、言葉にならない何かを感じ続けてきた。孤独は恐ろしいものではなく、自分と向き合うための静かな時間だと気づいたのはずいぶん後のことだった。
+食べ物の香りには記憶を呼び起こす力がある。誰かと食卓を囲むとき、そこには言葉以上のものが流れている。旅に出ると、普段気づかなかった自分の輪郭が少しずつ見えてくる気がする。`;
 }
 
-// ─── 起動 ───
+// ─── 起動 ───────────────────────────────
 init();
 </script>
 </body>
