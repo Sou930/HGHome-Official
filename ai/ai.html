@@ -562,20 +562,9 @@ textarea::placeholder{color:var(--dim)}
 
 <script>
 // ============================================================
-//  COMPOSE v3 — 改善版
-//  #1  コーパス読み込みエラーを明示的に報告
-//  #2  addMeta の XSS 修正 (DOM API + クロージャ)
-//  #3  buildGeneration カウンタでレース条件を排除
-//  #5  KN の二重正規化を除去してバックオフ構造を保持
-//  #6  ビームサーチの完了ビームスコアを凍結
-//  #7  O(1) 確率インデックスで getNextProb を高速化
-//  #8  モデル再構築時に統計カウンタをリセット
-//  #9  テキストエリアの高さリセットを確実に
-//  #12 パネルの同時展開を排他制御
-//  トークン化: スペース区切りに変更
+//  COMPOSE v3
 // ============================================================
 
-// ─── ユーティリティ（先頭で定義、全体から参照） ───────
 function isEndToken(t) {
   return /[.!?。！？]$/.test(t);
 }
@@ -585,7 +574,6 @@ function escHtml(t) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n); }
 
-// ─── グローバル状態 ──────────────────────────────────
 let corpus      = '';
 let tokens      = [];
 let vocab       = new Set();
@@ -594,7 +582,6 @@ let tokenIdf    = {};
 let kn          = {};
 let wb          = {};
 let mle         = {};
-// #7: O(1) 確率参照用インデックス
 let knIdx       = {};
 let wbIdx       = {};
 let mleIdx      = {};
@@ -608,14 +595,11 @@ let totalBoUsed   = 0;
 let totalGenSteps = 0;
 let busy          = false;
 let loadedFiles   = [];
-// #3: ビルド世代カウンタ（古いビルドを中断する）
 let buildGeneration = 0;
 let lastInput = '';
 let ppxLiveTimer = null;
-
 let history = [];
-  
-// ─── 起動 ────────────────────────────────────────────
+
 async function init() {
   corpus = await loadCorpusFiles();
   document.getElementById('corpusEdit').value = corpus;
@@ -625,7 +609,6 @@ async function init() {
   initSliders();
 }
 
-// ─── #1: コーパス読み込み（エラー明示） ──────────────
 async function loadCorpusFiles() {
   loadedFiles = [];
   const failedFiles = [];
@@ -684,7 +667,6 @@ async function loadCorpusFiles() {
   return texts.join('\n');
 }
 
-// ─── コーパスライブ編集 ───────────────────────────────
 async function relearnCorpus() {
   const edited = document.getElementById('corpusEdit').value.trim();
   if (!edited) return;
@@ -697,7 +679,6 @@ async function relearnCorpus() {
   }, 2000);
 }
 
-// ─── 文体プリセット ───────────────────────────────────
 const PRESETS = {
   poetic:   { temp: 1.8, topP: 0.95, repeat: 1.1, div: 0.2,  len: 60 },
   logical:  { temp: 0.4, topP: 0.80, repeat: 1.6, div: 0.0,  len: 40 },
@@ -726,7 +707,6 @@ function clearPreset() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 
-// ─── テーマ切り替え ───────────────────────────────────
 function toggleTheme() {
   const html = document.documentElement;
   const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -743,7 +723,6 @@ function toggleTheme() {
   }
 }
 
-// ─── N-gram 可視化 ────────────────────────────────────
 function updateNgramLive() {
   const bar = document.getElementById('ngramBar');
   if (!bar.classList.contains('open') || !modelReady) return;
@@ -777,7 +756,6 @@ function updateNgramLive() {
   }).join('');
 }
 
-// ─── Perplexity リアルタイム ──────────────────────────
 function updatePpxLive() {
   clearTimeout(ppxLiveTimer);
   const el = document.getElementById('ppxLive');
@@ -802,14 +780,12 @@ function updatePpxLive() {
   }, 150);
 }
 
-// ─── ステータス ───────────────────────────────────────
 function setStatus(cls, txt) {
   const p = document.getElementById('statusPill');
   p.className = 'status-pill ' + cls;
   document.getElementById('statusTxt').textContent = txt;
 }
 
-// ─── スライダー同期 ───────────────────────────────────
 function syncSlider(el, valId, step) {
   const v = parseFloat(el.value);
   const d = step < 1 ? String(step).split('.')[1].length : 0;
@@ -824,37 +800,22 @@ function initSliders() {
   document.querySelectorAll('input[type=range]').forEach(updateRangeFill);
 }
 
-// ─── トークン化: スペース区切り ───────────────────────
 function tokenize(text) {
   return text.replace(/\r?\n/g, ' ').split(/\s+/).filter(t => t.length > 0);
 }
 
-//PresencePenalty
-function applyPresencePenalty(probs, generated, penalty){
-  const seen = new Set(generated);
-  for(const token of seen){
-    if(probs[token]){
-      probs[token] /= penalty;
-    }
-  }
-}
-  
-// ─── モデル構築 (#3 #8) ──────────────────────────────
 function scheduleRebuild() {
   clearTimeout(rebuildTimer);
   rebuildTimer = setTimeout(() => buildModelAsync(), 600);
 }
 
 async function buildModelAsync() {
-  const myGen = ++buildGeneration; // #3: 世代番号を取得
+  const myGen = ++buildGeneration;
   setStatus('busy', 'モデル構築中…');
   modelReady = false;
   document.getElementById('sendBtn').disabled = true;
-
-  // #8: 統計カウンタをリセット（再構築後のバックオフ率が混入しないように）
   totalBoUsed   = 0;
   totalGenSteps = 0;
-
   const maxOrder = parseInt(document.getElementById('rOrder').value);
   const smMethod = document.getElementById('rSmMethod').value;
   tokens    = tokenize(corpus);
@@ -862,26 +823,22 @@ async function buildModelAsync() {
   vocabArr  = Array.from(vocab);
   rawCounts = {};
   kn = {}; wb = {}; mle = {};
-  knIdx = {}; wbIdx = {}; mleIdx = {}; // #7: インデックスもリセット
+  knIdx = {}; wbIdx = {}; mleIdx = {};
   unigramDist = new Map();
   sentStarts = [0];
   continuationCounts = {};
   buildIdf();
-
   for (let i = 0; i < tokens.length; i++) {
     if (isEndToken(tokens[i]) && i + 1 < tokens.length) sentStarts.push(i + 1);
   }
-
   const setBar = (pct, label) => {
     document.getElementById('buildBar').style.width = pct + '%';
     document.getElementById('buildLabel').textContent = label;
   };
-
-  // カウント集計
   for (let n = 1; n <= maxOrder; n++) {
     setBar(Math.round(n / maxOrder * 40), `カウント集計: ${n}-gram…`);
     await sleep(0);
-    if (myGen !== buildGeneration) return; // #3: 古いビルドを中断
+    if (myGen !== buildGeneration) return;
     rawCounts[n] = new Map();
     for (let i = 0; i <= tokens.length - n - 1; i++) {
       const key  = tokens.slice(i, i + n).join('\x00');
@@ -891,64 +848,52 @@ async function buildModelAsync() {
       m.set(next, (m.get(next) || 0) + 1);
     }
   }
-
   setBar(42, '継続カウント計算…');
   await sleep(0);
-  if (myGen !== buildGeneration) return; // #3
-
+  if (myGen !== buildGeneration) return;
   const contMap = new Map();
   if (rawCounts[1]) {
     for (const [, m] of rawCounts[1]) for (const [word] of m) contMap.set(word, (contMap.get(word) || 0) + 1);
   }
   continuationCounts = contMap;
   const totalContinuations = Array.from(contMap.values()).reduce((a, b) => a + b, 0) || 1;
-
-  // 確率化 + O(1) インデックス構築 (#7)
   for (let n = 1; n <= maxOrder; n++) {
     setBar(44 + Math.round(n / maxOrder * 50), `確率化: ${n}-gram (${smMethod})…`);
     await sleep(0);
-    if (myGen !== buildGeneration) return; // #3
-
+    if (myGen !== buildGeneration) return;
     if (smMethod === 'kn') {
       buildKN(n, totalContinuations);
-      knIdx[n] = buildProbIndex(kn[n]); // #7
+      knIdx[n] = buildProbIndex(kn[n]);
     } else if (smMethod === 'wb') {
       buildWB(n);
-      wbIdx[n] = buildProbIndex(wb[n]); // #7
+      wbIdx[n] = buildProbIndex(wb[n]);
     } else if (smMethod === 'lap') {
       buildLaplace(n);
-      mleIdx[n] = buildProbIndex(mle[n]); // #7
+      mleIdx[n] = buildProbIndex(mle[n]);
     } else {
       buildMLE(n);
-      mleIdx[n] = buildProbIndex(mle[n]); // #7
+      mleIdx[n] = buildProbIndex(mle[n]);
     }
   }
-
-  // #7: ユニグラム分布をフォールバック用に構築
   {
     const counts = new Map();
     for (const t of tokens) counts.set(t, (counts.get(t) || 0) + 1);
     const total = tokens.length || 1;
     for (const [w, c] of counts) unigramDist.set(w, c / total);
   }
-
   setBar(98, 'パープレキシティ計算…');
   await sleep(0);
-  if (myGen !== buildGeneration) return; // #3
-
+  if (myGen !== buildGeneration) return;
   const ppx = computePerplexity(maxOrder);
   const ent = computeEntropy(maxOrder);
   setBar(100, '完了');
-
-  if (myGen !== buildGeneration) return; // #3: 最終チェック
-
+  if (myGen !== buildGeneration) return;
   modelReady = true;
   document.getElementById('sendBtn').disabled = false;
   setStatus('ok', loadedFiles.length > 1 ? `${loadedFiles.length} ファイル 準備完了` : (loadedFiles[0] || '準備完了'));
   updateStats(ppx, ent);
 }
 
-// ─── #7: O(1) インデックス構築 ───────────────────────
 function buildProbIndex(model) {
   const idx = new Map();
   if (!model) return idx;
@@ -960,7 +905,6 @@ function buildProbIndex(model) {
   return idx;
 }
 
-// ─── Kneser-Ney (#5: 二重正規化を除去) ──────────────
 function buildKN(n, totalCont) {
   const d = parseFloat(document.getElementById('rDisc').value);
   const V = vocab.size || 1;
@@ -978,7 +922,6 @@ function buildKN(n, totalCont) {
         pLow = (continuationCounts.get(word) || 0) / totalCont;
       } else {
         const lowerKey = key.split('\x00').slice(1).join('\x00');
-        // #7: 構築済みインデックスで下位モデルを O(1) 参照
         const lowerIdx = knIdx[n - 1];
         if (lowerIdx) {
           const lm = lowerIdx.get(lowerKey);
@@ -992,13 +935,11 @@ function buildKN(n, totalCont) {
       const p = discounted + lambda * pLow;
       if (p > 0) entries.push({ word, p });
     }
-    // #5: 正規化を除去 — KN のバックオフ構造（未観測語への確率質量）を保持する
     result.set(key, entries);
   }
   kn[n] = result;
 }
 
-// ─── Witten-Bell ─────────────────────────────────────
 function buildWB(n) {
   const V = vocab.size || 1;
   const result = new Map();
@@ -1026,7 +967,6 @@ function buildWB(n) {
   wb[n] = result;
 }
 
-// ─── Laplace ─────────────────────────────────────────
 function buildLaplace(n) {
   const alpha = 0.1, V = vocab.size || 1, result = new Map();
   if (!rawCounts[n]) { mle[n] = result; return; }
@@ -1041,7 +981,6 @@ function buildLaplace(n) {
   mle[n] = result;
 }
 
-// ─── MLE ─────────────────────────────────────────────
 function buildMLE(n) {
   const result = new Map();
   if (!rawCounts[n]) { mle[n] = result; return; }
@@ -1059,7 +998,6 @@ function getModel(n) {
   return mle[n] || kn[n] || null;
 }
 
-// #7: O(1) 参照用インデックスを返す
 function getModelIdx(n) {
   const sm = document.getElementById('rSmMethod').value;
   if (sm === 'kn') return knIdx[n] || null;
@@ -1091,7 +1029,6 @@ function computeEntropy(maxOrder) {
   return count > 0 ? totalEnt / count : 0;
 }
 
-// #7: O(1) 確率参照 + ユニグラムフォールバック
 function getNextProb(context, target, maxOrder) {
   for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
     const key = context.slice(-n).join('\x00');
@@ -1103,7 +1040,6 @@ function getNextProb(context, target, maxOrder) {
       if (p !== undefined) return p;
     }
   }
-  // ユニグラム分布でフォールバック
   const p = unigramDist.get(target);
   if (p !== undefined) return p;
   return 1 / (vocab.size || 1);
@@ -1121,8 +1057,7 @@ function buildIdf() {
   for (const [word, d] of Object.entries(df)) tokenIdf[word] = Math.log((N + 1) / (d + 1)) + 1;
 }
 
-// ─── サンプリング ─────────────────────────────────────
-function sample(cands, recentTokens) {
+function sampleToken(cands, recentTokens) {
   const temp       = parseFloat(document.getElementById('rTemp').value);
   const topK       = parseInt(document.getElementById('rTopK').value);
   const topP       = parseFloat(document.getElementById('rTopP').value);
@@ -1177,11 +1112,9 @@ function getCandidates(context) {
   return { cands: [{ word: '.', p: 1 }], usedOrder: 0 };
 }
 
-// ─── #6: ビームサーチ — 完了ビームのスコアを凍結 ─────
 function generateBeam(seed, maxLen) {
   const beamWidth = parseInt(document.getElementById('rBeam').value);
   const maxOrder  = parseInt(document.getElementById('rOrder').value);
-  // 完了済みなら frozenScore を使い、未完了なら現在の正規化スコアを使う
   const getScore = b => b.frozenScore !== null ? b.frozenScore : b.logp / Math.max(b.tokens.length - seed.length, 1);
   let beams = [{ tokens: [...seed], logp: 0, done: false, frozenScore: null }];
   for (let step = 0; step < maxLen * 2; step++) {
@@ -1195,7 +1128,6 @@ function generateBeam(seed, maxLen) {
         const newToks = [...beam.tokens, c.word];
         const genLen  = newToks.length - seed.length;
         const isDone  = isEndToken(c.word) && genLen >= maxLen * 0.5;
-        // #6: 完了時点の長さ正規化スコアを凍結
         const frozenScore = isDone ? logp / Math.max(genLen, 1) : null;
         next.push({ tokens: newToks, logp, done: isDone, frozenScore });
       }
@@ -1212,7 +1144,7 @@ function generateSample(seed, maxLen) {
   const result   = []; let context = [...seed];
   for (let i = 0; i < maxLen * 2; i++) {
     const { cands } = getCandidates(context.slice(-maxOrder));
-    const word = sample(cands, context);
+    const word = sampleToken(cands, context);
     result.push(word); context.push(word);
     if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
     if (result.length >= maxLen) break;
@@ -1222,13 +1154,12 @@ function generateSample(seed, maxLen) {
 }
 
 function generateGreedy(seed, maxLen) {
-  const maxOrder  = parseInt(document.getElementById('rOrder').value);
+  const maxOrder   = parseInt(document.getElementById('rOrder').value);
   const repPenalty = parseFloat(document.getElementById('rRepeat').value);
-  const repWin    = parseInt(document.getElementById('rRepWin').value);
-  const result    = []; let context = [...seed];
+  const repWin     = parseInt(document.getElementById('rRepWin').value);
+  const result     = []; let context = [...seed];
   for (let i = 0; i < maxLen * 2; i++) {
     const { cands } = getCandidates(context.slice(-maxOrder));
-    // 貪欲法にも繰り返しペナルティを適用（#11 の関連修正）
     const win = context.slice(-repWin);
     const recentSet = new Set(win);
     const scored = cands.map(c => ({ word: c.word, w: recentSet.has(c.word) ? c.p / repPenalty : c.p }));
@@ -1277,6 +1208,7 @@ function findBestSeed(inputTokens) {
   return tokens.slice(bs, Math.min(bs + maxOrder, tokens.length));
 }
 
+// ─── generateReply: 統合版（会話履歴コンテキストを受け取り、アルゴリズムを選択して生成）
 function generateReply(input) {
   const maxLen = parseInt(document.getElementById('rLen').value);
   const algo   = document.getElementById('rGenAlgo').value;
@@ -1285,7 +1217,6 @@ function generateReply(input) {
   if (algo === 'beam')        result = generateBeam(seed, maxLen);
   else if (algo === 'greedy') result = generateGreedy(seed, maxLen);
   else                        result = generateSample(seed, maxLen);
-  // 末尾の句点トークンを探してそこでトリム
   let trimEnd = -1;
   for (let i = result.length - 1; i >= 0; i--) {
     if (isEndToken(result[i])) { trimEnd = i; break; }
@@ -1294,7 +1225,6 @@ function generateReply(input) {
   return trimmed.join(' ') || '.';
 }
 
-// ─── 統計更新 ─────────────────────────────────────────
 function updateStats(ppx, ent) {
   const maxN   = parseInt(document.getElementById('rOrder').value);
   const model  = getModel(maxN);
@@ -1315,7 +1245,6 @@ function updateStats(ppx, ent) {
   else { filesEl.textContent = `${loadedFiles.length} 件`; filesEl.title = loadedFiles.join('\n'); }
 }
 
-// ─── チップ ───────────────────────────────────────────
 function buildChips() {
   const ideas = ['the future', 'knowledge grows', 'language is', 'time passes',
                  'the ocean', 'science advances', 'music connects', 'every morning',
@@ -1325,7 +1254,6 @@ function buildChips() {
   ).join('');
 }
 
-// ─── #12: パネル排他制御 ─────────────────────────────
 const PANELS = [
   { barId: 'settingsBar', btnId: 'settingsBtn' },
   { barId: 'corpusBar',   btnId: 'corpusBtn'   },
@@ -1333,12 +1261,10 @@ const PANELS = [
 ];
 function openOnlyPanel(targetBarId, targetBtnId, onOpen) {
   const isOpen = document.getElementById(targetBarId).classList.contains('open');
-  // すべてのパネルを閉じる
   PANELS.forEach(({ barId, btnId }) => {
     document.getElementById(barId).classList.remove('open');
     document.getElementById(btnId).classList.remove('active');
   });
-  // 閉じていたなら開く（既に開いていたなら閉じるだけ）
   if (!isOpen) {
     document.getElementById(targetBarId).classList.add('open');
     document.getElementById(targetBtnId).classList.add('active');
@@ -1355,9 +1281,8 @@ function toggleNgram() {
   openOnlyPanel('ngramBar', 'ngramBtn', () => updateNgramLive());
 }
 
-// ─── #9: テキストエリアリサイズ（修正版） ────────────
 function resize(el) {
-  el.style.height = '0px'; // いったん潰して scrollHeight を正確に取得
+  el.style.height = '0px';
   el.style.height = Math.min(el.scrollHeight, 110) + 'px';
 }
 
@@ -1371,30 +1296,12 @@ function suggest(text) {
 function scrollToBottom() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
 function scrollDown() { const c = document.getElementById('chat'); if (c.scrollHeight - c.scrollTop - c.clientHeight < 120) c.scrollTop = c.scrollHeight; }
 
-
-function generateReply(prompt){
-
-  const algo = document.getElementById('rGenAlgo').value;
-
-  if(algo === "beam"){
-    return beam(prompt);
-  }
-
-  if(algo === "greedy"){
-    return greedy(prompt);
-  }
-
-  return sample(prompt);
-}
-  
-// ─── 送信 ─────────────────────────────────────────────
 async function sendMsg() {
   if (busy || !modelReady) return;
   const inp = document.getElementById('inp');
   const txt = inp.value.trim();
   if (!txt) return;
   lastInput = txt;
-  // #9: テキストエリアを確実に 1 行高さへリセット
   inp.value = '';
   resize(inp);
   document.getElementById('ppxLive').textContent = '';
@@ -1411,15 +1318,12 @@ async function sendMsg() {
     const pt = setInterval(() => { pv = Math.min(pv + Math.random() * 7, 80); prog.style.width = pv + '%'; }, 60);
     await sleep(50);
     const t0 = performance.now();
-    history.push({role:"user", text:txt});
-    const context =
-      history.slice(-6).
-      map(x => x.text)
-      .join(" ");
+    history.push({ role: 'user', text: txt });
+    const context = history.slice(-6).map(x => x.text).join(' ');
     const reply = await new Promise(resolve => {
       setTimeout(() => resolve(generateReply(context)), 0);
     });
-    history.push({role:"ai", text:reply});
+    history.push({ role: 'ai', text: reply });
     const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
     clearInterval(pt); prog.style.width = '96%';
     await sleep(150); removeSys();
@@ -1440,7 +1344,6 @@ async function sendMsg() {
   }
 }
 
-// ─── 再生成 ───────────────────────────────────────────
 async function regenerate(input) {
   if (busy || !modelReady || !input) return;
   busy = true;
@@ -1466,14 +1369,12 @@ async function regenerate(input) {
   }
 }
 
-// ─── #2: addMeta — DOM API で XSS を排除 ─────────────
 function addMeta(reply, algo, elapsed, inputForRegen) {
   const msgs = document.getElementById('msgs');
   const d    = document.createElement('div');
   d.className = 'msg-meta';
   const toks = tokenize(reply).length;
   const algoLabel = algo === 'beam' ? 'ビームサーチ' : algo === 'greedy' ? '貪欲法' : 'サンプリング';
-
   const mkTag = (cls, text) => {
     const s = document.createElement('span');
     s.className = 'meta-tag' + (cls ? ' ' + cls : '');
@@ -1483,8 +1384,6 @@ function addMeta(reply, algo, elapsed, inputForRegen) {
   d.appendChild(mkTag('g', algoLabel));
   d.appendChild(mkTag('',  toks + ' tok'));
   d.appendChild(mkTag('',  elapsed + 's'));
-
-  // #2: ユーザー入力をクロージャで安全に閉じ込め innerHTML への文字列注入を一切行わない
   const btn = document.createElement('button');
   btn.className = 'regen-btn';
   btn.title     = '再生成';
@@ -1495,7 +1394,6 @@ function addMeta(reply, algo, elapsed, inputForRegen) {
     '<path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
   btn.addEventListener('click', () => regenerate(inputForRegen));
   d.appendChild(btn);
-
   msgs.appendChild(d);
   scrollDown();
 }
@@ -1527,12 +1425,10 @@ async function typeText(bub, text) {
   bub.innerHTML = out; scrollDown();
 }
 
-// ─── フォールバックコーパス（スペース区切り） ─────────
 function fallbackCorpus() {
   return `The quick brown fox jumps over the lazy dog near the river bank. A language model learns statistical patterns from large amounts of text data. Words carry meaning through context and repetition across many sentences. The future of artificial intelligence is both exciting and deeply uncertain for everyone. Music connects people across languages and cultures in many unexpected ways. A journey of a thousand miles begins with a single step forward into the unknown. The stars at night remind us how vast the universe truly is beyond our reach. Knowledge grows when shared openly and freely with other curious and open minds. Memory and imagination are two sides of the same creative and powerful coin. Every sentence tells a small story about the world around us. Science advances one hypothesis and one careful experiment at a time. The ocean holds far more secrets than we have yet discovered beneath its surface. Reading expands the human mind in ways no other activity can fully replace. Change is the only constant in an uncertain and always evolving universe of possibilities. Technology continuously reshapes how humans communicate and create new things together. Time passes slowly when we wait and quickly when we are lost in deep thought. Language is the most powerful tool humans have ever invented to share complex ideas. Every morning brings a new chance to learn something previously unknown and surprising. The river flows endlessly forward never once returning to where it originally began.`;
 }
 
-// ─── ヘルプモーダル ───────────────────────────────────
 function toggleHelp() {
   const overlay = document.getElementById('helpOverlay');
   const btn     = document.getElementById('helpBtn');
