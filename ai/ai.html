@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>COMPOSE v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <!-- TinySegmenter 削除: トークン化はスペース区切りに変更 -->
@@ -56,11 +56,16 @@
   --panel-bg:  rgba(245,242,237,.99);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
+html{height:100%;overflow:hidden;overflow-x:hidden;overscroll-behavior:none;}
 body{
   background:var(--bg);color:var(--text);
   font-family:'Zen Kaku Gothic New',sans-serif;
-  display:flex;flex-direction:column;height:100vh;
+  display:flex;flex-direction:column;
+  height:100dvh;
+  height:calc(var(--vh,1vh) * 100);
+  width:100%;max-width:100%;
+  overflow:hidden;overflow-x:hidden;
+  overscroll-behavior:none;
   transition:background .3s,color .3s;
 }
 body::before{
@@ -296,7 +301,10 @@ input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,
 footer{
   position:relative;z-index:20;flex-shrink:0;
   border-top:1px solid var(--bd);background:var(--footer-bg);
-  backdrop-filter:blur(28px);padding:12px 18px;
+  backdrop-filter:blur(28px);
+  padding:12px 18px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+  width:100%;
 }
 .input-wrap{max-width:740px;margin:0 auto}
 .input-row{
@@ -304,7 +312,7 @@ footer{
   border-radius:var(--r-md);padding:9px 9px 9px 16px;transition:border-color .25s,box-shadow .25s;
 }
 .input-row:focus-within{border-color:rgba(143,188,122,.28);box-shadow:0 0 0 4px rgba(143,188,122,.035);}
-textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.86rem;resize:none;max-height:110px;line-height:1.75;padding:2px 0;}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.86rem;resize:none;max-height:110px;width:0;min-width:0;max-width:100%;line-height:1.75;padding:2px 0;}
 textarea::placeholder{color:var(--dim)}
 .send-btn{
   width:34px;height:34px;border:none;border-radius:var(--r-sm);background:var(--sage);color:#181512;
@@ -399,6 +407,12 @@ textarea::placeholder{color:var(--dim)}
 
 <div class="settings-bar" id="settingsBar">
   <div class="settings-inner">
+    <div class="preset-row" style="border-bottom:none;padding-bottom:8px;">
+      <span class="preset-lbl">LANG</span>
+      <button class="preset-btn" id="lang-ja" onclick="switchLang('ja')">日本語</button>
+      <button class="preset-btn" id="lang-en" onclick="switchLang('en')">English</button>
+      <span class="corpus-note" id="langNote" style="margin-left:6px"></span>
+    </div>
     <div class="preset-row">
       <span class="preset-lbl">PRESET</span>
       <button class="preset-btn" onclick="applyPreset('poetic')" id="preset-poetic">詩的</button>
@@ -604,28 +618,59 @@ let buildGeneration = 0;
 let lastInput = '';
 let ppxLiveTimer = null;
 let history = [];
+let currentLang = 'ja'; // 'ja' | 'en'
 
 async function init() {
   corpus = await loadCorpusFiles();
   document.getElementById('corpusEdit').value = corpus;
   await buildModelAsync();
   buildChips();
+  initLangUI();
   document.getElementById('sendBtn').disabled = false;
   initSliders();
 }
 
+// manifest.json フォーマット（どちらも対応）:
+//   パターンA: {"files":["a.txt","b.txt"], "lang":"ja"}
+//              → 全ファイルを現在の言語モードで読む
+//   パターンB: {"ja":["ja1.txt"], "en":["en1.txt"], "lang":"ja"}
+//              → 言語キーが있ればその言語のファイルだけ読む
 async function loadCorpusFiles() {
   loadedFiles = [];
   const failedFiles = [];
-  const fileList = [];
+  let fileList = [];
+  let manifestLang = null;
+
   try {
     const r = await fetch('data/manifest.json');
     if (r.ok) {
       const json = await r.json();
-      const arr = Array.isArray(json) ? json : (json.files || []);
-      for (const f of arr) if (typeof f === 'string' && f.endsWith('.txt')) fileList.push(f);
+
+      // lang フィールドを取得（初回ロード時のみ currentLang に反映）
+      if (!Array.isArray(json) && (json.lang === 'ja' || json.lang === 'en')) {
+        manifestLang = json.lang;
+      }
+
+      // パターンB: 言語別キーがある場合
+      if (!Array.isArray(json) && (json.ja || json.en)) {
+        const langFiles = json[currentLang] || json[manifestLang] || [];
+        for (const f of langFiles) if (typeof f === 'string' && f.endsWith('.txt')) fileList.push('data/' + f);
+      } else {
+        // パターンA: filesキー or 配列
+        const arr = Array.isArray(json) ? json : (json.files || []);
+        for (const f of arr) if (typeof f === 'string' && f.endsWith('.txt')) fileList.push(f);
+      }
     }
   } catch(_) {}
+
+  // manifest由来のデフォルト言語をUIに反映（初回のみ）
+  if (manifestLang && manifestLang !== currentLang) {
+    currentLang = manifestLang;
+  }
+  const sel = document.getElementById('rLangMode');
+  if (sel) sel.value = currentLang;
+
+  // manifest が空だった場合: data/ ディレクトリ一覧を試みる
   if (fileList.length === 0) {
     try {
       const r = await fetch('data/');
@@ -638,6 +683,7 @@ async function loadCorpusFiles() {
     } catch(_) {}
   }
   if (fileList.length === 0) fileList.push('ai.txt');
+
   const unique = [...new Set(fileList)];
   const texts = [];
   for (const path of unique) {
@@ -667,8 +713,9 @@ async function loadCorpusFiles() {
     loadedFiles = ['(内蔵)'];
     return fallbackCorpus();
   }
+  const langLabel = currentLang === 'ja' ? '日本語' : 'English';
   const label = loadedFiles.length === 1 ? loadedFiles[0] : loadedFiles.length + ' ファイル';
-  setStatus('ok', label + ' 読込完了' + (failedFiles.length > 0 ? ' ⚠' : ''));
+  setStatus('ok', `[${langLabel}] ${label}` + (failedFiles.length > 0 ? ' ⚠' : ''));
   return texts.join('\n');
 }
 
@@ -1415,6 +1462,25 @@ function openOnlyPanel(targetBarId, targetBtnId, onOpen) {
     if (onOpen) onOpen();
   }
 }
+// ─── 言語切り替え ─────────────────────────────────────
+function initLangUI() {
+  document.getElementById('lang-ja').classList.toggle('active', currentLang === 'ja');
+  document.getElementById('lang-en').classList.toggle('active', currentLang === 'en');
+}
+
+async function switchLang(lang) {
+  if (lang === currentLang) return;
+  currentLang = lang;
+  initLangUI();
+  const note = document.getElementById('langNote');
+  note.textContent = '再読込中…';
+  corpus = await loadCorpusFiles();
+  document.getElementById('corpusEdit').value = corpus;
+  await buildModelAsync();
+  note.textContent = '切り替え完了';
+  setTimeout(() => { note.textContent = ''; }, 2000);
+}
+
 function toggleSettings() {
   openOnlyPanel('settingsBar', 'settingsBtn', () => setTimeout(initSliders, 50));
 }
@@ -1602,6 +1668,29 @@ function toggleHelp() {
 }
 function closeHelpOnBg(e) {
   if (e.target === document.getElementById('helpOverlay')) toggleHelp();
+}
+
+// ─── モバイル viewport 修正 ──────────────────────────
+// 1) --vh をセットしてアドレスバー込みの100vhバグを回避
+function setVh() {
+  const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
+  document.documentElement.style.setProperty('--vh', vh + 'px');
+}
+setVh();
+window.addEventListener('resize', setVh, { passive: true });
+
+// 2) iOS Safariでキーボード出現時にbodyが押し上げられるのを防ぐ
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    setVh();
+    // キーボード出現でbodyがスクロールされた場合は戻す
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, { passive: true });
+  window.visualViewport.addEventListener('scroll', () => {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, { passive: true });
 }
 
 init();
