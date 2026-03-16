@@ -461,6 +461,7 @@ textarea::placeholder{color:var(--dim)}
       <select class="select-ctrl" id="rGenAlgo">
         <option value="sample">サンプリング</option>
         <option value="beam">ビームサーチ</option>
+        <option value="ultrabeam">極光ビーム ✦</option>
         <option value="greedy">貪欲法</option>
       </select>
       <div class="ctrl-desc">ビームは高品質・低速</div>
@@ -1227,8 +1228,8 @@ function getCandidates(context) {
 }
 
 // ─── ビームサーチ強化版 ───────────────────────────────
-function generateBeam(seed, maxLen, inputSet) {
-  const beamWidth  = parseInt(document.getElementById('rBeam').value);
+function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
+  const beamWidth  = overrideBeamWidth || parseInt(document.getElementById('rBeam').value);
   const maxOrder   = parseInt(document.getElementById('rOrder').value);
   const repPenalty = parseFloat(document.getElementById('rRepeat').value);
   const repWin     = parseInt(document.getElementById('rRepWin').value);
@@ -1415,11 +1416,12 @@ function generateReply(input) {
   const algo      = document.getElementById('rGenAlgo').value;
   const maxOrder  = parseInt(document.getElementById('rOrder').value);
 
-  if (algo === 'beam') {
-    const seeds = findTopSeeds(inputToks, 3);
+  if (algo === 'beam' || algo === 'ultrabeam') {
+    const isUltra = algo === 'ultrabeam';
+    const seeds = findTopSeeds(inputToks, isUltra ? 5 : 3);
     let bestResult = null, bestScore = -Infinity;
     for (const seed of seeds) {
-      const result = generateBeam(seed, maxLen, inputSet);
+      const result = generateBeam(seed, maxLen, inputSet, isUltra ? 200 : null);
       const score  = scoreResult(result, inputSet, maxOrder);
       if (score > bestScore) { bestScore = score; bestResult = result; }
     }
@@ -1574,7 +1576,7 @@ async function sendMsg() {
   const algo = document.getElementById('rGenAlgo').value;
   try {
     addBubble(txt, 'user'); scrollToBottom();
-    addSys(algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
+    addSys(algo === 'ultrabeam' ? '極光ビーム展開中… ✦' : algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
     prog.classList.add('active');
     let pv = 0;
     const pt = setInterval(() => { pv = Math.min(pv + Math.random() * 7, 80); prog.style.width = pv + '%'; }, 60);
@@ -1586,7 +1588,7 @@ async function sendMsg() {
     if (currentLang === 'en' && isJapanese(txt)) {
       addSys('入力を英語に翻訳中…');
       inputForModel = await translateWithMyMemory(txt, 'en');
-      addSys(algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
+      addSys(algo === 'ultrabeam' ? '極光ビーム展開中… ✦' : algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
     }
 
     history.push({ role: 'user', text: inputForModel });
@@ -1645,7 +1647,7 @@ function addMeta(reply, algo, elapsed, inputForRegen) {
   const d    = document.createElement('div');
   d.className = 'msg-meta';
   const toks = tokenize(reply).length;
-  const algoLabel = algo === 'beam' ? 'ビームサーチ' : algo === 'greedy' ? '貪欲法' : 'サンプリング';
+  const algoLabel = algo === 'ultrabeam' ? '極光ビーム ✦' : algo === 'beam' ? 'ビームサーチ' : algo === 'greedy' ? '貪欲法' : 'サンプリング';
   const mkTag = (cls, text) => {
     const s = document.createElement('span');
     s.className = 'meta-tag' + (cls ? ' ' + cls : '');
