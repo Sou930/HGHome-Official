@@ -1,3 +1,5 @@
 {
-  "files": ["data/ai.txt", "data/ai2.txt"]
+  "ja": ["ai-ja-1.txt", "ai-ja-2.txt"],
+  "en": ["ai-en-1.txt"],
+  "lang": "ja"
 }
