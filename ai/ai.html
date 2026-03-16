@@ -442,9 +442,12 @@ textarea::placeholder{color:var(--dim)}
       <div class="ctrl-desc">ビームサーチ時の幅</div>
     </div>
     <div class="ctrl">
-      <div class="ctrl-lbl">応答長 <span class="val" id="vLen">40</span></div>
-      <input type="range" id="rLen" min="8" max="120" value="40" step="4" oninput="syncSlider(this,'vLen',1)">
-      <div class="ctrl-desc">生成トークン数の目安</div>
+      <div class="ctrl-lbl">応答長 <span class="val" id="vLen">自動</span></div>
+      <input type="range" id="rLen" min="8" max="120" value="40" step="4" oninput="onLenSlider(this)" disabled style="opacity:.35">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+        <input type="checkbox" id="lenAuto" checked onchange="onLenAutoChange(this)" style="accent-color:var(--sage)">
+        <span class="ctrl-desc" style="margin:0">自動（入力長に比例）</span>
+      </label>
     </div>
     <div class="ctrl">
       <div class="ctrl-lbl">温度 <span class="val" id="vTemp">1.0</span></div>
@@ -693,7 +696,11 @@ function applyPreset(name) {
   setSliderVal('rTopP',   p.topP,   'vTopP',   0.01);
   setSliderVal('rRepeat', p.repeat, 'vRepeat', 0.1);
   setSliderVal('rDiv',    p.div,    'vDiv',    0.05);
-  setSliderVal('rLen',    p.len,    'vLen',    1);
+  const lenAutoCb = document.getElementById('lenAuto');
+  lenAutoCb.checked = false;
+  const lenSlider = document.getElementById('rLen');
+  lenSlider.disabled = false; lenSlider.style.opacity = '1';
+  setSliderVal('rLen', p.len, 'vLen', 1);
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('preset-' + name);
   if (btn) btn.classList.add('active');
@@ -1117,7 +1124,7 @@ function generateBeam(seed, maxLen) {
   const maxOrder  = parseInt(document.getElementById('rOrder').value);
   const getScore = b => b.frozenScore !== null ? b.frozenScore : b.logp / Math.max(b.tokens.length - seed.length, 1);
   let beams = [{ tokens: [...seed], logp: 0, done: false, frozenScore: null }];
-  for (let step = 0; step < maxLen * 2; step++) {
+  for (let step = 0; step < maxLen * 4; step++) {
     if (beams.every(b => b.done)) break;
     const next = [];
     for (const beam of beams) {
@@ -1210,9 +1217,10 @@ function findBestSeed(inputTokens) {
 
 // ─── generateReply: 統合版（会話履歴コンテキストを受け取り、アルゴリズムを選択して生成）
 function generateReply(input) {
-  const maxLen = parseInt(document.getElementById('rLen').value);
+  const inputToks = tokenize(input);
+  const seed   = findBestSeed(inputToks);
+  const maxLen = getMaxLen(inputToks.length);
   const algo   = document.getElementById('rGenAlgo').value;
-  const seed   = findBestSeed(tokenize(input));
   let result;
   if (algo === 'beam')        result = generateBeam(seed, maxLen);
   else if (algo === 'greedy') result = generateGreedy(seed, maxLen);
@@ -1429,7 +1437,27 @@ function fallbackCorpus() {
   return `The quick brown fox jumps over the lazy dog near the river bank. A language model learns statistical patterns from large amounts of text data. Words carry meaning through context and repetition across many sentences. The future of artificial intelligence is both exciting and deeply uncertain for everyone. Music connects people across languages and cultures in many unexpected ways. A journey of a thousand miles begins with a single step forward into the unknown. The stars at night remind us how vast the universe truly is beyond our reach. Knowledge grows when shared openly and freely with other curious and open minds. Memory and imagination are two sides of the same creative and powerful coin. Every sentence tells a small story about the world around us. Science advances one hypothesis and one careful experiment at a time. The ocean holds far more secrets than we have yet discovered beneath its surface. Reading expands the human mind in ways no other activity can fully replace. Change is the only constant in an uncertain and always evolving universe of possibilities. Technology continuously reshapes how humans communicate and create new things together. Time passes slowly when we wait and quickly when we are lost in deep thought. Language is the most powerful tool humans have ever invented to share complex ideas. Every morning brings a new chance to learn something previously unknown and surprising. The river flows endlessly forward never once returning to where it originally began.`;
 }
 
-function toggleHelp() {
+function onLenSlider(el) {
+  syncSlider(el, 'vLen', 1);
+}
+function onLenAutoChange(cb) {
+  const slider = document.getElementById('rLen');
+  if (cb.checked) {
+    slider.disabled = true;
+    slider.style.opacity = '.35';
+    document.getElementById('vLen').textContent = '自動';
+  } else {
+    slider.disabled = false;
+    slider.style.opacity = '1';
+    syncSlider(slider, 'vLen', 1);
+  }
+}
+function getMaxLen(inputTokenCount) {
+  if (document.getElementById('lenAuto').checked) {
+    return Math.max(20, Math.min(120, Math.round(inputTokenCount * 1.5 + 10)));
+  }
+  return parseInt(document.getElementById('rLen').value);
+}
   const overlay = document.getElementById('helpOverlay');
   const btn     = document.getElementById('helpBtn');
   overlay.classList.toggle('open');
