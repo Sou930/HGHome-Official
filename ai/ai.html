@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COMPOSE v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tiny-segmenter@0.2.0/tiny-segmenter.min.js"></script>
+<!-- TinySegmenter 削除: トークン化はスペース区切りに変更 -->
 <style>
-/* ─── テーマ変数 (10: ライト/ダーク) ─── */
+/* ─── テーマ変数 ─── */
 :root, [data-theme="dark"] {
   --bg:    #161412;
   --s1:    #1d1a17;
@@ -55,12 +55,10 @@
   --footer-bg: rgba(245,242,237,.98);
   --panel-bg:  rgba(245,242,237,.99);
 }
-
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
-  background:var(--bg);
-  color:var(--text);
+  background:var(--bg);color:var(--text);
   font-family:'Zen Kaku Gothic New',sans-serif;
   display:flex;flex-direction:column;height:100vh;
   transition:background .3s,color .3s;
@@ -72,27 +70,22 @@ body::before{
     radial-gradient(ellipse 60% 70% at 85% 95%, rgba(212,168,83,.04)  0%,transparent 55%),
     radial-gradient(ellipse 40% 40% at 50% 50%, rgba(122,179,194,.02) 0%,transparent 60%);
 }
-
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
 ::-webkit-scrollbar-thumb:hover{background:var(--bd3)}
-
 /* ─── Header ─── */
 header{
   position:relative;z-index:20;flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
-  padding:12px 22px;
-  border-bottom:1px solid var(--bd);
-  background:var(--header-bg);
-  backdrop-filter:blur(28px);
+  padding:12px 22px;border-bottom:1px solid var(--bd);
+  background:var(--header-bg);backdrop-filter:blur(28px);
 }
 .brand{display:flex;align-items:center;gap:11px}
 .brand-mark{
   width:26px;height:26px;border-radius:50%;
   border:1.5px solid rgba(143,188,122,.35);
-  display:grid;place-items:center;
-  position:relative;overflow:hidden;
+  display:grid;place-items:center;position:relative;overflow:hidden;
 }
 .brand-mark::before{
   content:'';position:absolute;inset:0;
@@ -105,21 +98,13 @@ header{
   animation:pulse 3.5s ease-in-out infinite;
 }
 @keyframes pulse{0%,100%{transform:scale(.65);opacity:.4}50%{transform:scale(1);opacity:1}}
-.brand-name{
-  font-family:'Fraunces',serif;
-  font-size:1rem;font-weight:400;letter-spacing:.2em;color:var(--text);
-}
-.brand-name em{
-  font-style:italic;color:var(--sage);font-size:.72em;
-  letter-spacing:.06em;vertical-align:middle;margin-left:3px;
-}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;letter-spacing:.2em;color:var(--text);}
+.brand-name em{font-style:italic;color:var(--sage);font-size:.72em;letter-spacing:.06em;vertical-align:middle;margin-left:3px;}
 .hright{display:flex;align-items:center;gap:7px}
 .status-pill{
-  display:flex;align-items:center;gap:5px;
-  padding:3px 9px;border-radius:20px;
+  display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
   border:1px solid var(--bd2);background:var(--s1);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.56rem;letter-spacing:.05em;color:var(--mid);
+  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.05em;color:var(--mid);
   transition:all .35s;
 }
 .status-pill.ok  {border-color:rgba(143,188,122,.3);color:var(--sage)}
@@ -130,18 +115,15 @@ header{
 .icon-btn{
   width:32px;height:32px;border-radius:var(--r-sm);
   border:1px solid var(--bd2);background:var(--s1);
-  color:var(--mid);cursor:pointer;
-  display:grid;place-items:center;font-size:.76rem;
+  color:var(--mid);cursor:pointer;display:grid;place-items:center;font-size:.76rem;
   transition:all .18s;
 }
 .icon-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
 .icon-btn.active{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
-
 /* ─── Settings Panel ─── */
 .settings-bar{
   position:relative;z-index:10;flex-shrink:0;
-  overflow:hidden;max-height:0;
-  border-bottom:0px solid var(--bd);
+  overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);
   background:var(--panel-bg);
   transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s;
 }
@@ -157,48 +139,29 @@ header{
   color:var(--mid);display:flex;justify-content:space-between;align-items:center;
 }
 .ctrl-lbl .val{
-  color:var(--sage);font-weight:500;
-  background:rgba(143,188,122,.07);
-  padding:1px 5px;border-radius:3px;
-  min-width:28px;text-align:center;
+  color:var(--sage);font-weight:500;background:rgba(143,188,122,.07);
+  padding:1px 5px;border-radius:3px;min-width:28px;text-align:center;
 }
-.ctrl-desc{
-  font-size:.62rem;color:var(--dim);line-height:1.45;
-  font-family:'JetBrains Mono',monospace;
-}
-
-/* ─── 文体プリセット (5) ─── */
+.ctrl-desc{font-size:.62rem;color:var(--dim);line-height:1.45;font-family:'JetBrains Mono',monospace;}
 .preset-row{
-  grid-column:1/-1;
-  display:flex;gap:6px;flex-wrap:wrap;
-  padding-bottom:12px;border-bottom:1px solid var(--bd);
-  align-items:center;
+  grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;
+  padding-bottom:12px;border-bottom:1px solid var(--bd);align-items:center;
 }
-.preset-lbl{
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;
-  letter-spacing:.06em;color:var(--mid);margin-right:4px;
-}
+.preset-lbl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;color:var(--mid);margin-right:4px;}
 .preset-btn{
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;
-  padding:3px 10px;border-radius:20px;
-  border:1px solid var(--bd2);background:var(--s1);
-  color:var(--mid);cursor:pointer;
-  transition:all .2s;
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 10px;border-radius:20px;
+  border:1px solid var(--bd2);background:var(--s1);color:var(--mid);cursor:pointer;transition:all .2s;
 }
 .preset-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
 .preset-btn.active{border-color:var(--amber);color:var(--amber);background:rgba(212,168,83,.08)}
-
-/* ─── Sliders ─── */
 input[type=range]{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:2px;border-radius:2px;
+  -webkit-appearance:none;appearance:none;width:100%;height:2px;border-radius:2px;
   background:linear-gradient(to right,var(--sage) var(--pct,50%),var(--bd2) var(--pct,50%));
   outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
-  background:var(--sage);cursor:pointer;
-  box-shadow:0 0 0 3px rgba(143,188,122,.12);transition:box-shadow .2s;
+  background:var(--sage);cursor:pointer;box-shadow:0 0 0 3px rgba(143,188,122,.12);transition:box-shadow .2s;
 }
 input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,122,.18)}
 .select-ctrl{
@@ -208,132 +171,67 @@ input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,
   -webkit-appearance:none;appearance:none;
 }
 .select-ctrl:focus{border-color:rgba(143,188,122,.3)}
-
-/* ─── Stats row ─── */
 .stat-row{
-  grid-column:1/-1;
-  display:flex;gap:6px;flex-wrap:wrap;
-  padding-top:10px;border-top:1px solid var(--bd);
-  align-items:center;
+  grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;
+  padding-top:10px;border-top:1px solid var(--bd);align-items:center;
 }
-.sc{
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;
-  padding:3px 9px;border-radius:20px;
-  border:1px solid var(--bd2);background:var(--s1);color:var(--mid);
-}
+.sc{font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);color:var(--mid);}
 .sc b{color:var(--text);font-weight:500}
 .sc.hi{border-color:rgba(143,188,122,.2);background:var(--sageg)}
 .sc.hi b{color:var(--sage)}
 .sc.file{border-color:rgba(165,144,208,.2);background:rgba(165,144,208,.04)}
 .sc.file b{color:var(--violet)}
-
-/* ─── Build progress ─── */
-.build-bar-wrap{
-  grid-column:1/-1;
-  background:var(--s1);border:1px solid var(--bd);border-radius:6px;
-  overflow:hidden;height:4px;
-}
-.build-bar{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,var(--sage),var(--sky));
-  border-radius:6px;transition:width .1s linear;
-}
-.build-label{
-  grid-column:1/-1;
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;
-  color:var(--mid);letter-spacing:.05em;min-height:14px;
-}
-
-/* ─── コーパス編集パネル (3) ─── */
+.build-bar-wrap{grid-column:1/-1;background:var(--s1);border:1px solid var(--bd);border-radius:6px;overflow:hidden;height:4px;}
+.build-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--sage),var(--sky));border-radius:6px;transition:width .1s linear;}
+.build-label{grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--mid);letter-spacing:.05em;min-height:14px;}
+/* ─── Corpus Panel ─── */
 .corpus-bar{
   position:relative;z-index:9;flex-shrink:0;
-  overflow:hidden;max-height:0;
-  border-bottom:0px solid var(--bd);
+  overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);
   background:var(--panel-bg);
   transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s;
 }
 .corpus-bar.open{max-height:300px;border-bottom-width:1px}
 .corpus-inner{padding:14px 22px 16px;display:flex;flex-direction:column;gap:10px;}
-.corpus-header{
-  display:flex;align-items:center;justify-content:space-between;
-}
-.corpus-header span{
-  font-family:'JetBrains Mono',monospace;font-size:.6rem;
-  letter-spacing:.06em;color:var(--mid);
-}
+.corpus-header{display:flex;align-items:center;justify-content:space-between;}
+.corpus-header span{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.06em;color:var(--mid);}
 .corpus-textarea{
-  width:100%;height:120px;
-  background:var(--s2);border:1px solid var(--bd2);
-  border-radius:var(--r-sm);color:var(--text);
-  font-family:'JetBrains Mono',monospace;font-size:.72rem;
-  line-height:1.6;padding:10px 12px;resize:vertical;outline:none;
+  width:100%;height:120px;background:var(--s2);border:1px solid var(--bd2);
+  border-radius:var(--r-sm);color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;line-height:1.6;padding:10px 12px;resize:vertical;outline:none;
 }
 .corpus-textarea:focus{border-color:rgba(143,188,122,.3)}
 .corpus-actions{display:flex;gap:8px;align-items:center;}
 .relearn-btn{
-  font-family:'JetBrains Mono',monospace;font-size:.6rem;
-  padding:5px 14px;border-radius:var(--r-sm);
-  border:1px solid rgba(143,188,122,.3);
-  background:var(--sagef);color:var(--sage);
-  cursor:pointer;transition:all .2s;
+  font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:5px 14px;border-radius:var(--r-sm);
+  border:1px solid rgba(143,188,122,.3);background:var(--sagef);color:var(--sage);cursor:pointer;transition:all .2s;
 }
 .relearn-btn:hover{background:rgba(143,188,122,.18);border-color:var(--sage)}
-.corpus-note{
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;
-  color:var(--dim);
-}
-
-/* ─── N-gram可視化パネル (4) ─── */
+.corpus-note{font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--dim);}
+/* ─── N-gram Panel ─── */
 .ngram-bar{
   position:relative;z-index:8;flex-shrink:0;
-  overflow:hidden;max-height:0;
-  border-bottom:0px solid var(--bd);
+  overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);
   background:var(--panel-bg);
   transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s;
 }
 .ngram-bar.open{max-height:200px;border-bottom-width:1px}
 .ngram-inner{padding:12px 22px 14px;}
-.ngram-title{
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;
-  letter-spacing:.06em;color:var(--mid);margin-bottom:10px;
-}
+.ngram-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.06em;color:var(--mid);margin-bottom:10px;}
 .ngram-chart{display:flex;flex-direction:column;gap:5px;}
 .ngram-row{display:flex;align-items:center;gap:8px;}
-.ngram-label{
-  font-family:'JetBrains Mono',monospace;font-size:.6rem;
-  color:var(--text);width:72px;text-align:right;flex-shrink:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
+.ngram-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text);width:90px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ngram-track{flex:1;height:14px;background:var(--bd);border-radius:3px;overflow:hidden;}
-.ngram-fill{
-  height:100%;border-radius:3px;
-  background:linear-gradient(90deg,var(--sage),var(--sky));
-  transition:width .35s cubic-bezier(.4,0,.2,1);
-}
-.ngram-pct{
-  font-family:'JetBrains Mono',monospace;font-size:.55rem;
-  color:var(--mid);width:36px;flex-shrink:0;
-}
-.ngram-empty{
-  font-family:'JetBrains Mono',monospace;font-size:.6rem;
-  color:var(--dim);
-}
-
+.ngram-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--sage),var(--sky));transition:width .35s cubic-bezier(.4,0,.2,1);}
+.ngram-pct{font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--mid);width:36px;flex-shrink:0;}
+.ngram-empty{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim);}
 /* ─── Chat ─── */
-#chat{
-  flex:1;overflow-y:auto;
-  padding:24px 0 18px;
-  position:relative;z-index:5;
-  scroll-behavior:smooth;
-}
+#chat{flex:1;overflow-y:auto;padding:24px 0 18px;position:relative;z-index:5;scroll-behavior:smooth;}
 .msgs{max-width:740px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:16px;}
-
-/* ─── Welcome ─── */
 .welcome{animation:fadeUp .8s cubic-bezier(.34,1.15,.64,1) both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .welcome-card{
-  border:1px solid var(--bd2);border-radius:var(--r-lg);
-  background:var(--s1);padding:26px 28px;
+  border:1px solid var(--bd2);border-radius:var(--r-lg);background:var(--s1);padding:26px 28px;
   position:relative;overflow:hidden;
 }
 .welcome-card::before{
@@ -341,60 +239,33 @@ input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,
   background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%);
 }
 .welcome-card::after{
-  content:'';position:absolute;bottom:0;right:0;
-  width:200px;height:200px;border-radius:50%;
-  background:radial-gradient(circle,rgba(143,188,122,.03),transparent 70%);
-  pointer-events:none;
+  content:'';position:absolute;bottom:0;right:0;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(143,188,122,.03),transparent 70%);pointer-events:none;
 }
 .welcome-head{display:flex;align-items:baseline;gap:11px;margin-bottom:13px;}
 .welcome-title{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:400;color:var(--text);letter-spacing:.12em;}
 .welcome-title em{font-style:italic;color:var(--sage)}
-.welcome-ver{
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;
-  padding:2px 6px;border:1px solid rgba(143,188,122,.2);
-  border-radius:4px;color:var(--sage);letter-spacing:.08em;
-}
+.welcome-ver{font-family:'JetBrains Mono',monospace;font-size:.56rem;padding:2px 6px;border:1px solid rgba(143,188,122,.2);border-radius:4px;color:var(--sage);letter-spacing:.08em;}
 .welcome-sub{color:var(--mid);font-size:.84rem;line-height:1.95;margin-bottom:16px}
-.welcome-sub code{
-  font-family:'JetBrains Mono',monospace;font-size:.78em;
-  color:var(--sky);background:rgba(122,179,194,.07);
-  padding:1px 5px;border-radius:3px;
-}
+.welcome-sub code{font-family:'JetBrains Mono',monospace;font-size:.78em;color:var(--sky);background:rgba(122,179,194,.07);padding:1px 5px;border-radius:3px;}
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
-.feat{
-  border:1px solid var(--bd);border-radius:var(--r-sm);
-  background:var(--bg);padding:9px 12px;
-  font-size:.7rem;line-height:1.6;
-  position:relative;overflow:hidden;
-}
-.feat::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--accent,var(--sage));border-radius:0 2px 2px 0;
-}
-.feat.kn{--accent:var(--sage)}.feat.beam{--accent:var(--sky)}
-.feat.coh{--accent:var(--amber)}.feat.samp{--accent:var(--violet)}
+.feat{border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg);padding:9px 12px;font-size:.7rem;line-height:1.6;position:relative;overflow:hidden;}
+.feat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent,var(--sage));border-radius:0 2px 2px 0;}
+.feat.kn{--accent:var(--sage)}.feat.beam{--accent:var(--sky)}.feat.coh{--accent:var(--amber)}.feat.samp{--accent:var(--violet)}
 .feat strong{display:block;font-size:.68rem;letter-spacing:.05em;color:var(--text);margin-bottom:2px;font-weight:500}
 .feat span{color:var(--mid)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{
-  font-size:.76rem;padding:5px 13px;
-  border:1px solid var(--bd2);border-radius:20px;
-  background:transparent;color:var(--mid);cursor:pointer;
-  font-family:'Zen Kaku Gothic New',sans-serif;
+  font-size:.76rem;padding:5px 13px;border:1px solid var(--bd2);border-radius:20px;
+  background:transparent;color:var(--mid);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;
   transition:all .22s cubic-bezier(.34,1.4,.64,1);
 }
 .chip:hover{border-color:rgba(143,188,122,.4);color:var(--sage);background:rgba(143,188,122,.05);transform:translateY(-2px);}
-
 /* ─── Messages ─── */
 .msg{display:flex;gap:11px;align-items:flex-start;animation:msgIn .38s cubic-bezier(.34,1.2,.64,1) both}
 @keyframes msgIn{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:none}}
 .msg.user{flex-direction:row-reverse}
-.av{
-  width:30px;height:30px;border-radius:var(--r-sm);
-  display:grid;place-items:center;flex-shrink:0;
-  font-family:'JetBrains Mono',monospace;font-size:.5rem;
-  font-weight:500;letter-spacing:.04em;
-}
+.av{width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:500;letter-spacing:.04em;}
 .av.ai{background:linear-gradient(135deg,rgba(143,188,122,.09),rgba(122,179,194,.06));border:1px solid rgba(143,188,122,.18);color:var(--sage);}
 .av.user{background:linear-gradient(135deg,rgba(196,136,122,.09),rgba(212,168,83,.06));border:1px solid rgba(196,136,122,.18);color:var(--rose);}
 .bub{max-width:78%;padding:12px 16px;font-size:.86rem;line-height:1.95;}
@@ -403,164 +274,82 @@ input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,
 .bub.streaming{border-color:rgba(143,188,122,.25);box-shadow:0 0 24px rgba(143,188,122,.05);}
 .msg-meta{
   font-family:'JetBrains Mono',monospace;font-size:.53rem;letter-spacing:.04em;
-  color:var(--dim);margin-top:5px;margin-left:41px;
-  display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  color:var(--dim);margin-top:5px;margin-left:41px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;
 }
 .meta-tag{border:1px solid var(--bd);border-radius:10px;padding:1px 7px;background:var(--s1);color:var(--mid);}
 .meta-tag.g{border-color:rgba(143,188,122,.18);color:rgba(143,188,122,.5)}
-
-/* ─── 再生成ボタン (2) ─── */
 .regen-btn{
-  width:20px;height:20px;border-radius:5px;
-  border:1px solid var(--bd);background:var(--s1);
-  color:var(--dim);cursor:pointer;
-  display:grid;place-items:center;
-  transition:all .18s;flex-shrink:0;
+  width:20px;height:20px;border-radius:5px;border:1px solid var(--bd);background:var(--s1);
+  color:var(--dim);cursor:pointer;display:grid;place-items:center;transition:all .18s;flex-shrink:0;
 }
 .regen-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
 .regen-btn svg{width:10px;height:10px}
-
 .cursor-blink{
-  display:inline-block;width:2px;height:.88em;
-  background:var(--sage);margin-left:2px;vertical-align:text-bottom;
-  border-radius:1px;animation:cb .65s step-end infinite;
+  display:inline-block;width:2px;height:.88em;background:var(--sage);margin-left:2px;
+  vertical-align:text-bottom;border-radius:1px;animation:cb .65s step-end infinite;
 }
 @keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
-.sys{
-  text-align:center;
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.07em;
-  color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both;
-}
+.sys{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.07em;color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both;}
 .sys span{border:1px solid var(--bd);border-radius:20px;padding:3px 11px;background:var(--s1);display:inline-flex;align-items:center;gap:6px;}
 .sys-dot{width:4px;height:4px;border-radius:50%;background:var(--sage);animation:bk 1.4s ease-in-out infinite;}
-
 /* ─── Footer ─── */
 footer{
   position:relative;z-index:20;flex-shrink:0;
-  border-top:1px solid var(--bd);
-  background:var(--footer-bg);
-  backdrop-filter:blur(28px);
-  padding:12px 18px;
+  border-top:1px solid var(--bd);background:var(--footer-bg);
+  backdrop-filter:blur(28px);padding:12px 18px;
 }
 .input-wrap{max-width:740px;margin:0 auto}
 .input-row{
-  display:flex;align-items:flex-end;gap:7px;
-  background:var(--s1);border:1px solid var(--bd2);
-  border-radius:var(--r-md);padding:9px 9px 9px 16px;
-  transition:border-color .25s,box-shadow .25s;
+  display:flex;align-items:flex-end;gap:7px;background:var(--s1);border:1px solid var(--bd2);
+  border-radius:var(--r-md);padding:9px 9px 9px 16px;transition:border-color .25s,box-shadow .25s;
 }
 .input-row:focus-within{border-color:rgba(143,188,122,.28);box-shadow:0 0 0 4px rgba(143,188,122,.035);}
-textarea{
-  flex:1;background:none;border:none;outline:none;
-  color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;
-  font-size:.86rem;resize:none;max-height:110px;
-  line-height:1.75;padding:2px 0;
-}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.86rem;resize:none;max-height:110px;line-height:1.75;padding:2px 0;}
 textarea::placeholder{color:var(--dim)}
 .send-btn{
-  width:34px;height:34px;border:none;border-radius:var(--r-sm);
-  background:var(--sage);color:#181512;
-  cursor:pointer;display:grid;place-items:center;flex-shrink:0;
-  transition:all .2s cubic-bezier(.34,1.4,.64,1);
+  width:34px;height:34px;border:none;border-radius:var(--r-sm);background:var(--sage);color:#181512;
+  cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:all .2s cubic-bezier(.34,1.4,.64,1);
 }
 .send-btn:hover{background:var(--sage2);box-shadow:0 4px 18px rgba(143,188,122,.28);transform:scale(1.07);}
 .send-btn:active{transform:scale(.91)}
 .send-btn:disabled{opacity:.28;cursor:not-allowed;transform:none;box-shadow:none}
 .send-btn svg{width:13px;height:13px}
-.progress-strip{
-  height:1.5px;border-radius:1px;
-  background:linear-gradient(90deg,var(--sage),var(--sky),var(--amber));
-  width:0%;margin-top:8px;
-  opacity:0;transition:width .07s linear,opacity .3s;
-}
+.progress-strip{height:1.5px;border-radius:1px;background:linear-gradient(90deg,var(--sage),var(--sky),var(--amber));width:0%;margin-top:8px;opacity:0;transition:width .07s linear,opacity .3s;}
 .progress-strip.active{opacity:1}
-
-/* ─── フッター下段 (9: Perplexity + ヒント) ─── */
-.footer-bottom{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:7px;
-}
-.footer-hint{
-  font-family:'JetBrains Mono',monospace;font-size:.52rem;
-  color:var(--dim);letter-spacing:.05em;
-}
-.ppx-live{
-  font-family:'JetBrains Mono',monospace;font-size:.52rem;
-  color:var(--mid);letter-spacing:.04em;
-  transition:color .25s;
-}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;}
+.footer-hint{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--dim);letter-spacing:.05em;}
+.ppx-live{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--mid);letter-spacing:.04em;transition:color .25s;}
 .ppx-live.hi{color:var(--sky)}
 .ppx-live.warn{color:var(--amber)}
 /* ─── ヘルプモーダル ─── */
 .help-overlay{
-  position:fixed;inset:0;z-index:100;
-  background:rgba(0,0,0,.55);
-  backdrop-filter:blur(6px);
+  position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;
-  transition:opacity .25s;
+  opacity:0;pointer-events:none;transition:opacity .25s;
 }
 .help-overlay.open{opacity:1;pointer-events:all}
 .help-modal{
-  width:min(620px,92vw);max-height:80vh;
-  background:var(--s1);border:1px solid var(--bd2);
-  border-radius:var(--r-lg);
-  overflow:hidden;display:flex;flex-direction:column;
-  transform:translateY(14px) scale(.97);
-  transition:transform .28s cubic-bezier(.34,1.2,.64,1);
+  width:min(620px,92vw);max-height:80vh;background:var(--s1);border:1px solid var(--bd2);
+  border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;
+  transform:translateY(14px) scale(.97);transition:transform .28s cubic-bezier(.34,1.2,.64,1);
   position:relative;
 }
 .help-overlay.open .help-modal{transform:none}
-.help-modal::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%);
-}
-.help-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 20px 14px;border-bottom:1px solid var(--bd);
-  flex-shrink:0;
-}
-.help-head-title{
-  font-family:'Fraunces',serif;font-size:.95rem;font-weight:400;
-  letter-spacing:.12em;color:var(--text);
-}
+.help-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%);}
+.help-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;}
+.help-head-title{font-family:'Fraunces',serif;font-size:.95rem;font-weight:400;letter-spacing:.12em;color:var(--text);}
 .help-head-title em{font-style:italic;color:var(--sage)}
-.help-close{
-  width:26px;height:26px;border-radius:var(--r-sm);
-  border:1px solid var(--bd2);background:transparent;
-  color:var(--mid);cursor:pointer;display:grid;place-items:center;
-  transition:all .18s;
-}
+.help-close{width:26px;height:26px;border-radius:var(--r-sm);border:1px solid var(--bd2);background:transparent;color:var(--mid);cursor:pointer;display:grid;place-items:center;transition:all .18s;}
 .help-close:hover{border-color:var(--rose);color:var(--rose)}
 .help-body{overflow-y:auto;padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px;}
-.help-section{}
-.help-section-title{
-  font-family:'JetBrains Mono',monospace;font-size:.58rem;
-  letter-spacing:.1em;color:var(--sage);
-  margin-bottom:10px;padding-bottom:5px;
-  border-bottom:1px solid var(--bd);
-}
+.help-section-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--sage);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--bd);}
 .help-items{display:flex;flex-direction:column;gap:8px;}
 .help-item{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:start;}
-.help-item-name{
-  font-family:'JetBrains Mono',monospace;font-size:.62rem;
-  color:var(--text);font-weight:500;padding-top:1px;
-}
-.help-item-name span{
-  display:inline-block;font-size:.52rem;
-  color:var(--mid);margin-top:2px;
-}
-.help-item-desc{
-  font-family:'Zen Kaku Gothic New',sans-serif;font-size:.76rem;
-  color:var(--mid);line-height:1.75;
-}
+.help-item-name{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text);font-weight:500;padding-top:1px;}
+.help-item-name span{display:inline-block;font-size:.52rem;color:var(--mid);margin-top:2px;}
+.help-item-desc{font-family:'Zen Kaku Gothic New',sans-serif;font-size:.76rem;color:var(--mid);line-height:1.75;}
 .help-item-desc b{color:var(--text);font-weight:500}
-.help-item-desc code{
-  font-family:'JetBrains Mono',monospace;font-size:.72em;
-  color:var(--sky);background:rgba(122,179,194,.08);
-  padding:1px 4px;border-radius:3px;
-}
-
+.help-item-desc code{font-family:'JetBrains Mono',monospace;font-size:.72em;color:var(--sky);background:rgba(122,179,194,.08);padding:1px 4px;border-radius:3px;}
 </style>
 </head>
 <body>
@@ -575,48 +364,30 @@ textarea::placeholder{color:var(--dim)}
       <div class="dot"></div>
       <span id="statusTxt">読込中…</span>
     </div>
-
-    <!-- 10: テーマ切り替え -->
     <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="テーマ切り替え">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
-        <circle cx="12" cy="12" r="5"/>
-        <line x1="12" y1="1" x2="12" y2="3"/>
-        <line x1="12" y1="21" x2="12" y2="23"/>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-        <line x1="1" y1="12" x2="3" y2="12"/>
-        <line x1="21" y1="12" x2="23" y2="12"/>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
       </svg>
     </div>
-
-    <!-- 4: N-gram可視化 -->
     <div class="icon-btn" id="ngramBtn" onclick="toggleNgram()" title="N-gram可視化">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10"/>
-        <line x1="12" y1="20" x2="12" y2="4"/>
-        <line x1="6"  y1="20" x2="6"  y2="14"/>
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
       </svg>
     </div>
-
-    <!-- 3: コーパス編集 -->
     <div class="icon-btn" id="corpusBtn" onclick="toggleCorpus()" title="コーパス編集">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
       </svg>
     </div>
-
-    <!-- ヘルプ/説明 -->
     <div class="icon-btn" id="helpBtn" onclick="toggleHelp()" title="設定の説明">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
-        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
       </svg>
     </div>
-
-    <!-- ⚙ 設定 -->
     <div class="icon-btn" id="settingsBtn" onclick="toggleSettings()" title="生成設定">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
@@ -626,11 +397,8 @@ textarea::placeholder{color:var(--dim)}
   </div>
 </header>
 
-<!-- ─── 設定パネル ─── -->
 <div class="settings-bar" id="settingsBar">
   <div class="settings-inner">
-
-    <!-- 5: 文体プリセット -->
     <div class="preset-row">
       <span class="preset-lbl">PRESET</span>
       <button class="preset-btn" onclick="applyPreset('poetic')" id="preset-poetic">詩的</button>
@@ -639,7 +407,6 @@ textarea::placeholder{color:var(--dim)}
       <button class="preset-btn" onclick="applyPreset('balanced')" id="preset-balanced">均衡</button>
       <button class="preset-btn" onclick="applyPreset('concise')" id="preset-concise">簡潔</button>
     </div>
-
     <div class="ctrl">
       <div class="ctrl-lbl">N-gram最大次数 <span class="val" id="vOrder">5</span></div>
       <input type="range" id="rOrder" min="2" max="8" value="5" oninput="syncSlider(this,'vOrder',1);scheduleRebuild()">
@@ -709,10 +476,8 @@ textarea::placeholder{color:var(--dim)}
       <input type="range" id="rDiv" min="0.0" max="1.0" value="0.0" step="0.05" oninput="syncSlider(this,'vDiv',.05)">
       <div class="ctrl-desc">同テーマ続出を抑制</div>
     </div>
-
     <div class="build-label" id="buildLabel">モデル未構築</div>
     <div class="build-bar-wrap"><div class="build-bar" id="buildBar"></div></div>
-
     <div class="stat-row">
       <div class="sc hi">文字数 <b id="sChars">—</b></div>
       <div class="sc hi">トークン数 <b id="sWords">—</b></div>
@@ -724,11 +489,9 @@ textarea::placeholder{color:var(--dim)}
       <div class="sc">Entropy <b id="sEnt">—</b></div>
       <div class="sc file">ファイル <b id="sFiles">—</b></div>
     </div>
-
   </div>
 </div>
 
-<!-- ─── 3: コーパス編集パネル ─── -->
 <div class="corpus-bar" id="corpusBar">
   <div class="corpus-inner">
     <div class="corpus-header">
@@ -742,7 +505,6 @@ textarea::placeholder{color:var(--dim)}
   </div>
 </div>
 
-<!-- ─── 4: N-gram可視化パネル ─── -->
 <div class="ngram-bar" id="ngramBar">
   <div class="ngram-inner">
     <div class="ngram-title" id="ngramTitle">入力語の次トークン候補（上位8件）</div>
@@ -752,7 +514,6 @@ textarea::placeholder{color:var(--dim)}
   </div>
 </div>
 
-<!-- ─── Chat ─── -->
 <div id="chat">
   <div class="msgs" id="msgs">
     <div class="welcome" id="welcome">
@@ -779,7 +540,6 @@ textarea::placeholder{color:var(--dim)}
   </div>
 </div>
 
-<!-- ─── Footer ─── -->
 <footer>
   <div class="input-wrap">
     <div class="input-row">
@@ -788,13 +548,11 @@ textarea::placeholder{color:var(--dim)}
         onkeydown="onKey(event)"></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled title="送信">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"/>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
       </button>
     </div>
     <div class="progress-strip" id="prog"></div>
-    <!-- 9: Perplexity リアルタイム + ヒント -->
     <div class="footer-bottom">
       <div class="footer-hint">ENTER で送信 ／ SHIFT+ENTER で改行</div>
       <div class="ppx-live" id="ppxLive"></div>
@@ -804,16 +562,30 @@ textarea::placeholder{color:var(--dim)}
 
 <script>
 // ============================================================
-//  COMPOSE v3 — 追加機能
-//   2. 再生成ボタン
-//   3. コーパスライブ編集
-//   4. N-gram候補可視化
-//   5. 文体プリセット
-//   9. Perplexityリアルタイム表示
-//  10. ライト/ダークテーマ切り替え
+//  COMPOSE v3 — 改善版
+//  #1  コーパス読み込みエラーを明示的に報告
+//  #2  addMeta の XSS 修正 (DOM API + クロージャ)
+//  #3  buildGeneration カウンタでレース条件を排除
+//  #5  KN の二重正規化を除去してバックオフ構造を保持
+//  #6  ビームサーチの完了ビームスコアを凍結
+//  #7  O(1) 確率インデックスで getNextProb を高速化
+//  #8  モデル再構築時に統計カウンタをリセット
+//  #9  テキストエリアの高さリセットを確実に
+//  #12 パネルの同時展開を排他制御
+//  トークン化: スペース区切りに変更
 // ============================================================
 
-let segmenter   = null;
+// ─── ユーティリティ（先頭で定義、全体から参照） ───────
+function isEndToken(t) {
+  return /[.!?。！？]$/.test(t);
+}
+function escHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n); }
+
+// ─── グローバル状態 ──────────────────────────────────
 let corpus      = '';
 let tokens      = [];
 let vocab       = new Set();
@@ -822,6 +594,11 @@ let tokenIdf    = {};
 let kn          = {};
 let wb          = {};
 let mle         = {};
+// #7: O(1) 確率参照用インデックス
+let knIdx       = {};
+let wbIdx       = {};
+let mleIdx      = {};
+let unigramDist = new Map();
 let rawCounts   = {};
 let continuationCounts = {};
 let sentStarts  = [];
@@ -831,16 +608,13 @@ let totalBoUsed   = 0;
 let totalGenSteps = 0;
 let busy          = false;
 let loadedFiles   = [];
-
-// 2: 再生成用に最後の入力を保持
+// #3: ビルド世代カウンタ（古いビルドを中断する）
+let buildGeneration = 0;
 let lastInput = '';
 let ppxLiveTimer = null;
 
-// ─── 起動 ─────────────────────────────────
+// ─── 起動 ────────────────────────────────────────────
 async function init() {
-  if (typeof TinySegmenter !== 'undefined') {
-    segmenter = new TinySegmenter();
-  }
   corpus = await loadCorpusFiles();
   document.getElementById('corpusEdit').value = corpus;
   await buildModelAsync();
@@ -849,9 +623,10 @@ async function init() {
   initSliders();
 }
 
-// ─── data/ から全 .txt を読み込む ──────────
+// ─── #1: コーパス読み込み（エラー明示） ──────────────
 async function loadCorpusFiles() {
   loadedFiles = [];
+  const failedFiles = [];
   const fileList = [];
   try {
     const r = await fetch('data/manifest.json');
@@ -880,27 +655,34 @@ async function loadCorpusFiles() {
       const r = await fetch(path);
       if (r.ok) {
         const t = await r.text();
-        if (t.trim().length > 0) { texts.push(t); loadedFiles.push(path.split('/').pop()); }
+        if (t.trim().length > 0) {
+          texts.push(t);
+          loadedFiles.push(path.split('/').pop());
+        } else {
+          failedFiles.push(path.split('/').pop() + ' (空)');
+        }
+      } else {
+        failedFiles.push(path.split('/').pop() + ' (HTTP ' + r.status + ')');
       }
-    } catch(_) {}
+    } catch(_) {
+      failedFiles.push(path.split('/').pop() + ' (読込失敗)');
+    }
+  }
+  if (failedFiles.length > 0) {
+    console.warn('COMPOSE: ファイル読み込み失敗 →', failedFiles.join(', '));
   }
   if (texts.length === 0) {
-    setStatus('warn', 'フォールバックデータ');
+    const reason = failedFiles.length > 0 ? failedFiles.join(', ') : 'ファイルなし';
+    setStatus('warn', 'フォールバック (' + reason + ')');
     loadedFiles = ['(内蔵)'];
     return fallbackCorpus();
   }
-  const label = loadedFiles.length === 1 ? loadedFiles[0] : `${loadedFiles.length} ファイル`;
-  setStatus('ok', label + ' 読込完了');
+  const label = loadedFiles.length === 1 ? loadedFiles[0] : loadedFiles.length + ' ファイル';
+  setStatus('ok', label + ' 読込完了' + (failedFiles.length > 0 ? ' ⚠' : ''));
   return texts.join('\n');
 }
 
-// ─── 3: コーパスライブ編集 ────────────────
-function toggleCorpus() {
-  const bar = document.getElementById('corpusBar');
-  const btn = document.getElementById('corpusBtn');
-  bar.classList.toggle('open');
-  btn.classList.toggle('active');
-}
+// ─── コーパスライブ編集 ───────────────────────────────
 async function relearnCorpus() {
   const edited = document.getElementById('corpusEdit').value.trim();
   if (!edited) return;
@@ -913,13 +695,13 @@ async function relearnCorpus() {
   }, 2000);
 }
 
-// ─── 5: 文体プリセット ────────────────────
+// ─── 文体プリセット ───────────────────────────────────
 const PRESETS = {
-  poetic:   { temp: 1.8, topP: 0.95, repeat: 1.1, div: 0.2,  len: 60  },
-  logical:  { temp: 0.4, topP: 0.80, repeat: 1.6, div: 0.0,  len: 40  },
-  random:   { temp: 2.2, topP: 1.00, repeat: 1.0, div: 0.0,  len: 40  },
-  balanced: { temp: 1.0, topP: 0.95, repeat: 1.2, div: 0.0,  len: 40  },
-  concise:  { temp: 0.7, topP: 0.85, repeat: 1.4, div: 0.15, len: 20  },
+  poetic:   { temp: 1.8, topP: 0.95, repeat: 1.1, div: 0.2,  len: 60 },
+  logical:  { temp: 0.4, topP: 0.80, repeat: 1.6, div: 0.0,  len: 40 },
+  random:   { temp: 2.2, topP: 1.00, repeat: 1.0, div: 0.0,  len: 40 },
+  balanced: { temp: 1.0, topP: 0.95, repeat: 1.2, div: 0.0,  len: 40 },
+  concise:  { temp: 0.7, topP: 0.85, repeat: 1.4, div: 0.15, len: 20 },
 };
 function applyPreset(name) {
   const p = PRESETS[name];
@@ -942,38 +724,24 @@ function clearPreset() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 
-// ─── 10: テーマ切り替え ───────────────────
+// ─── テーマ切り替え ───────────────────────────────────
 function toggleTheme() {
   const html = document.documentElement;
-  const current = html.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
-  // アイコン切り替え（月/太陽）
   const icon = document.getElementById('themeIcon');
   if (next === 'light') {
     icon.innerHTML = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
   } else {
-    icon.innerHTML = `
-      <circle cx="12" cy="12" r="5"/>
-      <line x1="12" y1="1" x2="12" y2="3"/>
-      <line x1="12" y1="21" x2="12" y2="23"/>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-      <line x1="1" y1="12" x2="3" y2="12"/>
-      <line x1="21" y1="12" x2="23" y2="12"/>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+    icon.innerHTML = `<circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
   }
 }
 
-// ─── 4: N-gram可視化 ─────────────────────
-function toggleNgram() {
-  const bar = document.getElementById('ngramBar');
-  const btn = document.getElementById('ngramBtn');
-  bar.classList.toggle('open');
-  btn.classList.toggle('active');
-  if (bar.classList.contains('open')) updateNgramLive();
-}
+// ─── N-gram 可視化 ────────────────────────────────────
 function updateNgramLive() {
   const bar = document.getElementById('ngramBar');
   if (!bar.classList.contains('open') || !modelReady) return;
@@ -994,11 +762,11 @@ function updateNgramLive() {
     return;
   }
   const maxP = top[0].p;
-  const ctxStr = toks.slice(-Math.min(usedOrder, 3)).join('') || '(なし)';
+  const ctxStr = toks.slice(-Math.min(usedOrder, 3)).join(' ') || '(なし)';
   title.textContent = `文脈「${ctxStr}」の次トークン候補（${usedOrder}-gram）`;
   chart.innerHTML = top.map(c => {
     const pct = (c.p / maxP * 100).toFixed(1);
-    const label = c.word.length > 8 ? c.word.slice(0, 7) + '…' : c.word;
+    const label = c.word.length > 10 ? c.word.slice(0, 9) + '…' : c.word;
     return `<div class="ngram-row">
       <div class="ngram-label" title="${escHtml(c.word)}">${escHtml(label)}</div>
       <div class="ngram-track"><div class="ngram-fill" style="width:${pct}%"></div></div>
@@ -1007,7 +775,7 @@ function updateNgramLive() {
   }).join('');
 }
 
-// ─── 9: Perplexityリアルタイム ────────────
+// ─── Perplexity リアルタイム ──────────────────────────
 function updatePpxLive() {
   clearTimeout(ppxLiveTimer);
   const el = document.getElementById('ppxLive');
@@ -1023,8 +791,7 @@ function updatePpxLive() {
       const ctx = toks.slice(Math.max(0, i - maxOrder), i);
       let p = getNextProb(ctx, toks[i], maxOrder);
       if (p < 1e-10) p = 1e-10;
-      logSum += Math.log2(p);
-      count++;
+      logSum += Math.log2(p); count++;
     }
     if (count === 0) { el.textContent = ''; return; }
     const ppx = Math.pow(2, -logSum / count);
@@ -1033,14 +800,14 @@ function updatePpxLive() {
   }, 150);
 }
 
-// ─── ステータス ──────────────────────────
+// ─── ステータス ───────────────────────────────────────
 function setStatus(cls, txt) {
   const p = document.getElementById('statusPill');
   p.className = 'status-pill ' + cls;
   document.getElementById('statusTxt').textContent = txt;
 }
 
-// ─── スライダー同期 ─────────────────────
+// ─── スライダー同期 ───────────────────────────────────
 function syncSlider(el, valId, step) {
   const v = parseFloat(el.value);
   const d = step < 1 ? String(step).split('.')[1].length : 0;
@@ -1055,27 +822,27 @@ function initSliders() {
   document.querySelectorAll('input[type=range]').forEach(updateRangeFill);
 }
 
-// ─── トークン化 ─────────────────────────
+// ─── トークン化: スペース区切り ───────────────────────
 function tokenize(text) {
-  const clean = text
-    .replace(/[#＃]/g, '')
-    .replace(/\r?\n/g, '。')
-    .replace(/\s+/g, '')
-    .replace(/[""「」『』【】〔〕（）()]/g, '');
-  if (segmenter) return segmenter.segment(clean).filter(t => t.trim() !== '');
-  return clean.split('').filter(c => c.trim() !== '');
+  return text.replace(/\r?\n/g, ' ').split(/\s+/).filter(t => t.length > 0);
 }
 
-// ─── モデル構築 ──────────────────────────
+// ─── モデル構築 (#3 #8) ──────────────────────────────
 function scheduleRebuild() {
   clearTimeout(rebuildTimer);
   rebuildTimer = setTimeout(() => buildModelAsync(), 600);
 }
 
 async function buildModelAsync() {
+  const myGen = ++buildGeneration; // #3: 世代番号を取得
   setStatus('busy', 'モデル構築中…');
   modelReady = false;
   document.getElementById('sendBtn').disabled = true;
+
+  // #8: 統計カウンタをリセット（再構築後のバックオフ率が混入しないように）
+  totalBoUsed   = 0;
+  totalGenSteps = 0;
+
   const maxOrder = parseInt(document.getElementById('rOrder').value);
   const smMethod = document.getElementById('rSmMethod').value;
   tokens    = tokenize(corpus);
@@ -1083,19 +850,26 @@ async function buildModelAsync() {
   vocabArr  = Array.from(vocab);
   rawCounts = {};
   kn = {}; wb = {}; mle = {};
+  knIdx = {}; wbIdx = {}; mleIdx = {}; // #7: インデックスもリセット
+  unigramDist = new Map();
   sentStarts = [0];
   continuationCounts = {};
   buildIdf();
+
   for (let i = 0; i < tokens.length; i++) {
-    if (['。', '！', '？', '!', '?'].includes(tokens[i]) && i + 1 < tokens.length) sentStarts.push(i + 1);
+    if (isEndToken(tokens[i]) && i + 1 < tokens.length) sentStarts.push(i + 1);
   }
+
   const setBar = (pct, label) => {
     document.getElementById('buildBar').style.width = pct + '%';
     document.getElementById('buildLabel').textContent = label;
   };
+
+  // カウント集計
   for (let n = 1; n <= maxOrder; n++) {
     setBar(Math.round(n / maxOrder * 40), `カウント集計: ${n}-gram…`);
     await sleep(0);
+    if (myGen !== buildGeneration) return; // #3: 古いビルドを中断
     rawCounts[n] = new Map();
     for (let i = 0; i <= tokens.length - n - 1; i++) {
       const key  = tokens.slice(i, i + n).join('\x00');
@@ -1105,37 +879,79 @@ async function buildModelAsync() {
       m.set(next, (m.get(next) || 0) + 1);
     }
   }
+
   setBar(42, '継続カウント計算…');
   await sleep(0);
+  if (myGen !== buildGeneration) return; // #3
+
   const contMap = new Map();
   if (rawCounts[1]) {
     for (const [, m] of rawCounts[1]) for (const [word] of m) contMap.set(word, (contMap.get(word) || 0) + 1);
   }
   continuationCounts = contMap;
   const totalContinuations = Array.from(contMap.values()).reduce((a, b) => a + b, 0) || 1;
+
+  // 確率化 + O(1) インデックス構築 (#7)
   for (let n = 1; n <= maxOrder; n++) {
     setBar(44 + Math.round(n / maxOrder * 50), `確率化: ${n}-gram (${smMethod})…`);
     await sleep(0);
-    if (smMethod === 'kn')       buildKN(n, totalContinuations);
-    else if (smMethod === 'wb')  buildWB(n);
-    else if (smMethod === 'lap') buildLaplace(n);
-    else                         buildMLE(n);
+    if (myGen !== buildGeneration) return; // #3
+
+    if (smMethod === 'kn') {
+      buildKN(n, totalContinuations);
+      knIdx[n] = buildProbIndex(kn[n]); // #7
+    } else if (smMethod === 'wb') {
+      buildWB(n);
+      wbIdx[n] = buildProbIndex(wb[n]); // #7
+    } else if (smMethod === 'lap') {
+      buildLaplace(n);
+      mleIdx[n] = buildProbIndex(mle[n]); // #7
+    } else {
+      buildMLE(n);
+      mleIdx[n] = buildProbIndex(mle[n]); // #7
+    }
   }
+
+  // #7: ユニグラム分布をフォールバック用に構築
+  {
+    const counts = new Map();
+    for (const t of tokens) counts.set(t, (counts.get(t) || 0) + 1);
+    const total = tokens.length || 1;
+    for (const [w, c] of counts) unigramDist.set(w, c / total);
+  }
+
   setBar(98, 'パープレキシティ計算…');
   await sleep(0);
+  if (myGen !== buildGeneration) return; // #3
+
   const ppx = computePerplexity(maxOrder);
   const ent = computeEntropy(maxOrder);
   setBar(100, '完了');
+
+  if (myGen !== buildGeneration) return; // #3: 最終チェック
+
   modelReady = true;
   document.getElementById('sendBtn').disabled = false;
   setStatus('ok', loadedFiles.length > 1 ? `${loadedFiles.length} ファイル 準備完了` : (loadedFiles[0] || '準備完了'));
   updateStats(ppx, ent);
 }
 
-// ─── Kneser-Ney ──────────────────────────
+// ─── #7: O(1) インデックス構築 ───────────────────────
+function buildProbIndex(model) {
+  const idx = new Map();
+  if (!model) return idx;
+  for (const [key, entries] of model) {
+    const m = new Map();
+    for (const e of entries) m.set(e.word, e.p);
+    idx.set(key, m);
+  }
+  return idx;
+}
+
+// ─── Kneser-Ney (#5: 二重正規化を除去) ──────────────
 function buildKN(n, totalCont) {
   const d = parseFloat(document.getElementById('rDisc').value);
-  const V = vocab.size;
+  const V = vocab.size || 1;
   const result = new Map();
   if (!rawCounts[n]) { kn[n] = result; return; }
   for (const [key, m] of rawCounts[n]) {
@@ -1149,24 +965,30 @@ function buildKN(n, totalCont) {
       if (n === 1) {
         pLow = (continuationCounts.get(word) || 0) / totalCont;
       } else {
-        const lowerKey  = key.split('\x00').slice(1).join('\x00');
-        const lowerProb = kn[n - 1] ? kn[n - 1].get(lowerKey) : null;
-        if (lowerProb) { const lp = lowerProb.find(e => e.word === word); pLow = lp ? lp.p : (1 / V); }
-        else pLow = (continuationCounts.get(word) || 0) / totalCont;
+        const lowerKey = key.split('\x00').slice(1).join('\x00');
+        // #7: 構築済みインデックスで下位モデルを O(1) 参照
+        const lowerIdx = knIdx[n - 1];
+        if (lowerIdx) {
+          const lm = lowerIdx.get(lowerKey);
+          pLow = lm ? (lm.get(word) ?? (1 / V)) : ((continuationCounts.get(word) || 0) / totalCont);
+        } else {
+          const lp = kn[n - 1] ? kn[n - 1].get(lowerKey) : null;
+          if (lp) { const found = lp.find(e => e.word === word); pLow = found ? found.p : (1 / V); }
+          else pLow = (continuationCounts.get(word) || 0) / totalCont;
+        }
       }
       const p = discounted + lambda * pLow;
       if (p > 0) entries.push({ word, p });
     }
-    const sum = entries.reduce((a, e) => a + e.p, 0);
-    if (sum > 0) entries.forEach(e => e.p /= sum);
+    // #5: 正規化を除去 — KN のバックオフ構造（未観測語への確率質量）を保持する
     result.set(key, entries);
   }
   kn[n] = result;
 }
 
-// ─── Witten-Bell ─────────────────────────
+// ─── Witten-Bell ─────────────────────────────────────
 function buildWB(n) {
-  const V = vocab.size;
+  const V = vocab.size || 1;
   const result = new Map();
   if (!rawCounts[n]) { wb[n] = result; return; }
   for (const [key, m] of rawCounts[n]) {
@@ -1192,9 +1014,9 @@ function buildWB(n) {
   wb[n] = result;
 }
 
-// ─── Laplace ─────────────────────────────
+// ─── Laplace ─────────────────────────────────────────
 function buildLaplace(n) {
-  const alpha = 0.1, V = vocab.size, result = new Map();
+  const alpha = 0.1, V = vocab.size || 1, result = new Map();
   if (!rawCounts[n]) { mle[n] = result; return; }
   for (const [key, m] of rawCounts[n]) {
     const total = Array.from(m.values()).reduce((a, b) => a + b, 0);
@@ -1207,7 +1029,7 @@ function buildLaplace(n) {
   mle[n] = result;
 }
 
-// ─── MLE ─────────────────────────────────
+// ─── MLE ─────────────────────────────────────────────
 function buildMLE(n) {
   const result = new Map();
   if (!rawCounts[n]) { mle[n] = result; return; }
@@ -1223,6 +1045,14 @@ function getModel(n) {
   if (sm === 'kn') return kn[n] || null;
   if (sm === 'wb') return wb[n] || null;
   return mle[n] || kn[n] || null;
+}
+
+// #7: O(1) 参照用インデックスを返す
+function getModelIdx(n) {
+  const sm = document.getElementById('rSmMethod').value;
+  if (sm === 'kn') return knIdx[n] || null;
+  if (sm === 'wb') return wbIdx[n] || null;
+  return mleIdx[n] || knIdx[n] || null;
 }
 
 function computePerplexity(maxOrder) {
@@ -1249,21 +1079,26 @@ function computeEntropy(maxOrder) {
   return count > 0 ? totalEnt / count : 0;
 }
 
+// #7: O(1) 確率参照 + ユニグラムフォールバック
 function getNextProb(context, target, maxOrder) {
   for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
-    const key   = context.slice(-n).join('\x00');
-    const model = getModel(n);
-    if (!model) continue;
-    const cands = model.get(key);
-    if (cands) { const found = cands.find(e => e.word === target); if (found) return found.p; }
+    const key = context.slice(-n).join('\x00');
+    const idx = getModelIdx(n);
+    if (!idx) continue;
+    const ctxMap = idx.get(key);
+    if (ctxMap) {
+      const p = ctxMap.get(target);
+      if (p !== undefined) return p;
+    }
   }
-  const u1 = getModel(1);
-  if (u1) for (const [, cands] of u1) { const found = cands.find(e => e.word === target); if (found) return found.p; }
-  return 1 / vocab.size;
+  // ユニグラム分布でフォールバック
+  const p = unigramDist.get(target);
+  if (p !== undefined) return p;
+  return 1 / (vocab.size || 1);
 }
 
 function buildIdf() {
-  const sentences = corpus.replace(/\r?\n/g, '。').split(/[。！？]/).filter(s => s.trim().length > 0);
+  const sentences = corpus.split(/[.!?。！？]+/).filter(s => s.trim().length > 0);
   const df = {};
   for (const sent of sentences) {
     const toks = new Set(tokenize(sent));
@@ -1274,7 +1109,7 @@ function buildIdf() {
   for (const [word, d] of Object.entries(df)) tokenIdf[word] = Math.log((N + 1) / (d + 1)) + 1;
 }
 
-// ─── サンプリング ──────────────────────────
+// ─── サンプリング ─────────────────────────────────────
 function sample(cands, recentTokens) {
   const temp       = parseFloat(document.getElementById('rTemp').value);
   const topK       = parseInt(document.getElementById('rTopK').value);
@@ -1302,7 +1137,7 @@ function sample(cands, recentTokens) {
     }
   }
   const total = sc.reduce((a, b) => a + b.w, 0);
-  if (total < 1e-10) return sc[Math.floor(Math.random() * sc.length)]?.word || '。';
+  if (total < 1e-10) return sc[Math.floor(Math.random() * sc.length)]?.word || '.';
   let r = Math.random() * total;
   for (const c of sc) { r -= c.w; if (r <= 0) return c.word; }
   return sc[sc.length - 1].word;
@@ -1327,14 +1162,16 @@ function getCandidates(context) {
     totalBoUsed++; totalGenSteps++;
     return { cands: allCands, usedOrder: 0 };
   }
-  return { cands: [{ word: '。', p: 1 }], usedOrder: 0 };
+  return { cands: [{ word: '.', p: 1 }], usedOrder: 0 };
 }
 
+// ─── #6: ビームサーチ — 完了ビームのスコアを凍結 ─────
 function generateBeam(seed, maxLen) {
   const beamWidth = parseInt(document.getElementById('rBeam').value);
   const maxOrder  = parseInt(document.getElementById('rOrder').value);
-  const PUNCT     = new Set(['。', '！', '？']);
-  let beams = [{ tokens: [...seed], logp: 0, done: false }];
+  // 完了済みなら frozenScore を使い、未完了なら現在の正規化スコアを使う
+  const getScore = b => b.frozenScore !== null ? b.frozenScore : b.logp / Math.max(b.tokens.length - seed.length, 1);
+  let beams = [{ tokens: [...seed], logp: 0, done: false, frozenScore: null }];
   for (let step = 0; step < maxLen * 2; step++) {
     if (beams.every(b => b.done)) break;
     const next = [];
@@ -1342,54 +1179,53 @@ function generateBeam(seed, maxLen) {
       if (beam.done) { next.push(beam); continue; }
       const { cands } = getCandidates(beam.tokens.slice(-maxOrder));
       for (const c of [...cands].sort((a, b) => b.p - a.p).slice(0, beamWidth * 2)) {
-        const logp = beam.logp + Math.log(Math.max(c.p, 1e-10));
-        const newTokens = [...beam.tokens, c.word];
-        const done = PUNCT.has(c.word) && newTokens.length - seed.length >= maxLen * 0.5;
-        next.push({ tokens: newTokens, logp, done });
+        const logp    = beam.logp + Math.log(Math.max(c.p, 1e-10));
+        const newToks = [...beam.tokens, c.word];
+        const genLen  = newToks.length - seed.length;
+        const isDone  = isEndToken(c.word) && genLen >= maxLen * 0.5;
+        // #6: 完了時点の長さ正規化スコアを凍結
+        const frozenScore = isDone ? logp / Math.max(genLen, 1) : null;
+        next.push({ tokens: newToks, logp, done: isDone, frozenScore });
       }
     }
-    next.sort((a, b) => {
-      const sa = a.logp / Math.max(a.tokens.length - seed.length, 1);
-      const sb = b.logp / Math.max(b.tokens.length - seed.length, 1);
-      return sb - sa;
-    });
+    next.sort((a, b) => getScore(b) - getScore(a));
     beams = next.slice(0, beamWidth);
     if (beams.every(b => b.done || b.tokens.length - seed.length >= maxLen)) break;
   }
-  return beams.sort((a, b) => {
-    const sa = a.logp / Math.max(a.tokens.length - seed.length, 1);
-    const sb = b.logp / Math.max(b.tokens.length - seed.length, 1);
-    return sb - sa;
-  })[0].tokens.slice(seed.length);
+  return beams.sort((a, b) => getScore(b) - getScore(a))[0].tokens.slice(seed.length);
 }
 
 function generateSample(seed, maxLen) {
   const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const PUNCT    = new Set(['。', '！', '？']);
   const result   = []; let context = [...seed];
   for (let i = 0; i < maxLen * 2; i++) {
     const { cands } = getCandidates(context.slice(-maxOrder));
     const word = sample(cands, context);
     result.push(word); context.push(word);
-    if (result.length >= maxLen * 0.6 && PUNCT.has(word)) break;
+    if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
     if (result.length >= maxLen) break;
   }
-  if (!PUNCT.has(result[result.length - 1])) result.push('。');
+  if (!isEndToken(result[result.length - 1])) result.push('.');
   return result;
 }
 
 function generateGreedy(seed, maxLen) {
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const PUNCT    = new Set(['。', '！', '？']);
-  const result   = []; let context = [...seed];
+  const maxOrder  = parseInt(document.getElementById('rOrder').value);
+  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
+  const repWin    = parseInt(document.getElementById('rRepWin').value);
+  const result    = []; let context = [...seed];
   for (let i = 0; i < maxLen * 2; i++) {
     const { cands } = getCandidates(context.slice(-maxOrder));
-    const word = [...cands].sort((a, b) => b.p - a.p)[0]?.word || '。';
+    // 貪欲法にも繰り返しペナルティを適用（#11 の関連修正）
+    const win = context.slice(-repWin);
+    const recentSet = new Set(win);
+    const scored = cands.map(c => ({ word: c.word, w: recentSet.has(c.word) ? c.p / repPenalty : c.p }));
+    const word = scored.sort((a, b) => b.w - a.w)[0]?.word || '.';
     result.push(word); context.push(word);
-    if (result.length >= maxLen * 0.6 && PUNCT.has(word)) break;
+    if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
     if (result.length >= maxLen) break;
   }
-  if (!PUNCT.has(result[result.length - 1])) result.push('。');
+  if (!isEndToken(result[result.length - 1])) result.push('.');
   return result;
 }
 
@@ -1437,18 +1273,21 @@ function generateReply(input) {
   if (algo === 'beam')        result = generateBeam(seed, maxLen);
   else if (algo === 'greedy') result = generateGreedy(seed, maxLen);
   else                        result = generateSample(seed, maxLen);
-  const joined  = result.join('');
-  const lastIdx = Math.max(...[...'。！？'].map(p => joined.lastIndexOf(p)));
-  const trimmed = lastIdx > 0 ? joined.slice(0, lastIdx + 1) : joined;
-  return trimmed.length > 0 ? trimmed : '。';
+  // 末尾の句点トークンを探してそこでトリム
+  let trimEnd = -1;
+  for (let i = result.length - 1; i >= 0; i--) {
+    if (isEndToken(result[i])) { trimEnd = i; break; }
+  }
+  const trimmed = trimEnd >= 0 ? result.slice(0, trimEnd + 1) : result;
+  return trimmed.join(' ') || '.';
 }
 
-// ─── 統計更新 ─────────────────────────────
+// ─── 統計更新 ─────────────────────────────────────────
 function updateStats(ppx, ent) {
   const maxN   = parseInt(document.getElementById('rOrder').value);
   const model  = getModel(maxN);
   const states = model ? model.size : 0;
-  const sents  = (corpus.match(/[。！？]/g) || []).length;
+  const sents  = (corpus.match(/[.!?。！？]/g) || []).length;
   const borate = totalGenSteps > 0 ? (totalBoUsed / totalGenSteps * 100).toFixed(1) + '%' : '—';
   const charCount = corpus.replace(/\s/g, '').length;
   document.getElementById('sChars').textContent  = fmt(charCount);
@@ -1463,37 +1302,73 @@ function updateStats(ppx, ent) {
   if (loadedFiles.length <= 3) { filesEl.textContent = loadedFiles.join(', '); }
   else { filesEl.textContent = `${loadedFiles.length} 件`; filesEl.title = loadedFiles.join('\n'); }
 }
-function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n); }
 
-// ─── チップ ──────────────────────────────
+// ─── チップ ───────────────────────────────────────────
 function buildChips() {
-  const ideas = ['春の光', '夜の街', '旅に出る', '孤独とは', '音楽について', '言葉の力', '朝の駅', '食べ物の香り', '宇宙の不思議', '記憶と時間', '静寂', '海の向こう'];
+  const ideas = ['the future', 'knowledge grows', 'language is', 'time passes',
+                 'the ocean', 'science advances', 'music connects', 'every morning',
+                 'the stars', 'memory and', 'change is', 'reading expands'];
   document.getElementById('chips').innerHTML = ideas.map(s =>
     `<button class="chip" onclick="suggest('${s}')">${s}</button>`
   ).join('');
 }
 
-// ─── UI ──────────────────────────────────
-function toggleSettings() {
-  const bar = document.getElementById('settingsBar');
-  const btn = document.getElementById('settingsBtn');
-  bar.classList.toggle('open'); btn.classList.toggle('active');
-  if (bar.classList.contains('open')) setTimeout(initSliders, 50);
+// ─── #12: パネル排他制御 ─────────────────────────────
+const PANELS = [
+  { barId: 'settingsBar', btnId: 'settingsBtn' },
+  { barId: 'corpusBar',   btnId: 'corpusBtn'   },
+  { barId: 'ngramBar',    btnId: 'ngramBtn'     },
+];
+function openOnlyPanel(targetBarId, targetBtnId, onOpen) {
+  const isOpen = document.getElementById(targetBarId).classList.contains('open');
+  // すべてのパネルを閉じる
+  PANELS.forEach(({ barId, btnId }) => {
+    document.getElementById(barId).classList.remove('open');
+    document.getElementById(btnId).classList.remove('active');
+  });
+  // 閉じていたなら開く（既に開いていたなら閉じるだけ）
+  if (!isOpen) {
+    document.getElementById(targetBarId).classList.add('open');
+    document.getElementById(targetBtnId).classList.add('active');
+    if (onOpen) onOpen();
+  }
 }
-function resize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; }
+function toggleSettings() {
+  openOnlyPanel('settingsBar', 'settingsBtn', () => setTimeout(initSliders, 50));
+}
+function toggleCorpus() {
+  openOnlyPanel('corpusBar', 'corpusBtn');
+}
+function toggleNgram() {
+  openOnlyPanel('ngramBar', 'ngramBtn', () => updateNgramLive());
+}
+
+// ─── #9: テキストエリアリサイズ（修正版） ────────────
+function resize(el) {
+  el.style.height = '0px'; // いったん潰して scrollHeight を正確に取得
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
 function onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
-function suggest(text) { document.getElementById('inp').value = text; resize(document.getElementById('inp')); sendMsg(); }
+function suggest(text) {
+  const inp = document.getElementById('inp');
+  inp.value = text;
+  resize(inp);
+  sendMsg();
+}
 function scrollToBottom() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
 function scrollDown() { const c = document.getElementById('chat'); if (c.scrollHeight - c.scrollTop - c.clientHeight < 120) c.scrollTop = c.scrollHeight; }
 
-// ─── 送信 ────────────────────────────────
+// ─── 送信 ─────────────────────────────────────────────
 async function sendMsg() {
   if (busy || !modelReady) return;
   const inp = document.getElementById('inp');
   const txt = inp.value.trim();
   if (!txt) return;
   lastInput = txt;
-  inp.value = ''; inp.style.height = 'auto';
+  // #9: テキストエリアを確実に 1 行高さへリセット
+  inp.value = '';
+  resize(inp);
   document.getElementById('ppxLive').textContent = '';
   busy = true;
   document.getElementById('sendBtn').disabled = true;
@@ -1518,7 +1393,7 @@ async function sendMsg() {
     bub.classList.add('streaming');
     await typeText(bub, reply);
     bub.classList.remove('streaming');
-    addMeta(reply, algo, elapsed, txt);  // 2: 再生成ボタン付き
+    addMeta(reply, algo, elapsed, txt);
   } catch(err) {
     removeSys(); addSys('エラーが発生しました'); console.error(err);
   } finally {
@@ -1529,7 +1404,7 @@ async function sendMsg() {
   }
 }
 
-// ─── 2: 再生成 ────────────────────────────
+// ─── 再生成 ───────────────────────────────────────────
 async function regenerate(input) {
   if (busy || !modelReady || !input) return;
   busy = true;
@@ -1555,22 +1430,36 @@ async function regenerate(input) {
   }
 }
 
-// ─── メタバッジ（再生成ボタン付き）─────────
+// ─── #2: addMeta — DOM API で XSS を排除 ─────────────
 function addMeta(reply, algo, elapsed, inputForRegen) {
   const msgs = document.getElementById('msgs');
   const d    = document.createElement('div');
   d.className = 'msg-meta';
   const toks = tokenize(reply).length;
   const algoLabel = algo === 'beam' ? 'ビームサーチ' : algo === 'greedy' ? '貪欲法' : 'サンプリング';
-  const safeInput = escHtml(inputForRegen || '').replace(/'/g, '\'');
-  d.innerHTML =
-    `<span class="meta-tag g">${algoLabel}</span>` +
-    `<span class="meta-tag">${toks} tok</span>` +
-    `<span class="meta-tag">${elapsed}s</span>` +
-    `<button class="regen-btn" onclick="regenerate('${safeInput}')" title="再生成">` +
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">` +
-    `<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>` +
-    `</svg></button>`;
+
+  const mkTag = (cls, text) => {
+    const s = document.createElement('span');
+    s.className = 'meta-tag' + (cls ? ' ' + cls : '');
+    s.textContent = text;
+    return s;
+  };
+  d.appendChild(mkTag('g', algoLabel));
+  d.appendChild(mkTag('',  toks + ' tok'));
+  d.appendChild(mkTag('',  elapsed + 's'));
+
+  // #2: ユーザー入力をクロージャで安全に閉じ込め innerHTML への文字列注入を一切行わない
+  const btn = document.createElement('button');
+  btn.className = 'regen-btn';
+  btn.title     = '再生成';
+  btn.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+    'stroke-linecap="round" stroke-linejoin="round">' +
+    '<polyline points="23 4 23 10 17 10"/>' +
+    '<path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
+  btn.addEventListener('click', () => regenerate(inputForRegen));
+  d.appendChild(btn);
+
   msgs.appendChild(d);
   scrollDown();
 }
@@ -1587,7 +1476,7 @@ function addSys(text) {
   removeSys();
   const c = document.getElementById('msgs');
   const d = document.createElement('div'); d.className = 'sys'; d.id = 'sys-msg';
-  d.innerHTML = `<span><span class="sys-dot"></span>${text}</span>`;
+  d.innerHTML = `<span><span class="sys-dot"></span>${escHtml(text)}</span>`;
   c.appendChild(d); scrollDown();
 }
 function removeSys() { const e = document.getElementById('sys-msg'); if (e) e.remove(); }
@@ -1602,17 +1491,12 @@ async function typeText(bub, text) {
   bub.innerHTML = out; scrollDown();
 }
 
-function escHtml(t) {
-  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
+// ─── フォールバックコーパス（スペース区切り） ─────────
 function fallbackCorpus() {
-  return '春の光は柔らかく大地を包み込む。桜の花びらが風に舞い散る様子はまるで淡い夢のようだ。山の向こうから吹いてくる風は若葉の香りをたっぷりと含んでいた。川のせせらぎが岩に当たって白い泡を立てながら流れていく。水面に映る空は揺れ続けて形を変える。夏の夜空には無数の星が瞬いている。蛍の光が暗い草むらの中でゆっくりと浮かび上がる。湿った大気の中で虫たちの鳴き声が重なり合って複雑な音楽を奏でていた。秋の森では葉が赤や黄色に染まり始めていた。落ち葉を踏みしめる音が静かな山道に響き渡る。冬の朝は凛とした空気が体を引き締める。雪が静かに降り積もって世界を白く覆っていく。言葉は思考を表現するためのものであるが同時に思考そのものを形作るものでもある。未来は確定していないからこそ希望を持つことができる。音楽は言葉の届かない場所まで届くことがある。旋律が記憶と結びついて遠い過去を一瞬で呼び戻す。海の水平線を眺めていると時間の感覚がなくなっていく。波が繰り返し岸に打ち寄せては砂を削り形を変えていく。朝の駅はいつも同じ顔をしているようで、毎日少しずつ違う。宇宙の広さを想像しようとすると、人間の言語はすぐに限界を迎える。孤独は恐ろしいものではなく、自分と向き合うための静かな時間だと気づいたのはずいぶん後のことだった。食べ物の香りには記憶を呼び起こす力がある。旅に出ると、普段気づかなかった自分の輪郭が少しずつ見えてくる気がする。';
+  return `The quick brown fox jumps over the lazy dog near the river bank. A language model learns statistical patterns from large amounts of text data. Words carry meaning through context and repetition across many sentences. The future of artificial intelligence is both exciting and deeply uncertain for everyone. Music connects people across languages and cultures in many unexpected ways. A journey of a thousand miles begins with a single step forward into the unknown. The stars at night remind us how vast the universe truly is beyond our reach. Knowledge grows when shared openly and freely with other curious and open minds. Memory and imagination are two sides of the same creative and powerful coin. Every sentence tells a small story about the world around us. Science advances one hypothesis and one careful experiment at a time. The ocean holds far more secrets than we have yet discovered beneath its surface. Reading expands the human mind in ways no other activity can fully replace. Change is the only constant in an uncertain and always evolving universe of possibilities. Technology continuously reshapes how humans communicate and create new things together. Time passes slowly when we wait and quickly when we are lost in deep thought. Language is the most powerful tool humans have ever invented to share complex ideas. Every morning brings a new chance to learn something previously unknown and surprising. The river flows endlessly forward never once returning to where it originally began.`;
 }
 
-
-// ─── ヘルプモーダル ──────────────────────
+// ─── ヘルプモーダル ───────────────────────────────────
 function toggleHelp() {
   const overlay = document.getElementById('helpOverlay');
   const btn     = document.getElementById('helpBtn');
@@ -1626,7 +1510,6 @@ function closeHelpOnBg(e) {
 init();
 </script>
 
-<!-- ─── ヘルプモーダル ─── -->
 <div class="help-overlay" id="helpOverlay" onclick="closeHelpOnBg(event)">
   <div class="help-modal">
     <div class="help-head">
@@ -1636,7 +1519,6 @@ init();
       </button>
     </div>
     <div class="help-body">
-
       <div class="help-section">
         <div class="help-section-title">モデル構築</div>
         <div class="help-items">
@@ -1650,17 +1532,16 @@ init();
           </div>
           <div class="help-item">
             <div class="help-item-name">KN割引 d<span>0.5〜0.95</span></div>
-            <div class="help-item-desc">Kneser-Ney平滑化での割引係数。各N-gramのカウントから<code>d</code>を引いた残りを高次確率に使う。<b>大きいほど低次モデルへのバックオフが増え多様性が上がる</b>。一般的に<code>0.7〜0.8</code>が良好。</div>
+            <div class="help-item-desc">Kneser-Ney平滑化での割引係数。各N-gramのカウントから<code>d</code>を引いた残りを高次確率に使う。一般的に<code>0.7〜0.8</code>が良好。</div>
           </div>
         </div>
       </div>
-
       <div class="help-section">
         <div class="help-section-title">生成アルゴリズム</div>
         <div class="help-items">
           <div class="help-item">
             <div class="help-item-name">生成アルゴリズム</div>
-            <div class="help-item-desc"><b>サンプリング</b>：確率に従いランダムに次トークンを選択。多様性が高い。<b>ビームサーチ</b>：複数の候補系列を並列探索し対数確率スコアが最高のものを採用。品質が高いが遅い。<b>貪欲法</b>：毎ステップ最高確率のトークンだけを選ぶ最速の手法。繰り返しが出やすい。</div>
+            <div class="help-item-desc"><b>サンプリング</b>：確率に従いランダムに次トークンを選択。多様性が高い。<b>ビームサーチ</b>：複数の候補系列を並列探索し対数確率スコアが最高のものを採用。<b>貪欲法</b>：毎ステップ最高確率のトークンだけを選ぶ最速の手法。</div>
           </div>
           <div class="help-item">
             <div class="help-item-name">ビーム幅<span>2〜12</span></div>
@@ -1668,47 +1549,44 @@ init();
           </div>
           <div class="help-item">
             <div class="help-item-name">応答長<span>8〜120</span></div>
-            <div class="help-item-desc">生成するトークン数の目安。句点（。！？）が来ると早めに終了するため、実際の長さはこの値より短くなることが多い。</div>
+            <div class="help-item-desc">生成するトークン数の目安。句点が来ると早めに終了するため、実際の長さはこの値より短くなることが多い。</div>
           </div>
         </div>
       </div>
-
       <div class="help-section">
         <div class="help-section-title">サンプリング制御</div>
         <div class="help-items">
           <div class="help-item">
             <div class="help-item-name">温度<span>0.1〜2.5</span></div>
-            <div class="help-item-desc">各トークンの確率分布を <code>1/温度</code> 乗してスケーリング。<b>1.0が標準</b>。<b>低いほど高確率トークンに集中</b>（保守的）、高いほど低確率トークンも選ばれやすくなり（創造的）、2.0を超えるとほぼランダムになる。</div>
+            <div class="help-item-desc">各トークンの確率分布をスケーリング。<b>1.0が標準</b>。低いほど高確率トークンに集中（保守的）、高いほど創造的になる。</div>
           </div>
           <div class="help-item">
             <div class="help-item-name">Top-K<span>0〜50</span></div>
-            <div class="help-item-desc">上位K件のトークンだけをサンプリング候補に絞る。<b>0で無効</b>（制限なし）。小さくするほど安全で単調、大きいほど多様。<code>10〜20</code>が一般的。</div>
+            <div class="help-item-desc">上位K件のトークンだけをサンプリング候補に絞る。<b>0で無効</b>。</div>
           </div>
           <div class="help-item">
             <div class="help-item-name">Top-P<span>0.5〜1.0</span></div>
-            <div class="help-item-desc">確率の累積が<code>P</code>に達するまでの上位トークンだけを使う「核サンプリング」。<b>1.0で制限なし</b>。<code>0.9〜0.95</code>が定番で、低確率の外れトークンを自動的に除外しながら多様性を保てる。</div>
+            <div class="help-item-desc">確率の累積が<code>P</code>に達するまでの上位トークンだけを使う「核サンプリング」。<b>1.0で制限なし</b>。</div>
           </div>
         </div>
       </div>
-
       <div class="help-section">
         <div class="help-section-title">繰り返し抑制</div>
         <div class="help-items">
           <div class="help-item">
             <div class="help-item-name">繰り返しペナルティ<span>1.0〜3.0</span></div>
-            <div class="help-item-desc">直近のウィンドウに出現したトークンの確率を<code>÷ペナルティ値</code>で減衰させる。<b>1.0で無効</b>。<code>1.2〜1.5</code>が自然な範囲で、高すぎると不自然な語彙の強制になる。</div>
+            <div class="help-item-desc">直近のウィンドウに出現したトークンの確率を<code>÷ペナルティ値</code>で減衰。<b>1.0で無効</b>。貪欲法にも適用されます。</div>
           </div>
           <div class="help-item">
             <div class="help-item-name">ペナルティ窓<span>2〜30</span></div>
-            <div class="help-item-desc">繰り返しペナルティを適用する直近のトークン数。<b>大きいほど長距離の繰り返しも抑制</b>するが、正当な繰り返し（主語の再登場など）も減らしてしまう。</div>
+            <div class="help-item-desc">繰り返しペナルティを適用する直近のトークン数。</div>
           </div>
           <div class="help-item">
             <div class="help-item-name">多様性ペナルティ<span>0.0〜1.0</span></div>
-            <div class="help-item-desc">ウィンドウ内での出現頻度に応じて指数的に確率を減衰させる追加ペナルティ。<b>0.0で無効</b>。繰り返しペナルティと組み合わせると同テーマの連続をより強く抑制できる。</div>
+            <div class="help-item-desc">ウィンドウ内での出現頻度に応じて指数的に確率を減衰させる追加ペナルティ。<b>0.0で無効</b>。</div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
