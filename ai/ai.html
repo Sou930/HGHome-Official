@@ -329,6 +329,21 @@ textarea::placeholder{color:var(--dim)}
 .ppx-live{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--mid);letter-spacing:.04em;transition:color .25s;}
 .ppx-live.hi{color:var(--sky)}
 .ppx-live.warn{color:var(--amber)}
+/* ─── 翻訳ボタン ─── */
+.trans-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:'JetBrains Mono',monospace;font-size:.54rem;letter-spacing:.04em;
+  padding:2px 8px;border-radius:10px;border:1px solid var(--bd2);
+  background:var(--s1);color:var(--mid);cursor:pointer;transition:all .18s;flex-shrink:0;
+}
+.trans-btn:hover{border-color:var(--sky);color:var(--sky);background:rgba(122,179,194,.08)}
+.trans-btn.loading{opacity:.5;pointer-events:none}
+.trans-bubble{
+  margin-top:6px;padding:9px 13px;border-radius:var(--r-sm);
+  background:rgba(122,179,194,.07);border:1px solid rgba(122,179,194,.15);
+  font-size:.84rem;line-height:1.9;color:var(--text);
+  animation:fadeUp .3s ease both;
+}
 /* ─── ヘルプモーダル ─── */
 .help-overlay{
   position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
@@ -1481,6 +1496,43 @@ async function switchLang(lang) {
   setTimeout(() => { note.textContent = ''; }, 2000);
 }
 
+// ─── MyMemory 翻訳（APIキー不要・無料）────────────────
+async function translateWithMyMemory(text, targetLang) {
+  const langpair = targetLang === 'en' ? 'ja|en' : 'en|ja';
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      return data.responseData.translatedText;
+    }
+    return '（翻訳失敗）';
+  } catch(e) {
+    return '（翻訳エラー）';
+  }
+}
+
+// 日本語テキストかどうか簡易判定
+function isJapanese(text) {
+  return /[\u3000-\u9fff\uff00-\uffef]/.test(text);
+}
+
+// 翻訳ボタンのクリック処理（バブル直下に翻訳結果を表示/非表示トグル）
+async function handleTranslate(btn, replyText) {
+  const existing = btn.parentElement.querySelector('.trans-bubble');
+  if (existing) { existing.remove(); btn.textContent = '🌐 JA'; return; }
+  btn.classList.add('loading');
+  btn.textContent = '翻訳中…';
+  const translated = await translateWithMyMemory(replyText, 'ja');
+  btn.classList.remove('loading');
+  btn.textContent = '🌐 JA ✕';
+  const bubble = document.createElement('div');
+  bubble.className = 'trans-bubble';
+  bubble.textContent = translated;
+  btn.parentElement.after(bubble);
+  scrollDown();
+}
+
 function toggleSettings() {
   openOnlyPanel('settingsBar', 'settingsBtn', () => setTimeout(initSliders, 50));
 }
@@ -1528,7 +1580,16 @@ async function sendMsg() {
     const pt = setInterval(() => { pv = Math.min(pv + Math.random() * 7, 80); prog.style.width = pv + '%'; }, 60);
     await sleep(50);
     const t0 = performance.now();
-    history.push({ role: 'user', text: txt });
+
+    // 英語モードで日本語入力の場合、英語に翻訳してからモデルに渡す
+    let inputForModel = txt;
+    if (currentLang === 'en' && isJapanese(txt)) {
+      addSys('入力を英語に翻訳中…');
+      inputForModel = await translateWithMyMemory(txt, 'en');
+      addSys(algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
+    }
+
+    history.push({ role: 'user', text: inputForModel });
     const context = history.slice(-6).map(x => x.text).join(' ');
     const reply = await new Promise(resolve => {
       setTimeout(() => resolve(generateReply(context)), 0);
@@ -1604,6 +1665,16 @@ function addMeta(reply, algo, elapsed, inputForRegen) {
     '<path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
   btn.addEventListener('click', () => regenerate(inputForRegen));
   d.appendChild(btn);
+
+  // 英語モード時は翻訳ボタンを追加
+  if (currentLang === 'en') {
+    const tBtn = document.createElement('button');
+    tBtn.className = 'trans-btn';
+    tBtn.textContent = '🌐 JA';
+    tBtn.title = '日本語に翻訳';
+    tBtn.addEventListener('click', () => handleTranslate(tBtn, replyText));
+    d.appendChild(tBtn);
+  }
   msgs.appendChild(d);
   scrollDown();
 }
