@@ -613,6 +613,8 @@ let buildGeneration = 0;
 let lastInput = '';
 let ppxLiveTimer = null;
 
+let history = [];
+  
 // ─── 起動 ────────────────────────────────────────────
 async function init() {
   corpus = await loadCorpusFiles();
@@ -827,6 +829,16 @@ function tokenize(text) {
   return text.replace(/\r?\n/g, ' ').split(/\s+/).filter(t => t.length > 0);
 }
 
+//PresencePenalty
+function applyPresencePenalty(probs, generated, penalty){
+  const seen = new Set(generated);
+  for(const token of seen){
+    if(probs[token]){
+      probs[token] /= penalty;
+    }
+  }
+}
+  
 // ─── モデル構築 (#3 #8) ──────────────────────────────
 function scheduleRebuild() {
   clearTimeout(rebuildTimer);
@@ -1359,6 +1371,22 @@ function suggest(text) {
 function scrollToBottom() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
 function scrollDown() { const c = document.getElementById('chat'); if (c.scrollHeight - c.scrollTop - c.clientHeight < 120) c.scrollTop = c.scrollHeight; }
 
+
+function generateReply(prompt){
+
+  const algo = document.getElementById('rGenAlgo').value;
+
+  if(algo === "beam"){
+    return beam(prompt);
+  }
+
+  if(algo === "greedy"){
+    return greedy(prompt);
+  }
+
+  return sample(prompt);
+}
+  
 // ─── 送信 ─────────────────────────────────────────────
 async function sendMsg() {
   if (busy || !modelReady) return;
@@ -1383,7 +1411,15 @@ async function sendMsg() {
     const pt = setInterval(() => { pv = Math.min(pv + Math.random() * 7, 80); prog.style.width = pv + '%'; }, 60);
     await sleep(50);
     const t0 = performance.now();
-    const reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(txt)), 0); });
+    history.push({role:"user", text:txt});
+    const context =
+      history.slice(-6).
+      map(x => x.text)
+      .join(" ");
+    const reply = await new Promise(resolve => {
+      setTimeout(() => resolve(generateReply(context)), 0);
+    });
+    history.push({role:"ai", text:reply});
     const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
     clearInterval(pt); prog.style.width = '96%';
     await sleep(150); removeSys();
