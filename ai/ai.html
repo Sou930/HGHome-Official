@@ -591,6 +591,8 @@ let mleIdx      = {};
 let unigramDist = new Map();
 let rawCounts   = {};
 let continuationCounts = {};
+let knDiscounts = {};   // knDiscounts[n] = {D1, D2, D3} — Modified KN auto-discounts
+let tokenPositions = new Map(); // token -> [positions] for fast seed lookup
 let sentStarts  = [];
 let modelReady  = false;
 let rebuildTimer = null;
@@ -831,6 +833,8 @@ async function buildModelAsync() {
   rawCounts = {};
   kn = {}; wb = {}; mle = {};
   knIdx = {}; wbIdx = {}; mleIdx = {};
+  knDiscounts = {};
+  tokenPositions = new Map();
   unigramDist = new Map();
   sentStarts = [0];
   continuationCounts = {};
@@ -858,6 +862,18 @@ async function buildModelAsync() {
   setBar(42, '継続カウント計算…');
   await sleep(0);
   if (myGen !== buildGeneration) return;
+
+  // トークン位置インデックス構築（高速シード探索用）
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (!tokenPositions.has(t)) tokenPositions.set(t, []);
+    tokenPositions.get(t).push(i);
+  }
+
+  // Modified KN 用に各次数の自動割引値を計算
+  for (let n = 1; n <= maxOrder; n++) {
+    knDiscounts[n] = computeKNDiscounts(n);
+  }
   const contMap = new Map();
   if (rawCounts[1]) {
     for (const [, m] of rawCounts[1]) for (const [word] of m) contMap.set(word, (contMap.get(word) || 0) + 1);
@@ -901,6 +917,27 @@ async function buildModelAsync() {
   updateStats(ppx, ent);
 }
 
+// ─── Modified KN 自動割引計算（Chen & Goodman 1999）─────
+function computeKNDiscounts(n) {
+  const sm = rawCounts[n];
+  if (!sm) return { D1: 0.5, D2: 1.0, D3: 1.5 };
+  let n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+  for (const [, m] of sm) {
+    for (const c of m.values()) {
+      if (c === 1) n1++;
+      else if (c === 2) n2++;
+      else if (c === 3) n3++;
+      else n4++;
+    }
+  }
+  if (n1 === 0 || n2 === 0) return { D1: 0.5, D2: 1.0, D3: 1.5 };
+  const Y  = n1 / (n1 + 2 * n2);
+  const D1 = Math.max(1 - 2 * Y * (n2 / n1),              0.01);
+  const D2 = Math.max(2 - 3 * Y * (n3 / Math.max(n2, 1)), 0.01);
+  const D3 = Math.max(3 - 4 * Y * (n4 / Math.max(n3, 1)), 0.01);
+  return { D1, D2, D3 };
+}
+
 function buildProbIndex(model) {
   const idx = new Map();
   if (!model) return idx;
@@ -912,17 +949,25 @@ function buildProbIndex(model) {
   return idx;
 }
 
+// ─── Modified Kneser-Ney（D1/D2/D3+ 自動割引）────────
 function buildKN(n, totalCont) {
-  const d = parseFloat(document.getElementById('rDisc').value);
+  const { D1, D2, D3 } = knDiscounts[n] || { D1: 0.5, D2: 1.0, D3: 1.5 };
   const V = vocab.size || 1;
   const result = new Map();
   if (!rawCounts[n]) { kn[n] = result; return; }
   for (const [key, m] of rawCounts[n]) {
     const entries = [];
-    const totalC  = Array.from(m.values()).reduce((a, b) => a + b, 0);
-    const N1plus  = Array.from(m.values()).filter(c => c > 0).length;
-    const lambda  = (d / totalC) * N1plus;
+    const totalC = Array.from(m.values()).reduce((a, b) => a + b, 0);
+    // N1+, N2+, N3+ (continuation counts used for lambda)
+    let N1 = 0, N2 = 0, N3 = 0;
+    for (const c of m.values()) {
+      if (c >= 1) N1++;
+      if (c >= 2) N2++;
+      if (c >= 3) N3++;
+    }
+    const lambda = (D1 * N1 + D2 * N2 + D3 * N3) / totalC;
     for (const [word, c] of m) {
+      const d = c === 1 ? D1 : c === 2 ? D2 : D3;
       const discounted = Math.max(c - d, 0) / totalC;
       let pLow;
       if (n === 1) {
@@ -1119,31 +1164,61 @@ function getCandidates(context) {
   return { cands: [{ word: '.', p: 1 }], usedOrder: 0 };
 }
 
-function generateBeam(seed, maxLen) {
-  const beamWidth = parseInt(document.getElementById('rBeam').value);
-  const maxOrder  = parseInt(document.getElementById('rOrder').value);
-  const getScore = b => b.frozenScore !== null ? b.frozenScore : b.logp / Math.max(b.tokens.length - seed.length, 1);
+// ─── ビームサーチ強化版 ───────────────────────────────
+function generateBeam(seed, maxLen, inputSet) {
+  const beamWidth  = parseInt(document.getElementById('rBeam').value);
+  const maxOrder   = parseInt(document.getElementById('rOrder').value);
+  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
+  const repWin     = parseInt(document.getElementById('rRepWin').value);
+  const ALPHA      = 0.65;  // 長さ正規化指数（Google NMT推奨値）
+  const COV_W      = 0.25;  // 入力語カバレッジボーナス重み
+
+  const normScore = b => {
+    if (b.frozenScore !== null) return b.frozenScore;
+    const genLen = Math.max(b.tokens.length - seed.length, 1);
+    let score = b.logp / Math.pow(genLen, ALPHA);
+    if (inputSet && inputSet.size > 0) {
+      const covered = b.tokens.filter(t => inputSet.has(t)).length;
+      score += COV_W * covered / inputSet.size;
+    }
+    return score;
+  };
+
   let beams = [{ tokens: [...seed], logp: 0, done: false, frozenScore: null }];
+  const seenStates = new Set();
+
   for (let step = 0; step < maxLen * 4; step++) {
     if (beams.every(b => b.done)) break;
     const next = [];
     for (const beam of beams) {
       if (beam.done) { next.push(beam); continue; }
-      const { cands } = getCandidates(beam.tokens.slice(-maxOrder));
-      for (const c of [...cands].sort((a, b) => b.p - a.p).slice(0, beamWidth * 2)) {
+      const ctx = beam.tokens.slice(-maxOrder);
+      const { cands } = getCandidates(ctx);
+      // 繰り返しペナルティを候補に適用してから展開
+      const win = new Set(beam.tokens.slice(-repWin));
+      const penalized = cands
+        .map(c => ({ word: c.word, p: win.has(c.word) ? c.p / repPenalty : c.p }))
+        .sort((a, b) => b.p - a.p)
+        .slice(0, beamWidth * 3);
+      for (const c of penalized) {
         const logp    = beam.logp + Math.log(Math.max(c.p, 1e-10));
         const newToks = [...beam.tokens, c.word];
         const genLen  = newToks.length - seed.length;
         const isDone  = isEndToken(c.word) && genLen >= maxLen * 0.5;
-        const frozenScore = isDone ? logp / Math.max(genLen, 1) : null;
-        next.push({ tokens: newToks, logp, done: isDone, frozenScore });
+        // 末尾 maxOrder トークンで状態を識別し重複ビームを除去
+        const stateKey = newToks.slice(-maxOrder).join('\x00') + '|' + isDone;
+        if (seenStates.has(stateKey)) continue;
+        seenStates.add(stateKey);
+        const b = { tokens: newToks, logp, done: isDone, frozenScore: null };
+        if (isDone) b.frozenScore = normScore(b);
+        next.push(b);
       }
     }
-    next.sort((a, b) => getScore(b) - getScore(a));
+    next.sort((a, b) => normScore(b) - normScore(a));
     beams = next.slice(0, beamWidth);
     if (beams.every(b => b.done || b.tokens.length - seed.length >= maxLen)) break;
   }
-  return beams.sort((a, b) => getScore(b) - getScore(a))[0].tokens.slice(seed.length);
+  return beams.sort((a, b) => normScore(b) - normScore(a))[0].tokens.slice(seed.length);
 }
 
 function generateSample(seed, maxLen) {
@@ -1179,58 +1254,119 @@ function generateGreedy(seed, maxLen) {
   return result;
 }
 
-function findBestSeed(inputTokens) {
+// ─── 上位K個のシードを返す（IDF重み + 位置インデックス）─
+function findTopSeeds(inputTokens, k) {
   const maxOrder = parseInt(document.getElementById('rOrder').value);
   const inputSet = new Set(inputTokens);
-  const scoreSlice = slice => slice.length * 5 + slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0) * 2;
-  let bestScore = -1, bestSlice = null;
+  // IDF高い語を優先（一般語はシード候補から除外）
+  const highIdfTokens = inputTokens
+    .map(t => ({ t, idf: tokenIdf[t] || 1 }))
+    .sort((a, b) => b.idf - a.idf)
+    .slice(0, 8)
+    .map(x => x.t);
+
+  const scoreSlice = slice => {
+    const idfSum = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
+    return slice.length * 3 + idfSum * 4;
+  };
+
+  const candidates = [];
+
+  // 1. 入力トークン列の部分列が直接モデルに存在するもの
   for (let n = Math.min(maxOrder, inputTokens.length); n >= 1; n--) {
-    for (let i = inputTokens.length - n; i >= 0; i--) {
+    for (let i = 0; i <= inputTokens.length - n; i++) {
       const slice = inputTokens.slice(i, i + n);
       const model = getModel(n);
       if (model && model.has(slice.join('\x00'))) {
-        const score = scoreSlice(slice);
-        if (score > bestScore) { bestScore = score; bestSlice = slice; }
+        candidates.push({ slice, score: scoreSlice(slice) });
       }
     }
-    if (bestSlice && n >= maxOrder - 1) break;
   }
-  if (bestSlice) return bestSlice;
-  let bcs = -1, bcsSlice = null;
-  for (const t of inputTokens) {
-    const idx = tokens.indexOf(t);
-    if (idx >= 0) {
-      const slice = tokens.slice(idx, Math.min(idx + maxOrder, tokens.length));
-      const score = scoreSlice(slice);
-      if (score > bcs) { bcs = score; bcsSlice = slice; }
+
+  // 2. コーパス内でIDF高い入力語が出現する位置からウィンドウを取る
+  for (const t of highIdfTokens) {
+    const positions = tokenPositions.get(t) || [];
+    // 出現頻度が高すぎる語は多くの候補を生まないよう制限
+    const limit = Math.min(positions.length, 6);
+    for (let pi = 0; pi < limit; pi++) {
+      const i = positions[Math.floor(pi * positions.length / limit)];
+      const start = Math.max(0, i - Math.floor(maxOrder / 2));
+      const slice = tokens.slice(start, Math.min(start + maxOrder, tokens.length));
+      if (slice.length > 0) candidates.push({ slice, score: scoreSlice(slice) });
     }
   }
-  if (bcsSlice) return bcsSlice;
-  let bss = -1, bs = 0;
-  for (const si of sentStarts) {
-    const slice = tokens.slice(si, Math.min(si + maxOrder, tokens.length));
-    const score = scoreSlice(slice);
-    if (score > bss) { bss = score; bs = si; }
+
+  // スコア降順でユニーク化
+  candidates.sort((a, b) => b.score - a.score);
+  const seen = new Set();
+  const result = [];
+  for (const { slice } of candidates) {
+    const key = slice.join('\x00');
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(slice);
+      if (result.length >= k) break;
+    }
   }
-  return tokens.slice(bs, Math.min(bs + maxOrder, tokens.length));
+
+  // フォールバック: IDF最高の文開始位置
+  if (result.length === 0) {
+    let bss = -1, bs = 0;
+    for (const si of sentStarts) {
+      const slice = tokens.slice(si, Math.min(si + maxOrder, tokens.length));
+      const score = scoreSlice(slice);
+      if (score > bss) { bss = score; bs = si; }
+    }
+    result.push(tokens.slice(bs, Math.min(bs + maxOrder, tokens.length)));
+  }
+  return result;
 }
 
-// ─── generateReply: 統合版（会話履歴コンテキストを受け取り、アルゴリズムを選択して生成）
-function generateReply(input) {
-  const inputToks = tokenize(input);
-  const seed   = findBestSeed(inputToks);
-  const maxLen = getMaxLen(inputToks.length);
-  const algo   = document.getElementById('rGenAlgo').value;
-  let result;
-  if (algo === 'beam')        result = generateBeam(seed, maxLen);
-  else if (algo === 'greedy') result = generateGreedy(seed, maxLen);
-  else                        result = generateSample(seed, maxLen);
+// ─── 生成結果スコアリング（対数確率 + カバレッジ）────
+function scoreResult(result, inputSet, maxOrder) {
+  if (result.length < 2) return -Infinity;
+  let logSum = 0, count = 0;
+  for (let i = 1; i < result.length; i++) {
+    let p = getNextProb(result.slice(Math.max(0, i - maxOrder), i), result[i], maxOrder);
+    if (p < 1e-10) p = 1e-10;
+    logSum += Math.log2(p); count++;
+  }
+  const avgLogP   = count > 0 ? logSum / count : -20;
+  const coverage  = result.filter(t => inputSet.has(t)).length / Math.max(result.length, 1);
+  return avgLogP + coverage * 6;
+}
+
+function trimResult(result) {
+  if (!result || result.length === 0) return '.';
   let trimEnd = -1;
   for (let i = result.length - 1; i >= 0; i--) {
     if (isEndToken(result[i])) { trimEnd = i; break; }
   }
-  const trimmed = trimEnd >= 0 ? result.slice(0, trimEnd + 1) : result;
-  return trimmed.join(' ') || '.';
+  return (trimEnd >= 0 ? result.slice(0, trimEnd + 1) : result).join(' ') || '.';
+}
+
+// ─── generateReply: マルチシード版（ビームは複数シードから最良を選択）
+function generateReply(input) {
+  const inputToks = tokenize(input);
+  const inputSet  = new Set(inputToks);
+  const maxLen    = getMaxLen(inputToks.length);
+  const algo      = document.getElementById('rGenAlgo').value;
+  const maxOrder  = parseInt(document.getElementById('rOrder').value);
+
+  if (algo === 'beam') {
+    const seeds = findTopSeeds(inputToks, 3);
+    let bestResult = null, bestScore = -Infinity;
+    for (const seed of seeds) {
+      const result = generateBeam(seed, maxLen, inputSet);
+      const score  = scoreResult(result, inputSet, maxOrder);
+      if (score > bestScore) { bestScore = score; bestResult = result; }
+    }
+    return trimResult(bestResult || ['.']);
+  }
+
+  const seed = findTopSeeds(inputToks, 1)[0];
+  if (algo === 'greedy') return trimResult(generateGreedy(seed, maxLen));
+  return trimResult(generateSample(seed, maxLen));
 }
 
 function updateStats(ppx, ent) {
@@ -1458,6 +1594,7 @@ function getMaxLen(inputTokenCount) {
   }
   return parseInt(document.getElementById('rLen').value);
 }
+function toggleHelp() {
   const overlay = document.getElementById('helpOverlay');
   const btn     = document.getElementById('helpBtn');
   overlay.classList.toggle('open');
