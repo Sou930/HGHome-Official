@@ -624,6 +624,8 @@ let continuationCounts = {};
 let knDiscounts = {};   // knDiscounts[n] = {D1, D2, D3} — Modified KN auto-discounts
 let tokenPositions = new Map(); // token -> [positions] for fast seed lookup
 let sentStarts  = [];
+let bm25AvgLen  = 0;   // BM25用：平均文セグメント長
+let bm25Docs    = [];  // BM25用：文セグメント配列 [{tokens, tfMap}]
 let modelReady  = false;
 let rebuildTimer = null;
 let totalBoUsed   = 0;
@@ -732,7 +734,9 @@ async function loadCorpusFiles() {
   const langLabel = currentLang === 'ja' ? '日本語' : 'English';
   const label = loadedFiles.length === 1 ? loadedFiles[0] : loadedFiles.length + ' ファイル';
   setStatus('ok', `[${langLabel}] ${label}` + (failedFiles.length > 0 ? ' ⚠' : ''));
-  return texts.join('\n');
+  // ## 見出し行（# で始まる行）を除去してから返す
+  const joined = texts.join('\n');
+  return joined.split('\n').filter(line => !/^\s*#{1,6}\s/.test(line)).join('\n');
 }
 
 async function relearnCorpus() {
@@ -902,6 +906,7 @@ async function buildModelAsync() {
   sentStarts = [0];
   continuationCounts = {};
   buildIdf();
+  buildBM25();
   for (let i = 0; i < tokens.length; i++) {
     if (isEndToken(tokens[i]) && i + 1 < tokens.length) sentStarts.push(i + 1);
   }
@@ -1172,6 +1177,36 @@ function buildIdf() {
   for (const [word, d] of Object.entries(df)) tokenIdf[word] = Math.log((N + 1) / (d + 1)) + 1;
 }
 
+// ─── BM25インデックス構築 ─────────────────────────────
+function buildBM25() {
+  // コーパスを文単位に分割してドキュメントとして扱う
+  const sentences = corpus.split(/[。！？\n]+/).filter(s => s.trim().length > 0);
+  bm25Docs = sentences.map(s => {
+    const toks = tokenize(s);
+    const tfMap = new Map();
+    for (const t of toks) tfMap.set(t, (tfMap.get(t) || 0) + 1);
+    return { tokens: toks, tfMap };
+  });
+  bm25AvgLen = bm25Docs.length > 0
+    ? bm25Docs.reduce((s, d) => s + d.tokens.length, 0) / bm25Docs.length
+    : 1;
+}
+
+// BM25スコア計算（k=1.5, b=0.75）
+function bm25Score(doc, queryTokens) {
+  const k = 1.5, b = 0.75;
+  const N = bm25Docs.length || 1;
+  let score = 0;
+  for (const qt of queryTokens) {
+    const tf  = doc.tfMap.get(qt) || 0;
+    if (tf === 0) continue;
+    const df  = [...bm25Docs].filter(d => d.tfMap.has(qt)).length || 1;
+    const idf = Math.log((N - df + 0.5) / (df + 0.5) + 1);
+    score += idf * (tf * (k + 1)) / (tf + k * (1 - b + b * (doc.tokens.length / bm25AvgLen)));
+  }
+  return score;
+}
+
 function sampleToken(cands, recentTokens) {
   const temp       = parseFloat(document.getElementById('rTemp').value);
   const topK       = parseInt(document.getElementById('rTopK').value);
@@ -1227,7 +1262,35 @@ function getCandidates(context) {
   return { cands: [{ word: '.', p: 1 }], usedOrder: 0 };
 }
 
-// ─── ビームサーチ強化版 ───────────────────────────────
+// ─── 日本語文法フィルタ ───────────────────────────────
+// 助詞・助動詞の連続などNGパターンをペナルティで抑制
+const JA_JOSHI    = new Set(['は','が','を','に','で','と','も','から','まで','より','へ','の','や','か','ね','よ','な','けど','けれど','けれども','し','て','で','に','を']);
+const JA_JODOUSHI = new Set(['です','ます','だ','である','ない','ない','たい','らしい','ようだ','そうだ','べき','はず','かもしれない','かも','でしょう','でしょ','ましょう','ましょ']);
+
+function jaGrammarPenalty(prevToken, candWord) {
+  if (!prevToken) return 1.0;
+  const prevIsJoshi    = JA_JOSHI.has(prevToken);
+  const prevIsJodoushi = JA_JODOUSHI.has(prevToken);
+  const candIsJoshi    = JA_JOSHI.has(candWord);
+  const candIsJodoushi = JA_JODOUSHI.has(candWord);
+  // 助詞→助詞
+  if (prevIsJoshi    && candIsJoshi)    return 0.05;
+  // 助動詞→助動詞
+  if (prevIsJodoushi && candIsJodoushi) return 0.05;
+  // 助詞→助動詞（「はです」など）
+  if (prevIsJoshi    && candIsJodoushi) return 0.1;
+  // 文頭に助詞
+  if (prevToken === '__START__' && candIsJoshi) return 0.02;
+  return 1.0;
+}
+
+// 候補リストに文法ペナルティを適用して返す
+function applyGrammarFilter(cands, prevToken) {
+  return cands.map(c => ({
+    word: c.word,
+    p: c.p * jaGrammarPenalty(prevToken, c.word)
+  }));
+}
 function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
   const beamWidth  = overrideBeamWidth || parseInt(document.getElementById('rBeam').value);
   const maxOrder   = parseInt(document.getElementById('rOrder').value);
@@ -1257,9 +1320,10 @@ function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
       if (beam.done) { next.push(beam); continue; }
       const ctx = beam.tokens.slice(-maxOrder);
       const { cands } = getCandidates(ctx);
-      // 繰り返しペナルティを候補に適用してから展開
+      // 繰り返しペナルティ + 文法フィルタを候補に適用してから展開
+      const prevToken = beam.tokens[beam.tokens.length - 1] || '__START__';
       const win = new Set(beam.tokens.slice(-repWin));
-      const penalized = cands
+      const penalized = applyGrammarFilter(cands, prevToken)
         .map(c => ({ word: c.word, p: win.has(c.word) ? c.p / repPenalty : c.p }))
         .sort((a, b) => b.p - a.p)
         .slice(0, beamWidth * 3);
@@ -1289,12 +1353,14 @@ function generateSample(seed, maxLen) {
   const result   = []; let context = [...seed];
   for (let i = 0; i < maxLen * 2; i++) {
     const { cands } = getCandidates(context.slice(-maxOrder));
-    const word = sampleToken(cands, context);
+    const prevToken  = context[context.length - 1] || '__START__';
+    const filtered   = applyGrammarFilter(cands, prevToken);
+    const word = sampleToken(filtered, context);
     result.push(word); context.push(word);
     if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
     if (result.length >= maxLen) break;
   }
-  if (!isEndToken(result[result.length - 1])) result.push('.');
+  if (!isEndToken(result[result.length - 1])) result.push('。');
   return result;
 }
 
@@ -1305,64 +1371,56 @@ function generateGreedy(seed, maxLen) {
   const result     = []; let context = [...seed];
   for (let i = 0; i < maxLen * 2; i++) {
     const { cands } = getCandidates(context.slice(-maxOrder));
+    const prevToken  = context[context.length - 1] || '__START__';
+    const filtered   = applyGrammarFilter(cands, prevToken);
     const win = context.slice(-repWin);
     const recentSet = new Set(win);
-    const scored = cands.map(c => ({ word: c.word, w: recentSet.has(c.word) ? c.p / repPenalty : c.p }));
-    const word = scored.sort((a, b) => b.w - a.w)[0]?.word || '.';
+    const scored = filtered.map(c => ({ word: c.word, w: recentSet.has(c.word) ? c.p / repPenalty : c.p }));
+    const word = scored.sort((a, b) => b.w - a.w)[0]?.word || '。';
     result.push(word); context.push(word);
     if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
     if (result.length >= maxLen) break;
   }
-  if (!isEndToken(result[result.length - 1])) result.push('.');
+  if (!isEndToken(result[result.length - 1])) result.push('。');
   return result;
 }
 
-// ─── 上位K個のシードを返す（IDF重み + 位置インデックス）─
+// ─── 上位K個のシードを返す（BM25 + モデルヒットボーナス）─
 function findTopSeeds(inputTokens, k) {
   const maxOrder = parseInt(document.getElementById('rOrder').value);
   const inputSet = new Set(inputTokens);
-  // IDF高い語を優先（一般語はシード候補から除外）
-  const highIdfTokens = inputTokens
-    .map(t => ({ t, idf: tokenIdf[t] || 1 }))
-    .sort((a, b) => b.idf - a.idf)
-    .slice(0, 8)
-    .map(x => x.t);
 
-  const scoreSlice = slice => {
-    const sliceSet  = new Set(slice);
-    const idfSum    = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
-    // Jaccard類似度：入力との重複率を加味
-    const union     = new Set([...sliceSet, ...inputSet]).size;
-    const intersect = [...sliceSet].filter(t => inputSet.has(t)).length;
-    const jaccard   = union > 0 ? intersect / union : 0;
-    // モデルに存在する文脈かどうかボーナス
-    const modelHit  = getModel(slice.length) && getModel(slice.length).has(slice.join('\x00')) ? 5 : 0;
-    return slice.length * 2 + idfSum * 4 + jaccard * 10 + modelHit;
-  };
+  // BM25で上位文セグメントを取得
+  const scored = bm25Docs.map((doc, idx) => ({
+    idx,
+    score: bm25Score(doc, inputTokens)
+  })).filter(x => x.score > 0);
+  scored.sort((a, b) => b.score - a.score);
+  const topDocs = scored.slice(0, 20); // 上位20文から候補を生成
 
   const candidates = [];
 
-  // 1. 入力トークン列の部分列が直接モデルに存在するもの
+  for (const { idx } of topDocs) {
+    const doc = bm25Docs[idx];
+    // 文内の各位置からmaxOrderウィンドウをスライド
+    for (let i = 0; i <= doc.tokens.length - 1; i++) {
+      const slice = doc.tokens.slice(i, Math.min(i + maxOrder, doc.tokens.length));
+      if (slice.length === 0) continue;
+      const modelHit = getModel(slice.length) && getModel(slice.length).has(slice.join('\x00')) ? 5 : 0;
+      const idfSum   = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
+      candidates.push({ slice, score: idfSum * 3 + modelHit + slice.length });
+    }
+  }
+
+  // 入力トークン列の部分列が直接モデルに存在するものも追加
   for (let n = Math.min(maxOrder, inputTokens.length); n >= 1; n--) {
     for (let i = 0; i <= inputTokens.length - n; i++) {
       const slice = inputTokens.slice(i, i + n);
       const model = getModel(n);
       if (model && model.has(slice.join('\x00'))) {
-        candidates.push({ slice, score: scoreSlice(slice) });
+        const idfSum = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
+        candidates.push({ slice, score: idfSum * 3 + 5 + slice.length });
       }
-    }
-  }
-
-  // 2. コーパス内でIDF高い入力語が出現する位置からウィンドウを取る
-  for (const t of highIdfTokens) {
-    const positions = tokenPositions.get(t) || [];
-    // 出現頻度が高すぎる語は多くの候補を生まないよう制限
-    const limit = Math.min(positions.length, 6);
-    for (let pi = 0; pi < limit; pi++) {
-      const i = positions[Math.floor(pi * positions.length / limit)];
-      const start = Math.max(0, i - Math.floor(maxOrder / 2));
-      const slice = tokens.slice(start, Math.min(start + maxOrder, tokens.length));
-      if (slice.length > 0) candidates.push({ slice, score: scoreSlice(slice) });
     }
   }
 
@@ -1384,8 +1442,8 @@ function findTopSeeds(inputTokens, k) {
     let bss = -1, bs = 0;
     for (const si of sentStarts) {
       const slice = tokens.slice(si, Math.min(si + maxOrder, tokens.length));
-      const score = scoreSlice(slice);
-      if (score > bss) { bss = score; bs = si; }
+      const s = slice.filter(t => inputSet.has(t)).reduce((a, t) => a + (tokenIdf[t] || 1), 0);
+      if (s > bss) { bss = s; bs = si; }
     }
     result.push(tokens.slice(bs, Math.min(bs + maxOrder, tokens.length)));
   }
@@ -1608,10 +1666,19 @@ async function sendMsg() {
     }
 
     history.push({ role: 'user', text: inputForModel });
-    const context = history.slice(-6).map(x => x.text).join(' ');
-    const reply = await new Promise(resolve => {
-      setTimeout(() => resolve(generateReply(context)), 0);
-    });
+    // ユーザー入力のみをコンテキストに使用（AI返答の蓄積で同一返答ループを防ぐ）
+    const context = history
+      .filter(x => x.role === 'user')
+      .slice(-3)
+      .map(x => x.text)
+      .join(' ');
+    // 重複返答防止：直近2件のAI返答と被ったら別シードで最大2回再試行
+    const recentReplies = history.filter(x => x.role === 'ai').slice(-2).map(x => x.text);
+    let reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(context)), 0); });
+    for (let retry = 0; retry < 2; retry++) {
+      if (!recentReplies.includes(reply)) break;
+      reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(context + ' ' + inputForModel)), 0); });
+    }
     history.push({ role: 'ai', text: reply });
     const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
     clearInterval(pt); prog.style.width = '96%';
