@@ -1329,8 +1329,15 @@ function findTopSeeds(inputTokens, k) {
     .map(x => x.t);
 
   const scoreSlice = slice => {
-    const idfSum = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
-    return slice.length * 3 + idfSum * 4;
+    const sliceSet  = new Set(slice);
+    const idfSum    = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
+    // Jaccard類似度：入力との重複率を加味
+    const union     = new Set([...sliceSet, ...inputSet]).size;
+    const intersect = [...sliceSet].filter(t => inputSet.has(t)).length;
+    const jaccard   = union > 0 ? intersect / union : 0;
+    // モデルに存在する文脈かどうかボーナス
+    const modelHit  = getModel(slice.length) && getModel(slice.length).has(slice.join('\x00')) ? 5 : 0;
+    return slice.length * 2 + idfSum * 4 + jaccard * 10 + modelHit;
   };
 
   const candidates = [];
@@ -1385,7 +1392,7 @@ function findTopSeeds(inputTokens, k) {
   return result;
 }
 
-// ─── 生成結果スコアリング（対数確率 + カバレッジ）────
+// ─── 生成結果スコアリング（対数確率 + カバレッジ + IDF重み + 長さペナルティ）────
 function scoreResult(result, inputSet, maxOrder) {
   if (result.length < 2) return -Infinity;
   let logSum = 0, count = 0;
@@ -1394,9 +1401,18 @@ function scoreResult(result, inputSet, maxOrder) {
     if (p < 1e-10) p = 1e-10;
     logSum += Math.log2(p); count++;
   }
-  const avgLogP   = count > 0 ? logSum / count : -20;
-  const coverage  = result.filter(t => inputSet.has(t)).length / Math.max(result.length, 1);
-  return avgLogP + coverage * 6;
+  const avgLogP = count > 0 ? logSum / count : -20;
+  // IDF重み付きカバレッジ（単純カウントより意味的に重要な語を優遇）
+  const idfCoverage = result
+    .filter(t => inputSet.has(t))
+    .reduce((s, t) => s + (tokenIdf[t] || 1), 0)
+    / Math.max(result.length, 1);
+  // 極端に短い・長い結果にペナルティ
+  const idealLen  = 20;
+  const lenPenalty = Math.abs(result.length - idealLen) / idealLen * 1.5;
+  // 末尾が終端トークンで終わる場合ボーナス
+  const endBonus  = isEndToken(result[result.length - 1]) ? 1.5 : 0;
+  return avgLogP + idfCoverage * 8 - lenPenalty + endBonus;
 }
 
 function trimResult(result) {
@@ -1418,10 +1434,10 @@ function generateReply(input) {
 
   if (algo === 'beam' || algo === 'ultrabeam') {
     const isUltra = algo === 'ultrabeam';
-    const seeds = findTopSeeds(inputToks, isUltra ? 5 : 3);
+    const seeds = findTopSeeds(inputToks, isUltra ? 7 : 3);
     let bestResult = null, bestScore = -Infinity;
     for (const seed of seeds) {
-      const result = generateBeam(seed, maxLen, inputSet, isUltra ? 200 : null);
+      const result = generateBeam(seed, maxLen, inputSet, isUltra ? 100 : null);
       const score  = scoreResult(result, inputSet, maxOrder);
       if (score > bestScore) { bestScore = score; bestResult = result; }
     }
