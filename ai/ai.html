@@ -3,83 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>COMPOSE v3</title>
+<title>COMPOSE v4</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- TinySegmenter 削除: トークン化はスペース区切りに変更 -->
 <style>
-/* ─── テーマ変数 ─── */
-:root, [data-theme="dark"] {
-  --bg:    #161412;
-  --s1:    #1d1a17;
-  --s2:    #242018;
-  --bd:    #302c24;
-  --bd2:   #3e3830;
-  --bd3:   #524a3e;
-  --sage:  #8fbc7a;
-  --sage2: #76a863;
-  --sagef: rgba(143,188,122,0.10);
-  --sageg: rgba(143,188,122,0.04);
-  --amber: #d4a853;
-  --rose:  #c4887a;
-  --sky:   #7ab3c2;
-  --violet:#a590d0;
-  --text:  #e8e0d4;
-  --mid:   #7a7060;
-  --dim:   #3e3830;
-  --header-bg: rgba(22,20,18,.96);
-  --footer-bg: rgba(22,20,18,.98);
-  --panel-bg:  rgba(22,20,18,.99);
-  --r-sm:  8px;
-  --r-md:  14px;
-  --r-lg:  20px;
+:root,[data-theme="dark"]{
+  --bg:#161412;--s1:#1d1a17;--s2:#242018;--bd:#302c24;--bd2:#3e3830;--bd3:#524a3e;
+  --sage:#8fbc7a;--sage2:#76a863;--sagef:rgba(143,188,122,.10);--sageg:rgba(143,188,122,.04);
+  --amber:#d4a853;--rose:#c4887a;--sky:#7ab3c2;--violet:#a590d0;
+  --text:#e8e0d4;--mid:#7a7060;--dim:#3e3830;
+  --header-bg:rgba(22,20,18,.96);--footer-bg:rgba(22,20,18,.98);--panel-bg:rgba(22,20,18,.99);
+  --r-sm:8px;--r-md:14px;--r-lg:20px;
 }
-[data-theme="light"] {
-  --bg:    #f5f2ed;
-  --s1:    #fffefb;
-  --s2:    #f0ece4;
-  --bd:    #d8d0c4;
-  --bd2:   #c8bfb2;
-  --bd3:   #b0a494;
-  --sage:  #4a8c35;
-  --sage2: #3a7428;
-  --sagef: rgba(74,140,53,0.10);
-  --sageg: rgba(74,140,53,0.05);
-  --amber: #9c6e0a;
-  --rose:  #a0463a;
-  --sky:   #2a7a8c;
-  --violet:#6e50b8;
-  --text:  #1a1510;
-  --mid:   #6a5c48;
-  --dim:   #c0b8ac;
-  --header-bg: rgba(245,242,237,.96);
-  --footer-bg: rgba(245,242,237,.98);
-  --panel-bg:  rgba(245,242,237,.99);
+[data-theme="light"]{
+  --bg:#f5f2ed;--s1:#fffefb;--s2:#f0ece4;--bd:#d8d0c4;--bd2:#c8bfb2;--bd3:#b0a494;
+  --sage:#4a8c35;--sage2:#3a7428;--sagef:rgba(74,140,53,.10);--sageg:rgba(74,140,53,.05);
+  --amber:#9c6e0a;--rose:#a0463a;--sky:#2a7a8c;--violet:#6e50b8;
+  --text:#1a1510;--mid:#6a5c48;--dim:#c0b8ac;
+  --header-bg:rgba(245,242,237,.96);--footer-bg:rgba(245,242,237,.98);--panel-bg:rgba(245,242,237,.99);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{height:100%;overflow:hidden;overflow-x:hidden;overscroll-behavior:none;}
+html{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
-  background:var(--bg);color:var(--text);
-  font-family:'Zen Kaku Gothic New',sans-serif;
-  display:flex;flex-direction:column;
-  height:100dvh;
-  height:calc(var(--vh,1vh) * 100);
-  width:100%;max-width:100%;
-  overflow:hidden;overflow-x:hidden;
-  overscroll-behavior:none;
-  transition:background .3s,color .3s;
+  background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;
+  display:flex;flex-direction:column;height:100dvh;height:calc(var(--vh,1vh)*100);
+  width:100%;overflow:hidden;overscroll-behavior:none;transition:background .3s,color .3s;
 }
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 70% 50% at 15% 5%,  rgba(143,188,122,.05) 0%,transparent 55%),
-    radial-gradient(ellipse 60% 70% at 85% 95%, rgba(212,168,83,.04)  0%,transparent 55%),
-    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(122,179,194,.02) 0%,transparent 60%);
+  background:radial-gradient(ellipse 70% 50% at 15% 5%,rgba(143,188,122,.05) 0%,transparent 55%),
+             radial-gradient(ellipse 60% 70% at 85% 95%,rgba(212,168,83,.04) 0%,transparent 55%);
 }
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
-::-webkit-scrollbar-thumb:hover{background:var(--bd3)}
-/* ─── Header ─── */
+/* Header */
 header{
   position:relative;z-index:20;flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
@@ -88,71 +45,57 @@ header{
 }
 .brand{display:flex;align-items:center;gap:11px}
 .brand-mark{
-  width:26px;height:26px;border-radius:50%;
-  border:1.5px solid rgba(143,188,122,.35);
+  width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(143,188,122,.35);
   display:grid;place-items:center;position:relative;overflow:hidden;
 }
-.brand-mark::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at center,rgba(143,188,122,.12),transparent 70%);
-}
+.brand-mark::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(143,188,122,.12),transparent 70%)}
 .brand-mark::after{
-  content:'';width:7px;height:7px;
-  background:var(--sage);border-radius:50%;
-  box-shadow:0 0 10px rgba(143,188,122,.6);
-  animation:pulse 3.5s ease-in-out infinite;
+  content:'';width:7px;height:7px;background:var(--sage);border-radius:50%;
+  box-shadow:0 0 10px rgba(143,188,122,.6);animation:pulse 3.5s ease-in-out infinite;
 }
 @keyframes pulse{0%,100%{transform:scale(.65);opacity:.4}50%{transform:scale(1);opacity:1}}
-.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;letter-spacing:.2em;color:var(--text);}
-.brand-name em{font-style:italic;color:var(--sage);font-size:.72em;letter-spacing:.06em;vertical-align:middle;margin-left:3px;}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;letter-spacing:.2em;color:var(--text)}
+.brand-name em{font-style:italic;color:var(--sage);font-size:.72em;letter-spacing:.06em;vertical-align:middle;margin-left:3px}
 .hright{display:flex;align-items:center;gap:7px}
 .status-pill{
   display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
   border:1px solid var(--bd2);background:var(--s1);
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.05em;color:var(--mid);
-  transition:all .35s;
+  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.05em;color:var(--mid);transition:all .35s;
 }
-.status-pill.ok  {border-color:rgba(143,188,122,.3);color:var(--sage)}
-.status-pill.warn{border-color:rgba(212,168,83,.3); color:var(--amber)}
+.status-pill.ok{border-color:rgba(143,188,122,.3);color:var(--sage)}
+.status-pill.warn{border-color:rgba(212,168,83,.3);color:var(--amber)}
 .status-pill.busy{border-color:rgba(122,179,194,.3);color:var(--sky)}
 .dot{width:4px;height:4px;border-radius:50%;background:currentColor;animation:bk 2s ease-in-out infinite}
 @keyframes bk{0%,100%{opacity:1}50%{opacity:.15}}
 .icon-btn{
-  width:32px;height:32px;border-radius:var(--r-sm);
-  border:1px solid var(--bd2);background:var(--s1);
-  color:var(--mid);cursor:pointer;display:grid;place-items:center;font-size:.76rem;
-  transition:all .18s;
+  width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--bd2);background:var(--s1);
+  color:var(--mid);cursor:pointer;display:grid;place-items:center;font-size:.76rem;transition:all .18s;
 }
 .icon-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
 .icon-btn.active{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
-/* ─── Settings Panel ─── */
+/* Settings */
 .settings-bar{
-  position:relative;z-index:10;flex-shrink:0;
-  overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);
-  background:var(--panel-bg);
+  position:relative;z-index:10;flex-shrink:0;overflow:hidden;max-height:0;
+  border-bottom:0px solid var(--bd);background:var(--panel-bg);
   transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s;
 }
-.settings-bar.open{max-height:460px;border-bottom-width:1px}
+.settings-bar.open{max-height:520px;border-bottom-width:1px}
 .settings-inner{
   padding:18px 22px 20px;
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));
-  gap:14px 18px;align-items:start;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:14px 18px;align-items:start;
 }
 .ctrl{display:flex;flex-direction:column;gap:7px}
 .ctrl-lbl{
   font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;
   color:var(--mid);display:flex;justify-content:space-between;align-items:center;
 }
-.ctrl-lbl .val{
-  color:var(--sage);font-weight:500;background:rgba(143,188,122,.07);
-  padding:1px 5px;border-radius:3px;min-width:28px;text-align:center;
-}
-.ctrl-desc{font-size:.62rem;color:var(--dim);line-height:1.45;font-family:'JetBrains Mono',monospace;}
+.ctrl-lbl .val{color:var(--sage);font-weight:500;background:rgba(143,188,122,.07);padding:1px 5px;border-radius:3px;min-width:28px;text-align:center}
+.ctrl-desc{font-size:.62rem;color:var(--dim);line-height:1.45;font-family:'JetBrains Mono',monospace}
 .preset-row{
   grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;
   padding-bottom:12px;border-bottom:1px solid var(--bd);align-items:center;
 }
-.preset-lbl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;color:var(--mid);margin-right:4px;}
+.preset-lbl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;color:var(--mid);margin-right:4px}
 .preset-btn{
   font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 10px;border-radius:20px;
   border:1px solid var(--bd2);background:var(--s1);color:var(--mid);cursor:pointer;transition:all .2s;
@@ -165,74 +108,46 @@ input[type=range]{
   outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
-  background:var(--sage);cursor:pointer;box-shadow:0 0 0 3px rgba(143,188,122,.12);transition:box-shadow .2s;
+  -webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--sage);
+  cursor:pointer;box-shadow:0 0 0 3px rgba(143,188,122,.12);transition:box-shadow .2s;
 }
-input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,122,.18)}
 .select-ctrl{
   background:var(--s2);border:1px solid var(--bd2);border-radius:6px;
   color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.62rem;
-  padding:4px 8px;outline:none;cursor:pointer;width:100%;
-  -webkit-appearance:none;appearance:none;
+  padding:4px 8px;outline:none;cursor:pointer;width:100%;-webkit-appearance:none;appearance:none;
 }
-.select-ctrl:focus{border-color:rgba(143,188,122,.3)}
 .stat-row{
   grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;
   padding-top:10px;border-top:1px solid var(--bd);align-items:center;
 }
-.sc{font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);color:var(--mid);}
+.sc{font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);color:var(--mid)}
 .sc b{color:var(--text);font-weight:500}
 .sc.hi{border-color:rgba(143,188,122,.2);background:var(--sageg)}
 .sc.hi b{color:var(--sage)}
-.sc.file{border-color:rgba(165,144,208,.2);background:rgba(165,144,208,.04)}
-.sc.file b{color:var(--violet)}
-.build-bar-wrap{grid-column:1/-1;background:var(--s1);border:1px solid var(--bd);border-radius:6px;overflow:hidden;height:4px;}
-.build-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--sage),var(--sky));border-radius:6px;transition:width .1s linear;}
-.build-label{grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--mid);letter-spacing:.05em;min-height:14px;}
-/* ─── Corpus Panel ─── */
-.corpus-bar{
-  position:relative;z-index:9;flex-shrink:0;
-  overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);
-  background:var(--panel-bg);
-  transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s;
-}
-.corpus-bar.open{max-height:300px;border-bottom-width:1px}
-.corpus-inner{padding:14px 22px 16px;display:flex;flex-direction:column;gap:10px;}
-.corpus-header{display:flex;align-items:center;justify-content:space-between;}
-.corpus-header span{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.06em;color:var(--mid);}
-.corpus-textarea{
-  width:100%;height:120px;background:var(--s2);border:1px solid var(--bd2);
-  border-radius:var(--r-sm);color:var(--text);font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;line-height:1.6;padding:10px 12px;resize:vertical;outline:none;
-}
-.corpus-textarea:focus{border-color:rgba(143,188,122,.3)}
-.corpus-actions{display:flex;gap:8px;align-items:center;}
-.relearn-btn{
-  font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:5px 14px;border-radius:var(--r-sm);
-  border:1px solid rgba(143,188,122,.3);background:var(--sagef);color:var(--sage);cursor:pointer;transition:all .2s;
-}
-.relearn-btn:hover{background:rgba(143,188,122,.18);border-color:var(--sage)}
-.corpus-note{font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--dim);}
-/* ─── N-gram Panel ─── */
+.sc.new{border-color:rgba(122,179,194,.2);background:rgba(122,179,194,.04)}
+.sc.new b{color:var(--sky)}
+.build-bar-wrap{grid-column:1/-1;background:var(--s1);border:1px solid var(--bd);border-radius:6px;overflow:hidden;height:4px}
+.build-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--sage),var(--sky));border-radius:6px;transition:width .1s linear}
+.build-label{grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--mid);letter-spacing:.05em;min-height:14px}
+/* N-gram panel */
 .ngram-bar{
-  position:relative;z-index:8;flex-shrink:0;
-  overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);
-  background:var(--panel-bg);
+  position:relative;z-index:8;flex-shrink:0;overflow:hidden;max-height:0;
+  border-bottom:0px solid var(--bd);background:var(--panel-bg);
   transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s;
 }
 .ngram-bar.open{max-height:200px;border-bottom-width:1px}
-.ngram-inner{padding:12px 22px 14px;}
-.ngram-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.06em;color:var(--mid);margin-bottom:10px;}
-.ngram-chart{display:flex;flex-direction:column;gap:5px;}
-.ngram-row{display:flex;align-items:center;gap:8px;}
-.ngram-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text);width:90px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ngram-track{flex:1;height:14px;background:var(--bd);border-radius:3px;overflow:hidden;}
-.ngram-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--sage),var(--sky));transition:width .35s cubic-bezier(.4,0,.2,1);}
-.ngram-pct{font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--mid);width:36px;flex-shrink:0;}
-.ngram-empty{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim);}
-/* ─── Chat ─── */
-#chat{flex:1;overflow-y:auto;padding:24px 0 18px;position:relative;z-index:5;scroll-behavior:smooth;}
-.msgs{max-width:740px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:16px;}
+.ngram-inner{padding:12px 22px 14px}
+.ngram-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.06em;color:var(--mid);margin-bottom:10px}
+.ngram-chart{display:flex;flex-direction:column;gap:5px}
+.ngram-row{display:flex;align-items:center;gap:8px}
+.ngram-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text);width:90px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ngram-track{flex:1;height:14px;background:var(--bd);border-radius:3px;overflow:hidden}
+.ngram-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--sage),var(--sky));transition:width .35s cubic-bezier(.4,0,.2,1)}
+.ngram-pct{font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--mid);width:36px;flex-shrink:0}
+.ngram-empty{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim)}
+/* Chat */
+#chat{flex:1;overflow-y:auto;padding:24px 0 18px;position:relative;z-index:5;scroll-behavior:smooth}
+.msgs{max-width:740px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:16px}
 .welcome{animation:fadeUp .8s cubic-bezier(.34,1.15,.64,1) both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .welcome-card{
@@ -243,20 +158,16 @@ input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%);
 }
-.welcome-card::after{
-  content:'';position:absolute;bottom:0;right:0;width:200px;height:200px;border-radius:50%;
-  background:radial-gradient(circle,rgba(143,188,122,.03),transparent 70%);pointer-events:none;
-}
-.welcome-head{display:flex;align-items:baseline;gap:11px;margin-bottom:13px;}
-.welcome-title{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:400;color:var(--text);letter-spacing:.12em;}
+.welcome-head{display:flex;align-items:baseline;gap:11px;margin-bottom:13px}
+.welcome-title{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:400;color:var(--text);letter-spacing:.12em}
 .welcome-title em{font-style:italic;color:var(--sage)}
-.welcome-ver{font-family:'JetBrains Mono',monospace;font-size:.56rem;padding:2px 6px;border:1px solid rgba(143,188,122,.2);border-radius:4px;color:var(--sage);letter-spacing:.08em;}
+.welcome-ver{font-family:'JetBrains Mono',monospace;font-size:.56rem;padding:2px 6px;border:1px solid rgba(143,188,122,.2);border-radius:4px;color:var(--sage);letter-spacing:.08em}
 .welcome-sub{color:var(--mid);font-size:.84rem;line-height:1.95;margin-bottom:16px}
-.welcome-sub code{font-family:'JetBrains Mono',monospace;font-size:.78em;color:var(--sky);background:rgba(122,179,194,.07);padding:1px 5px;border-radius:3px;}
-.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
-.feat{border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg);padding:9px 12px;font-size:.7rem;line-height:1.6;position:relative;overflow:hidden;}
-.feat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent,var(--sage));border-radius:0 2px 2px 0;}
-.feat.kn{--accent:var(--sage)}.feat.beam{--accent:var(--sky)}.feat.coh{--accent:var(--amber)}.feat.samp{--accent:var(--violet)}
+.welcome-sub code{font-family:'JetBrains Mono',monospace;font-size:.78em;color:var(--sky);background:rgba(122,179,194,.07);padding:1px 5px;border-radius:3px}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.feat{border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg);padding:9px 12px;font-size:.7rem;line-height:1.6;position:relative;overflow:hidden}
+.feat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent,var(--sage));border-radius:0 2px 2px 0}
+.feat.kn{--accent:var(--sage)}.feat.beam{--accent:var(--sky)}.feat.rag{--accent:var(--amber)}.feat.coh{--accent:var(--violet)}
 .feat strong{display:block;font-size:.68rem;letter-spacing:.05em;color:var(--text);margin-bottom:2px;font-weight:500}
 .feat span{color:var(--mid)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -265,129 +176,111 @@ input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(143,188,
   background:transparent;color:var(--mid);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;
   transition:all .22s cubic-bezier(.34,1.4,.64,1);
 }
-.chip:hover{border-color:rgba(143,188,122,.4);color:var(--sage);background:rgba(143,188,122,.05);transform:translateY(-2px);}
-/* ─── Messages ─── */
+.chip:hover{border-color:rgba(143,188,122,.4);color:var(--sage);background:rgba(143,188,122,.05);transform:translateY(-2px)}
+/* Messages */
 .msg{display:flex;gap:11px;align-items:flex-start;animation:msgIn .38s cubic-bezier(.34,1.2,.64,1) both}
 @keyframes msgIn{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:none}}
 .msg.user{flex-direction:row-reverse}
-.av{width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:500;letter-spacing:.04em;}
-.av.ai{background:linear-gradient(135deg,rgba(143,188,122,.09),rgba(122,179,194,.06));border:1px solid rgba(143,188,122,.18);color:var(--sage);}
-.av.user{background:linear-gradient(135deg,rgba(196,136,122,.09),rgba(212,168,83,.06));border:1px solid rgba(196,136,122,.18);color:var(--rose);}
-.bub{max-width:78%;padding:12px 16px;font-size:.86rem;line-height:1.95;}
-.bub.ai{background:var(--s1);border:1px solid var(--bd);border-radius:3px var(--r-md) var(--r-md) var(--r-md);color:var(--text);}
-.bub.user{background:var(--s2);border:1px solid rgba(196,136,122,.1);border-radius:var(--r-md) 3px var(--r-md) var(--r-md);color:var(--text);text-align:right;}
-.bub.streaming{border-color:rgba(143,188,122,.25);box-shadow:0 0 24px rgba(143,188,122,.05);}
+.av{width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:500;letter-spacing:.04em}
+.av.ai{background:linear-gradient(135deg,rgba(143,188,122,.09),rgba(122,179,194,.06));border:1px solid rgba(143,188,122,.18);color:var(--sage)}
+.av.user{background:linear-gradient(135deg,rgba(196,136,122,.09),rgba(212,168,83,.06));border:1px solid rgba(196,136,122,.18);color:var(--rose)}
+.bub{max-width:78%;padding:12px 16px;font-size:.86rem;line-height:1.95}
+.bub.ai{background:var(--s1);border:1px solid var(--bd);border-radius:3px var(--r-md) var(--r-md) var(--r-md);color:var(--text)}
+.bub.user{background:var(--s2);border:1px solid rgba(196,136,122,.1);border-radius:var(--r-md) 3px var(--r-md) var(--r-md);color:var(--text);text-align:right}
+.bub.streaming{border-color:rgba(143,188,122,.25);box-shadow:0 0 24px rgba(143,188,122,.05)}
+/* Retrieved source badge - 新機能 */
+.source-badge{
+  display:inline-flex;align-items:center;gap:4px;margin-top:8px;
+  font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:.04em;
+  padding:2px 8px;border-radius:10px;border:1px solid rgba(122,179,194,.2);
+  background:rgba(122,179,194,.06);color:var(--sky);
+}
 .msg-meta{
   font-family:'JetBrains Mono',monospace;font-size:.53rem;letter-spacing:.04em;
   color:var(--dim);margin-top:5px;margin-left:41px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;
 }
-.meta-tag{border:1px solid var(--bd);border-radius:10px;padding:1px 7px;background:var(--s1);color:var(--mid);}
+.meta-tag{border:1px solid var(--bd);border-radius:10px;padding:1px 7px;background:var(--s1);color:var(--mid)}
 .meta-tag.g{border-color:rgba(143,188,122,.18);color:rgba(143,188,122,.5)}
+.meta-tag.r{border-color:rgba(122,179,194,.18);color:rgba(122,179,194,.5)}
 .regen-btn{
   width:20px;height:20px;border-radius:5px;border:1px solid var(--bd);background:var(--s1);
   color:var(--dim);cursor:pointer;display:grid;place-items:center;transition:all .18s;flex-shrink:0;
 }
 .regen-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sagef)}
 .regen-btn svg{width:10px;height:10px}
-.cursor-blink{
-  display:inline-block;width:2px;height:.88em;background:var(--sage);margin-left:2px;
-  vertical-align:text-bottom;border-radius:1px;animation:cb .65s step-end infinite;
-}
+.cursor-blink{display:inline-block;width:2px;height:.88em;background:var(--sage);margin-left:2px;vertical-align:text-bottom;border-radius:1px;animation:cb .65s step-end infinite}
 @keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
-.sys{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.07em;color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both;}
-.sys span{border:1px solid var(--bd);border-radius:20px;padding:3px 11px;background:var(--s1);display:inline-flex;align-items:center;gap:6px;}
-.sys-dot{width:4px;height:4px;border-radius:50%;background:var(--sage);animation:bk 1.4s ease-in-out infinite;}
-/* ─── Footer ─── */
+.sys{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.07em;color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both}
+.sys span{border:1px solid var(--bd);border-radius:20px;padding:3px 11px;background:var(--s1);display:inline-flex;align-items:center;gap:6px}
+.sys-dot{width:4px;height:4px;border-radius:50%;background:var(--sage);animation:bk 1.4s ease-in-out infinite}
+/* Footer */
 footer{
-  position:relative;z-index:20;flex-shrink:0;
-  border-top:1px solid var(--bd);background:var(--footer-bg);
-  backdrop-filter:blur(28px);
-  padding:12px 18px;
-  padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));
-  width:100%;
+  position:relative;z-index:20;flex-shrink:0;border-top:1px solid var(--bd);
+  background:var(--footer-bg);backdrop-filter:blur(28px);
+  padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));width:100%;
 }
 .input-wrap{max-width:740px;margin:0 auto}
 .input-row{
   display:flex;align-items:flex-end;gap:7px;background:var(--s1);border:1px solid var(--bd2);
   border-radius:var(--r-md);padding:9px 9px 9px 16px;transition:border-color .25s,box-shadow .25s;
 }
-.input-row:focus-within{border-color:rgba(143,188,122,.28);box-shadow:0 0 0 4px rgba(143,188,122,.035);}
-textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.86rem;resize:none;max-height:110px;width:0;min-width:0;max-width:100%;line-height:1.75;padding:2px 0;}
+.input-row:focus-within{border-color:rgba(143,188,122,.28);box-shadow:0 0 0 4px rgba(143,188,122,.035)}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.86rem;resize:none;max-height:110px;width:0;min-width:0;max-width:100%;line-height:1.75;padding:2px 0}
 textarea::placeholder{color:var(--dim)}
 .send-btn{
   width:34px;height:34px;border:none;border-radius:var(--r-sm);background:var(--sage);color:#181512;
   cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:all .2s cubic-bezier(.34,1.4,.64,1);
 }
-.send-btn:hover{background:var(--sage2);box-shadow:0 4px 18px rgba(143,188,122,.28);transform:scale(1.07);}
+.send-btn:hover{background:var(--sage2);box-shadow:0 4px 18px rgba(143,188,122,.28);transform:scale(1.07)}
 .send-btn:active{transform:scale(.91)}
 .send-btn:disabled{opacity:.28;cursor:not-allowed;transform:none;box-shadow:none}
 .send-btn svg{width:13px;height:13px}
-.progress-strip{height:1.5px;border-radius:1px;background:linear-gradient(90deg,var(--sage),var(--sky),var(--amber));width:0%;margin-top:8px;opacity:0;transition:width .07s linear,opacity .3s;}
+.progress-strip{height:1.5px;border-radius:1px;background:linear-gradient(90deg,var(--sage),var(--sky),var(--amber));width:0%;margin-top:8px;opacity:0;transition:width .07s linear,opacity .3s}
 .progress-strip.active{opacity:1}
-.footer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px;}
-.footer-hint{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--dim);letter-spacing:.05em;}
-.ppx-live{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--mid);letter-spacing:.04em;transition:color .25s;}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
+.footer-hint{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--dim);letter-spacing:.05em}
+.ppx-live{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--mid);letter-spacing:.04em;transition:color .25s}
 .ppx-live.hi{color:var(--sky)}
 .ppx-live.warn{color:var(--amber)}
-/* ─── 翻訳ボタン ─── */
-.trans-btn{
-  display:inline-flex;align-items:center;gap:4px;
-  font-family:'JetBrains Mono',monospace;font-size:.54rem;letter-spacing:.04em;
-  padding:2px 8px;border-radius:10px;border:1px solid var(--bd2);
-  background:var(--s1);color:var(--mid);cursor:pointer;transition:all .18s;flex-shrink:0;
-}
-.trans-btn:hover{border-color:var(--sky);color:var(--sky);background:rgba(122,179,194,.08)}
-.trans-btn.loading{opacity:.5;pointer-events:none}
-.trans-bubble{
-  margin-top:6px;padding:9px 13px;border-radius:var(--r-sm);
-  background:rgba(122,179,194,.07);border:1px solid rgba(122,179,194,.15);
-  font-size:.84rem;line-height:1.9;color:var(--text);
-  animation:fadeUp .3s ease both;
-}
-/* ─── ヘルプモーダル ─── */
+/* Help overlay */
 .help-overlay{
   position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;transition:opacity .25s;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;
 }
 .help-overlay.open{opacity:1;pointer-events:all}
 .help-modal{
-  width:min(620px,92vw);max-height:80vh;background:var(--s1);border:1px solid var(--bd2);
+  width:min(640px,92vw);max-height:82vh;background:var(--s1);border:1px solid var(--bd2);
   border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;
-  transform:translateY(14px) scale(.97);transition:transform .28s cubic-bezier(.34,1.2,.64,1);
-  position:relative;
+  transform:translateY(14px) scale(.97);transition:transform .28s cubic-bezier(.34,1.2,.64,1);position:relative;
 }
 .help-overlay.open .help-modal{transform:none}
-.help-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%);}
-.help-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;}
-.help-head-title{font-family:'Fraunces',serif;font-size:.95rem;font-weight:400;letter-spacing:.12em;color:var(--text);}
+.help-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(143,188,122,.35) 40%,rgba(122,179,194,.25) 70%,transparent 95%)}
+.help-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.help-head-title{font-family:'Fraunces',serif;font-size:.95rem;font-weight:400;letter-spacing:.12em;color:var(--text)}
 .help-head-title em{font-style:italic;color:var(--sage)}
-.help-close{width:26px;height:26px;border-radius:var(--r-sm);border:1px solid var(--bd2);background:transparent;color:var(--mid);cursor:pointer;display:grid;place-items:center;transition:all .18s;}
+.help-close{width:26px;height:26px;border-radius:var(--r-sm);border:1px solid var(--bd2);background:transparent;color:var(--mid);cursor:pointer;display:grid;place-items:center;transition:all .18s}
 .help-close:hover{border-color:var(--rose);color:var(--rose)}
-.help-body{overflow-y:auto;padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px;}
-.help-section-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--sage);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--bd);}
-.help-items{display:flex;flex-direction:column;gap:8px;}
-.help-item{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:start;}
-.help-item-name{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text);font-weight:500;padding-top:1px;}
-.help-item-name span{display:inline-block;font-size:.52rem;color:var(--mid);margin-top:2px;}
-.help-item-desc{font-family:'Zen Kaku Gothic New',sans-serif;font-size:.76rem;color:var(--mid);line-height:1.75;}
+.help-body{overflow-y:auto;padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px}
+.help-section-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--sage);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--bd)}
+.help-items{display:flex;flex-direction:column;gap:8px}
+.help-item{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:start}
+.help-item-name{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text);font-weight:500;padding-top:1px}
+.help-item-name span{display:block;font-size:.52rem;color:var(--mid);margin-top:2px}
+.help-item-desc{font-family:'Zen Kaku Gothic New',sans-serif;font-size:.76rem;color:var(--mid);line-height:1.75}
 .help-item-desc b{color:var(--text);font-weight:500}
-.help-item-desc code{font-family:'JetBrains Mono',monospace;font-size:.72em;color:var(--sky);background:rgba(122,179,194,.08);padding:1px 4px;border-radius:3px;}
+.help-item-desc code{font-family:'JetBrains Mono',monospace;font-size:.72em;color:var(--sky);background:rgba(122,179,194,.08);padding:1px 4px;border-radius:3px}
+.new-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.48rem;padding:1px 5px;border-radius:3px;background:rgba(122,179,194,.12);border:1px solid rgba(122,179,194,.25);color:var(--sky);margin-left:5px;letter-spacing:.04em;vertical-align:middle}
 </style>
 </head>
 <body>
-
 <header>
   <div class="brand">
     <div class="brand-mark"></div>
-    <div class="brand-name">COMPOSE <em>v3</em></div>
+    <div class="brand-name">COMPOSE <em>v4</em></div>
   </div>
   <div class="hright">
-    <div class="status-pill warn" id="statusPill">
-      <div class="dot"></div>
-      <span id="statusTxt">読込中…</span>
-    </div>
-    <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="テーマ切り替え">
+    <div class="status-pill warn" id="statusPill"><div class="dot"></div><span id="statusTxt">読込中…</span></div>
+    <div class="icon-btn" onclick="toggleTheme()" title="テーマ切り替え">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
         <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
         <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
@@ -400,12 +293,6 @@ textarea::placeholder{color:var(--dim)}
         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
       </svg>
     </div>
-    <div class="icon-btn" id="corpusBtn" onclick="toggleCorpus()" title="コーパス編集">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-      </svg>
-    </div>
     <div class="icon-btn" id="helpBtn" onclick="toggleHelp()" title="設定の説明">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
@@ -414,7 +301,7 @@ textarea::placeholder{color:var(--dim)}
     <div class="icon-btn" id="settingsBtn" onclick="toggleSettings()" title="生成設定">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
       </svg>
     </div>
   </div>
@@ -422,12 +309,6 @@ textarea::placeholder{color:var(--dim)}
 
 <div class="settings-bar" id="settingsBar">
   <div class="settings-inner">
-    <div class="preset-row" style="border-bottom:none;padding-bottom:8px;">
-      <span class="preset-lbl">LANG</span>
-      <button class="preset-btn" id="lang-ja" onclick="switchLang('ja')">日本語</button>
-      <button class="preset-btn" id="lang-en" onclick="switchLang('en')">English</button>
-      <span class="corpus-note" id="langNote" style="margin-left:6px"></span>
-    </div>
     <div class="preset-row">
       <span class="preset-lbl">PRESET</span>
       <button class="preset-btn" onclick="applyPreset('poetic')" id="preset-poetic">詩的</button>
@@ -437,103 +318,70 @@ textarea::placeholder{color:var(--dim)}
       <button class="preset-btn" onclick="applyPreset('concise')" id="preset-concise">簡潔</button>
     </div>
     <div class="ctrl">
-      <div class="ctrl-lbl">N-gram最大次数 <span class="val" id="vOrder">5</span></div>
+      <div class="ctrl-lbl">N-gram次数 <span class="val" id="vOrder">5</span></div>
       <input type="range" id="rOrder" min="2" max="8" value="5" oninput="syncSlider(this,'vOrder',1);scheduleRebuild()">
       <div class="ctrl-desc">高いほど長い文脈を参照</div>
     </div>
     <div class="ctrl">
       <div class="ctrl-lbl">平滑化手法</div>
       <select class="select-ctrl" id="rSmMethod" onchange="scheduleRebuild()">
-        <option value="kn">Kneser-Ney（推奨）</option>
+        <option value="kn">Kneser-Ney</option>
         <option value="wb">Witten-Bell</option>
         <option value="lap">Laplace</option>
-        <option value="none">なし（MLE）</option>
+        <option value="none">MLE</option>
       </select>
-      <div class="ctrl-desc">KNが最高精度</div>
     </div>
     <div class="ctrl">
-      <div class="ctrl-lbl">KN割引 d <span class="val" id="vDisc">0.75</span></div>
-      <input type="range" id="rDisc" min="0.5" max="0.95" value="0.75" step="0.01" oninput="syncSlider(this,'vDisc',.01);scheduleRebuild()">
-      <div class="ctrl-desc">Kneser-Ney割引係数</div>
+      <div class="ctrl-lbl">検索文数 <span class="val" id="vTopK">3</span><span class="new-badge">NEW</span></div>
+      <input type="range" id="rRetrK" min="1" max="8" value="3" oninput="syncSlider(this,'vTopK',1)">
+      <div class="ctrl-desc">TF-IDF検索の取得文数</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">文脈混合比 <span class="val" id="vMix">0.6</span><span class="new-badge">NEW</span></div>
+      <input type="range" id="rMix" min="0.0" max="1.0" value="0.6" step="0.05" oninput="syncSlider(this,'vMix',.05)">
+      <div class="ctrl-desc">1.0=検索文のみ、0=入力のみ</div>
     </div>
     <div class="ctrl">
       <div class="ctrl-lbl">生成アルゴリズム</div>
       <select class="select-ctrl" id="rGenAlgo">
-        <option value="sample">サンプリング</option>
         <option value="beam">ビームサーチ</option>
-        <option value="ultrabeam">極光ビーム ✦</option>
+        <option value="sample">サンプリング</option>
         <option value="greedy">貪欲法</option>
       </select>
-      <div class="ctrl-desc">ビームは高品質・低速</div>
     </div>
     <div class="ctrl">
       <div class="ctrl-lbl">ビーム幅 <span class="val" id="vBeam">4</span></div>
-      <input type="range" id="rBeam" min="2" max="12" value="4" oninput="syncSlider(this,'vBeam',1)">
-      <div class="ctrl-desc">ビームサーチ時の幅</div>
+      <input type="range" id="rBeam" min="2" max="10" value="4" oninput="syncSlider(this,'vBeam',1)">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">温度 <span class="val" id="vTemp">1.0</span></div>
+      <input type="range" id="rTemp" min="0.1" max="2.5" value="1.0" step="0.1" oninput="syncSlider(this,'vTemp',.1);clearPreset()">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">Top-P <span class="val" id="vTopP">0.95</span></div>
+      <input type="range" id="rTopP" min="0.5" max="1.0" value="0.95" step="0.01" oninput="syncSlider(this,'vTopP',.01);clearPreset()">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">繰り返しペナルティ <span class="val" id="vRepeat">1.2</span></div>
+      <input type="range" id="rRepeat" min="1.0" max="3.0" value="1.2" step="0.1" oninput="syncSlider(this,'vRepeat',.1);clearPreset()">
     </div>
     <div class="ctrl">
       <div class="ctrl-lbl">応答長 <span class="val" id="vLen">自動</span></div>
       <input type="range" id="rLen" min="8" max="120" value="40" step="4" oninput="onLenSlider(this)" disabled style="opacity:.35">
       <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
         <input type="checkbox" id="lenAuto" checked onchange="onLenAutoChange(this)" style="accent-color:var(--sage)">
-        <span class="ctrl-desc" style="margin:0">自動（入力長に比例）</span>
+        <span class="ctrl-desc" style="margin:0">自動</span>
       </label>
-    </div>
-    <div class="ctrl">
-      <div class="ctrl-lbl">温度 <span class="val" id="vTemp">1.0</span></div>
-      <input type="range" id="rTemp" min="0.1" max="2.5" value="1.0" step="0.1" oninput="syncSlider(this,'vTemp',.1);clearPreset()">
-      <div class="ctrl-desc">高いほどランダム</div>
-    </div>
-    <div class="ctrl">
-      <div class="ctrl-lbl">Top-K <span class="val" id="vTopK">0</span></div>
-      <input type="range" id="rTopK" min="0" max="50" value="0" oninput="syncSlider(this,'vTopK',1)">
-      <div class="ctrl-desc">0=無効。上位K候補に絞る</div>
-    </div>
-    <div class="ctrl">
-      <div class="ctrl-lbl">Top-P <span class="val" id="vTopP">0.95</span></div>
-      <input type="range" id="rTopP" min="0.5" max="1.0" value="0.95" step="0.01" oninput="syncSlider(this,'vTopP',.01);clearPreset()">
-      <div class="ctrl-desc">核サンプリング累積確率</div>
-    </div>
-    <div class="ctrl">
-      <div class="ctrl-lbl">繰り返しペナルティ <span class="val" id="vRepeat">1.2</span></div>
-      <input type="range" id="rRepeat" min="1.0" max="3.0" value="1.2" step="0.1" oninput="syncSlider(this,'vRepeat',.1);clearPreset()">
-      <div class="ctrl-desc">直近トークンの重みを減衰</div>
-    </div>
-    <div class="ctrl">
-      <div class="ctrl-lbl">ペナルティ窓 <span class="val" id="vRepWin">10</span></div>
-      <input type="range" id="rRepWin" min="2" max="30" value="10" oninput="syncSlider(this,'vRepWin',1)">
-      <div class="ctrl-desc">繰り返し検出の直近N単語</div>
-    </div>
-    <div class="ctrl">
-      <div class="ctrl-lbl">多様性ペナルティ <span class="val" id="vDiv">0.0</span></div>
-      <input type="range" id="rDiv" min="0.0" max="1.0" value="0.0" step="0.05" oninput="syncSlider(this,'vDiv',.05)">
-      <div class="ctrl-desc">同テーマ続出を抑制</div>
     </div>
     <div class="build-label" id="buildLabel">モデル未構築</div>
     <div class="build-bar-wrap"><div class="build-bar" id="buildBar"></div></div>
     <div class="stat-row">
-      <div class="sc hi">文字数 <b id="sChars">—</b></div>
-      <div class="sc hi">トークン数 <b id="sWords">—</b></div>
+      <div class="sc hi">トークン <b id="sWords">—</b></div>
+      <div class="sc hi">語彙 <b id="sVocab">—</b></div>
       <div class="sc">状態数 <b id="sStates">—</b></div>
-      <div class="sc">語彙数 <b id="sVocab">—</b></div>
-      <div class="sc">文数 <b id="sSents">—</b></div>
-      <div class="sc">Perplexity <b id="sPpx">—</b></div>
-      <div class="sc">バックオフ率 <b id="sBoRate">—</b></div>
-      <div class="sc">Entropy <b id="sEnt">—</b></div>
-      <div class="sc file">ファイル <b id="sFiles">—</b></div>
-    </div>
-  </div>
-</div>
-
-<div class="corpus-bar" id="corpusBar">
-  <div class="corpus-inner">
-    <div class="corpus-header">
-      <span>コーパス編集 — 直接編集して再学習</span>
-    </div>
-    <textarea class="corpus-textarea" id="corpusEdit" placeholder="ここにテキストを入力…"></textarea>
-    <div class="corpus-actions">
-      <button class="relearn-btn" onclick="relearnCorpus()">再学習</button>
-      <span class="corpus-note" id="corpusNote">編集後に「再学習」を押してください</span>
+      <div class="sc">PPX <b id="sPpx">—</b></div>
+      <div class="sc new">文書数 <b id="sDocs">—</b></div>
+      <div class="sc new">平均TF-IDF語 <b id="sTfidf">—</b></div>
     </div>
   </div>
 </div>
@@ -541,9 +389,7 @@ textarea::placeholder{color:var(--dim)}
 <div class="ngram-bar" id="ngramBar">
   <div class="ngram-inner">
     <div class="ngram-title" id="ngramTitle">入力語の次トークン候補（上位8件）</div>
-    <div class="ngram-chart" id="ngramChart">
-      <div class="ngram-empty">入力欄に文字を入力すると候補が表示されます</div>
-    </div>
+    <div class="ngram-chart" id="ngramChart"><div class="ngram-empty">入力欄に文字を入力すると候補が表示されます</div></div>
   </div>
 </div>
 
@@ -553,21 +399,19 @@ textarea::placeholder{color:var(--dim)}
       <div class="welcome-card">
         <div class="welcome-head">
           <div class="welcome-title">Com<em>pose</em></div>
-          <span class="welcome-ver">v3</span>
+          <span class="welcome-ver">v4</span>
         </div>
         <p class="welcome-sub">
-          <code>data/*.txt</code> を学習したマルコフ言語モデルです。<br>
-          入力を起点に文脈を辿り、高精度な文章を生成して返答します。
+          <code>TF-IDF検索</code> + <code>N-gram生成</code> のハイブリッドエンジン。<br>
+          入力の意味に最も近いコーパス文を検索してからN-gramで拡張します。
         </p>
         <div class="feature-grid">
-          <div class="feat kn"><strong>Kneser-Ney 平滑化</strong><span>低頻度・未観測N-gramを精密に補完</span></div>
+          <div class="feat rag"><strong>TF-IDF 意味検索</strong><span>入力に関連する文をコーパスから取得</span></div>
+          <div class="feat kn"><strong>Kneser-Ney 平滑化</strong><span>取得文を起点にN-gramで文章を拡張</span></div>
           <div class="feat beam"><strong>ビームサーチ</strong><span>複数仮説を並列展開し最良系列を選択</span></div>
-          <div class="feat coh"><strong>コヒーレンス強化</strong><span>IDF加重スコアでシード選択を最適化</span></div>
-          <div class="feat samp"><strong>多様性ペナルティ</strong><span>同一トークンの連続出現を統計的に抑制</span></div>
+          <div class="feat coh"><strong>会話スコープ管理</strong><span>直近の会話文脈を検索クエリに混合</span></div>
         </div>
-        <div class="chips" id="chips">
-          <span style="color:var(--dim);font-size:.76rem">学習中…</span>
-        </div>
+        <div class="chips" id="chips"><span style="color:var(--dim);font-size:.76rem">学習中…</span></div>
       </div>
     </div>
   </div>
@@ -595,1254 +439,697 @@ textarea::placeholder{color:var(--dim)}
 
 <script>
 // ============================================================
-//  COMPOSE v3
+//  COMPOSE v4 — TF-IDF Retrieval + N-gram Generation
 // ============================================================
 
-function isEndToken(t) {
-  return /[.!?。！？]$/.test(t);
-}
-function escHtml(t) {
-  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n); }
+function isEndToken(t){return /[.!?。！？]$/.test(t)}
+function escHtml(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n)}
 
-let corpus      = '';
-let tokens      = [];
-let vocab       = new Set();
-let vocabArr    = [];
-let tokenIdf    = {};
-let kn          = {};
-let wb          = {};
-let mle         = {};
-let knIdx       = {};
-let wbIdx       = {};
-let mleIdx      = {};
-let unigramDist = new Map();
-let rawCounts   = {};
-let continuationCounts = {};
-let knDiscounts = {};   // knDiscounts[n] = {D1, D2, D3} — Modified KN auto-discounts
-let tokenPositions = new Map(); // token -> [positions] for fast seed lookup
-let sentStarts  = [];
-let modelReady  = false;
-let rebuildTimer = null;
-let totalBoUsed   = 0;
-let totalGenSteps = 0;
-let busy          = false;
-let loadedFiles   = [];
-let buildGeneration = 0;
-let lastInput = '';
-let ppxLiveTimer = null;
-let history = [];
-let currentLang = 'ja'; // 'ja' | 'en'
+// ─── State ───────────────────────────────────────────────
+let corpus='', tokens=[], vocab=new Set(), vocabArr=[], tokenIdf={};
+let kn={}, wb={}, mle={}, knIdx={}, wbIdx={}, mleIdx={};
+let unigramDist=new Map(), rawCounts={}, continuationCounts={};
+let knDiscounts={}, sentStarts=[], modelReady=false;
+let rebuildTimer=null, busy=false, buildGeneration=0;
+let loadedFiles=[];
 
-async function init() {
-  corpus = await loadCorpusFiles();
-  document.getElementById('corpusEdit').value = corpus;
+// v4: 新フィールド
+let corpusSentences=[];   // 文単位の配列（検索インデックス用）
+let sentTfIdf=[];         // 各文のTF-IDFベクトル { token->weight }
+let idfMap={};            // token -> IDF値
+let dialogHistory=[];     // {role:'user'|'ai', text:string}[] — ターン別管理
+let ppxLiveTimer=null;
+
+// ─── Init ────────────────────────────────────────────────
+async function init(){
+  corpus=await loadCorpusFiles();
   await buildModelAsync();
   buildChips();
-  initLangUI();
-  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('sendBtn').disabled=false;
   initSliders();
 }
 
-// manifest.json フォーマット（どちらも対応）:
-//   パターンA: {"files":["a.txt","b.txt"], "lang":"ja"}
-//              → 全ファイルを現在の言語モードで読む
-//   パターンB: {"ja":["ja1.txt"], "en":["en1.txt"], "lang":"ja"}
-//              → 言語キーが있ればその言語のファイルだけ読む
-async function loadCorpusFiles() {
-  loadedFiles = [];
-  const failedFiles = [];
-  let fileList = [];
-  let manifestLang = null;
-
-  try {
-    const r = await fetch('data/manifest.json');
-    if (r.ok) {
-      const json = await r.json();
-
-      // lang フィールドを取得（初回ロード時のみ currentLang に反映）
-      if (!Array.isArray(json) && (json.lang === 'ja' || json.lang === 'en')) {
-        manifestLang = json.lang;
-      }
-
-      // パターンB: 言語別キーがある場合
-      if (!Array.isArray(json) && (json.ja || json.en)) {
-        const langFiles = json[currentLang] || json[manifestLang] || [];
-        for (const f of langFiles) if (typeof f === 'string' && f.endsWith('.txt')) fileList.push('data/' + f);
-      } else {
-        // パターンA: filesキー or 配列
-        const arr = Array.isArray(json) ? json : (json.files || []);
-        for (const f of arr) if (typeof f === 'string' && f.endsWith('.txt')) fileList.push(f);
-      }
+async function loadCorpusFiles(){
+  loadedFiles=[];
+  let fileList=[];
+  try{
+    const r=await fetch('data/manifest.json');
+    if(r.ok){
+      const json=await r.json();
+      const arr=Array.isArray(json)?json:(json.files||[]);
+      for(const f of arr) if(typeof f==='string'&&f.endsWith('.txt')) fileList.push(f);
     }
-  } catch(_) {}
-
-  // manifest由来のデフォルト言語をUIに反映（初回のみ）
-  if (manifestLang && manifestLang !== currentLang) {
-    currentLang = manifestLang;
+  }catch(_){}
+  if(fileList.length===0){
+    try{
+      const r=await fetch('data/');
+      if(r.ok){const html=await r.text();const re=/href="\.?\/?([^"?#]+\.txt)"/gi;let m;while((m=re.exec(html))!==null)fileList.push('data/'+m[1].split('/').pop());}
+    }catch(_){}
   }
-  const sel = document.getElementById('rLangMode');
-  if (sel) sel.value = currentLang;
-
-  // manifest が空だった場合: data/ ディレクトリ一覧を試みる
-  if (fileList.length === 0) {
-    try {
-      const r = await fetch('data/');
-      if (r.ok) {
-        const html = await r.text();
-        const re = /href="\.?\/?([^"?#]+\.txt)"/gi;
-        let m;
-        while ((m = re.exec(html)) !== null) fileList.push('data/' + m[1].split('/').pop());
-      }
-    } catch(_) {}
+  if(fileList.length===0) fileList.push('ai.txt');
+  const texts=[];
+  for(const path of [...new Set(fileList)]){
+    try{const r=await fetch(path);if(r.ok){const t=await r.text();if(t.trim()){texts.push(t);loadedFiles.push(path.split('/').pop())}}}catch(_){}
   }
-  if (fileList.length === 0) fileList.push('ai.txt');
-
-  const unique = [...new Set(fileList)];
-  const texts = [];
-  for (const path of unique) {
-    try {
-      const r = await fetch(path);
-      if (r.ok) {
-        const t = await r.text();
-        if (t.trim().length > 0) {
-          texts.push(t);
-          loadedFiles.push(path.split('/').pop());
-        } else {
-          failedFiles.push(path.split('/').pop() + ' (空)');
-        }
-      } else {
-        failedFiles.push(path.split('/').pop() + ' (HTTP ' + r.status + ')');
-      }
-    } catch(_) {
-      failedFiles.push(path.split('/').pop() + ' (読込失敗)');
-    }
-  }
-  if (failedFiles.length > 0) {
-    console.warn('COMPOSE: ファイル読み込み失敗 →', failedFiles.join(', '));
-  }
-  if (texts.length === 0) {
-    const reason = failedFiles.length > 0 ? failedFiles.join(', ') : 'ファイルなし';
-    setStatus('warn', 'フォールバック (' + reason + ')');
-    loadedFiles = ['(内蔵)'];
-    return fallbackCorpus();
-  }
-  const langLabel = currentLang === 'ja' ? '日本語' : 'English';
-  const label = loadedFiles.length === 1 ? loadedFiles[0] : loadedFiles.length + ' ファイル';
-  setStatus('ok', `[${langLabel}] ${label}` + (failedFiles.length > 0 ? ' ⚠' : ''));
+  if(texts.length===0){loadedFiles=['(内蔵)'];setStatus('warn','フォールバック');return fallbackCorpus()}
+  setStatus('ok',loadedFiles.length===1?loadedFiles[0]:loadedFiles.length+' ファイル');
   return texts.join('\n');
 }
 
-async function relearnCorpus() {
-  const edited = document.getElementById('corpusEdit').value.trim();
-  if (!edited) return;
-  corpus = edited;
-  document.getElementById('corpusNote').textContent = '再学習中…';
-  await buildModelAsync();
-  document.getElementById('corpusNote').textContent = '再学習完了！';
-  setTimeout(() => {
-    document.getElementById('corpusNote').textContent = '編集後に「再学習」を押してください';
-  }, 2000);
+// ─── TF-IDF 文書インデックス構築（v4 核心①）────────────
+function buildTfIdfIndex(){
+  // 文単位に分割（句点・改行で区切り、短すぎる文は除外）
+  corpusSentences=corpus
+    .split(/(?<=[。.!?！？\n])\s*/)
+    .map(s=>s.trim())
+    .filter(s=>s.length>4);
+
+  // IDF計算: log((N+1)/(df+1))+1
+  const N=corpusSentences.length||1;
+  const df={};
+  for(const sent of corpusSentences){
+    const toks=new Set(tokenize(sent));
+    for(const t of toks) df[t]=(df[t]||0)+1;
+  }
+  idfMap={};
+  for(const [t,d] of Object.entries(df)){
+    idfMap[t]=Math.log((N+1)/(d+1))+1;
+  }
+
+  // 各文のTF-IDF正規化ベクトルを計算
+  sentTfIdf=corpusSentences.map(sent=>{
+    const toks=tokenize(sent);
+    const tf={};
+    for(const t of toks) tf[t]=(tf[t]||0)+1;
+    const vec={};
+    let norm=0;
+    for(const [t,c] of Object.entries(tf)){
+      const w=(c/toks.length)*(idfMap[t]||1);
+      vec[t]=w;
+      norm+=w*w;
+    }
+    const sqrtNorm=Math.sqrt(norm)||1;
+    for(const t in vec) vec[t]/=sqrtNorm;
+    return vec;
+  });
+
+  // tokenIdf を旧インターフェースと統一
+  tokenIdf=idfMap;
 }
 
-const PRESETS = {
-  poetic:   { temp: 1.8, topP: 0.95, repeat: 1.1, div: 0.2,  len: 60 },
-  logical:  { temp: 0.4, topP: 0.80, repeat: 1.6, div: 0.0,  len: 40 },
-  random:   { temp: 2.2, topP: 1.00, repeat: 1.0, div: 0.0,  len: 40 },
-  balanced: { temp: 1.0, topP: 0.95, repeat: 1.2, div: 0.0,  len: 40 },
-  concise:  { temp: 0.7, topP: 0.85, repeat: 1.4, div: 0.15, len: 20 },
+// TF-IDFコサイン類似度で上位k文を取得
+function retrieveTopSentences(queryTokens, k){
+  if(sentTfIdf.length===0) return [];
+  // クエリベクトル生成
+  const qtf={};
+  for(const t of queryTokens) qtf[t]=(qtf[t]||0)+1;
+  const qvec={};
+  let qnorm=0;
+  for(const [t,c] of Object.entries(qtf)){
+    const w=(c/queryTokens.length)*(idfMap[t]||1);
+    qvec[t]=w;
+    qnorm+=w*w;
+  }
+  const sqrtQ=Math.sqrt(qnorm)||1;
+  for(const t in qvec) qvec[t]/=sqrtQ;
+
+  // 各文との内積（コサイン類似度）
+  const scored=sentTfIdf.map((vec,i)=>{
+    let sim=0;
+    for(const t in qvec){
+      if(vec[t]) sim+=qvec[t]*vec[t];
+    }
+    return {i, sim, sent:corpusSentences[i]};
+  });
+  scored.sort((a,b)=>b.sim-a.sim);
+  return scored.slice(0,k).filter(s=>s.sim>0);
+}
+
+// ─── Model Build ─────────────────────────────────────────
+async function buildModelAsync(){
+  const myGen=++buildGeneration;
+  setStatus('busy','モデル構築中…');
+  modelReady=false;
+  document.getElementById('sendBtn').disabled=true;
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const smMethod=document.getElementById('rSmMethod').value;
+  tokens=tokenize(corpus);
+  vocab=new Set(tokens);
+  vocabArr=Array.from(vocab);
+  rawCounts={};kn={};wb={};mle={};knIdx={};wbIdx={};mleIdx={};
+  knDiscounts={};unigramDist=new Map();sentStarts=[0];continuationCounts={};
+  const setBar=(p,l)=>{document.getElementById('buildBar').style.width=p+'%';document.getElementById('buildLabel').textContent=l};
+  setBar(5,'TF-IDFインデックス構築…');
+  await sleep(0);
+  if(myGen!==buildGeneration)return;
+  buildTfIdfIndex();
+  for(let i=0;i<tokens.length;i++) if(isEndToken(tokens[i])&&i+1<tokens.length) sentStarts.push(i+1);
+  for(let n=1;n<=maxOrder;n++){
+    setBar(Math.round(10+n/maxOrder*40),'N-gramカウント: '+n+'…');
+    await sleep(0);
+    if(myGen!==buildGeneration)return;
+    rawCounts[n]=new Map();
+    for(let i=0;i<=tokens.length-n-1;i++){
+      const key=tokens.slice(i,i+n).join('\x00');
+      const next=tokens[i+n];
+      if(!rawCounts[n].has(key))rawCounts[n].set(key,new Map());
+      const m=rawCounts[n].get(key);
+      m.set(next,(m.get(next)||0)+1);
+    }
+  }
+  setBar(55,'継続カウント…');await sleep(0);
+  if(myGen!==buildGeneration)return;
+  for(let n=1;n<=maxOrder;n++) knDiscounts[n]=computeKNDiscounts(n);
+  const contMap=new Map();
+  if(rawCounts[1]) for(const[,m] of rawCounts[1]) for(const[word] of m) contMap.set(word,(contMap.get(word)||0)+1);
+  continuationCounts=contMap;
+  const totalCont=Array.from(contMap.values()).reduce((a,b)=>a+b,0)||1;
+  for(let n=1;n<=maxOrder;n++){
+    setBar(55+Math.round(n/maxOrder*38),'確率化: '+n+'…');
+    await sleep(0);
+    if(myGen!==buildGeneration)return;
+    if(smMethod==='kn'){buildKN(n,totalCont);knIdx[n]=buildProbIndex(kn[n])}
+    else if(smMethod==='wb'){buildWB(n);wbIdx[n]=buildProbIndex(wb[n])}
+    else{buildLaplace(n);mleIdx[n]=buildProbIndex(mle[n])}
+  }
+  {const counts=new Map();for(const t of tokens)counts.set(t,(counts.get(t)||0)+1);const total=tokens.length||1;for(const[w,c]of counts)unigramDist.set(w,c/total)}
+  setBar(97,'PPX計算…');await sleep(0);
+  if(myGen!==buildGeneration)return;
+  const ppx=computePerplexity(maxOrder);
+  setBar(100,'完了');
+  if(myGen!==buildGeneration)return;
+  modelReady=true;
+  document.getElementById('sendBtn').disabled=false;
+  setStatus('ok',loadedFiles.length>1?loadedFiles.length+' ファイル 準備完了':(loadedFiles[0]||'準備完了'));
+  updateStats(ppx);
+}
+
+// ─── KN, WB, Laplace (v3と同一) ─────────────────────────
+function computeKNDiscounts(n){
+  const sm=rawCounts[n];if(!sm)return{D1:.5,D2:1,D3:1.5};
+  let n1=0,n2=0,n3=0,n4=0;
+  for(const[,m]of sm)for(const c of m.values()){if(c===1)n1++;else if(c===2)n2++;else if(c===3)n3++;else n4++}
+  if(!n1||!n2)return{D1:.5,D2:1,D3:1.5};
+  const Y=n1/(n1+2*n2);
+  return{D1:Math.max(1-2*Y*(n2/n1),.01),D2:Math.max(2-3*Y*(n3/Math.max(n2,1)),.01),D3:Math.max(3-4*Y*(n4/Math.max(n3,1)),.01)};
+}
+function buildProbIndex(model){const idx=new Map();if(!model)return idx;for(const[key,entries]of model){const m=new Map();for(const e of entries)m.set(e.word,e.p);idx.set(key,m)}return idx}
+function buildKN(n,totalCont){
+  const{D1,D2,D3}=knDiscounts[n]||{D1:.5,D2:1,D3:1.5};const V=vocab.size||1;const result=new Map();
+  if(!rawCounts[n]){kn[n]=result;return}
+  for(const[key,m]of rawCounts[n]){
+    const entries=[];const totalC=Array.from(m.values()).reduce((a,b)=>a+b,0);
+    let N1=0,N2=0,N3=0;for(const c of m.values()){if(c>=1)N1++;if(c>=2)N2++;if(c>=3)N3++}
+    const lambda=(D1*N1+D2*N2+D3*N3)/totalC;
+    for(const[word,c]of m){
+      const d=c===1?D1:c===2?D2:D3;const discounted=Math.max(c-d,0)/totalC;
+      let pLow;
+      if(n===1){pLow=(continuationCounts.get(word)||0)/totalCont}
+      else{
+        const lowerKey=key.split('\x00').slice(1).join('\x00');const lowerIdx=knIdx[n-1];
+        if(lowerIdx){const lm=lowerIdx.get(lowerKey);pLow=lm?(lm.get(word)??(1/V)):((continuationCounts.get(word)||0)/totalCont)}
+        else pLow=(continuationCounts.get(word)||0)/totalCont;
+      }
+      const p=discounted+lambda*pLow;if(p>0)entries.push({word,p});
+    }
+    result.set(key,entries);
+  }
+  kn[n]=result;
+}
+function buildWB(n){
+  const V=vocab.size||1;const result=new Map();if(!rawCounts[n]){wb[n]=result;return}
+  for(const[key,m]of rawCounts[n]){
+    const entries=[];const totalC=Array.from(m.values()).reduce((a,b)=>a+b,0);const T=m.size;const lambda=T/(T+totalC);
+    for(const[word,c]of m){
+      let pLow=1/V;
+      if(n>1&&wb[n-1]){const lk=key.split('\x00').slice(1).join('\x00');const lp=wb[n-1].get(lk);if(lp){const f=lp.find(e=>e.word===word);if(f)pLow=f.p}}
+      const p=(1-lambda)*(c/totalC)+lambda*pLow;if(p>0)entries.push({word,p});
+    }
+    const sum=entries.reduce((a,e)=>a+e.p,0);if(sum>0)entries.forEach(e=>e.p/=sum);
+    result.set(key,entries);
+  }
+  wb[n]=result;
+}
+function buildLaplace(n){
+  const alpha=0.1,V=vocab.size||1,result=new Map();if(!rawCounts[n]){mle[n]=result;return}
+  for(const[key,m]of rawCounts[n]){
+    const total=Array.from(m.values()).reduce((a,b)=>a+b,0);const denom=total+alpha*V;
+    const entries=Array.from(m.entries()).map(([word,c])=>({word,p:(c+alpha)/denom}));
+    const sum=entries.reduce((a,e)=>a+e.p,0);if(sum>0)entries.forEach(e=>e.p/=sum);
+    result.set(key,entries);
+  }
+  mle[n]=result;
+}
+
+function getModel(n){const sm=document.getElementById('rSmMethod').value;if(sm==='kn')return kn[n]||null;if(sm==='wb')return wb[n]||null;return mle[n]||kn[n]||null}
+function getModelIdx(n){const sm=document.getElementById('rSmMethod').value;if(sm==='kn')return knIdx[n]||null;if(sm==='wb')return wbIdx[n]||null;return mleIdx[n]||knIdx[n]||null}
+
+function getNextProb(context,target,maxOrder){
+  for(let n=Math.min(maxOrder,context.length);n>=1;n--){
+    const key=context.slice(-n).join('\x00');const idx=getModelIdx(n);if(!idx)continue;
+    const ctxMap=idx.get(key);if(ctxMap){const p=ctxMap.get(target);if(p!==undefined)return p}
+  }
+  return unigramDist.get(target)||1/(vocab.size||1);
+}
+
+function getCandidates(context){
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  for(let n=Math.min(maxOrder,context.length);n>=1;n--){
+    const key=context.slice(-n).join('\x00');const model=getModel(n);if(!model)continue;
+    const cands=model.get(key);if(cands&&cands.length>0)return{cands,usedOrder:n};
+  }
+  const u1=getModel(1);
+  if(u1&&u1.size>0){const all=[];for(const[,c]of u1)all.push(...c);return{cands:all,usedOrder:0}}
+  return{cands:[{word:'.',p:1}],usedOrder:0};
+}
+
+function computePerplexity(maxOrder){
+  const testLen=Math.min(tokens.length,500);let logSum=0,count=0;
+  for(let i=maxOrder;i<testLen;i++){
+    let p=getNextProb(tokens.slice(i-maxOrder,i),tokens[i],maxOrder);
+    if(p<1e-10)p=1e-10;logSum+=Math.log2(p);count++;
+  }
+  return count===0?Infinity:Math.pow(2,-logSum/count);
+}
+
+// ─── v4 核心②: RAG風 generateReply ──────────────────────
+// 戦略:
+//   1. 直近の会話文脈（最大2ターン）と入力をTF-IDFで検索
+//   2. 取得文のトークン列 + 入力トークンを混合してシードを生成
+//   3. そのシードからN-gramで文章を拡張
+//   4. 返答と共に「どのコーパス文を参照したか」を返す
+function generateReply(input){
+  const inputToks=tokenize(input);
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const retriK=parseInt(document.getElementById('rRetrK').value);
+  const mix=parseFloat(document.getElementById('rMix').value);
+  const algo=document.getElementById('rGenAlgo').value;
+  const maxLen=getMaxLen(inputToks.length);
+  const inputSet=new Set(inputToks);
+
+  // 検索クエリ = 入力 + 直近1ターンのAI応答（会話コンテキスト混合）
+  const recentAI=dialogHistory.filter(h=>h.role==='ai').slice(-1).map(h=>h.text).join(' ');
+  const queryTokens=[...inputToks,...(recentAI?tokenize(recentAI).slice(0,10):[])];
+
+  // TF-IDF検索
+  const retrieved=retrieveTopSentences(queryTokens, retriK);
+  const retrievedTexts=retrieved.map(r=>r.sent);
+
+  // シード生成: 取得文トークンと入力トークンを mix 比率で配合
+  let seedTokens=[];
+  if(retrieved.length>0){
+    const rtoks=tokenize(retrievedTexts.join(' '));
+    const mixLen=Math.round(maxOrder*mix);
+    const inputLen=maxOrder-mixLen;
+    // 取得文から IDF の高いトークンを優先的に抽出
+    const sortedRtoks=[...rtoks].sort((a,b)=>(idfMap[b]||1)-(idfMap[a]||1));
+    const fromRetr=sortedRtoks.slice(0,Math.max(mixLen,1));
+    const fromInput=inputToks.slice(-Math.max(inputLen,1));
+    seedTokens=[...fromRetr,...fromInput].slice(-maxOrder);
+  }else{
+    seedTokens=inputToks.slice(-maxOrder);
+  }
+
+  // シードがモデルに存在するか確認し、最も長い一致するサブ列を探す
+  let validSeed=seedTokens;
+  for(let n=Math.min(maxOrder,seedTokens.length);n>=1;n--){
+    const candidate=seedTokens.slice(-n);
+    const key=candidate.join('\x00');
+    const model=getModel(n);
+    if(model&&model.has(key)){validSeed=candidate;break}
+    if(n===1) validSeed=inputToks.slice(-1);
+  }
+
+  // 生成
+  let resultToks;
+  if(algo==='beam'){
+    resultToks=generateBeam(validSeed,maxLen,inputSet);
+  }else if(algo==='greedy'){
+    resultToks=generateGreedy(validSeed,maxLen);
+  }else{
+    resultToks=generateSample(validSeed,maxLen);
+  }
+
+  return{
+    text: trimResult(resultToks),
+    sources: retrievedTexts.slice(0,2)  // 表示用：上位2文
+  };
+}
+
+// ─── 生成アルゴリズム ────────────────────────────────────
+function generateBeam(seed,maxLen,inputSet){
+  const beamWidth=parseInt(document.getElementById('rBeam').value);
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const repPenalty=parseFloat(document.getElementById('rRepeat').value);
+  const ALPHA=0.65,COV_W=0.25;
+  const normScore=b=>{
+    const genLen=Math.max(b.tokens.length-seed.length,1);
+    let score=b.logp/Math.pow(genLen,ALPHA);
+    if(inputSet&&inputSet.size>0){const cov=b.tokens.filter(t=>inputSet.has(t)).length;score+=COV_W*cov/inputSet.size}
+    return score;
+  };
+  let beams=[{tokens:[...seed],logp:0,done:false}];
+  const seen=new Set();
+  for(let step=0;step<maxLen*4;step++){
+    if(beams.every(b=>b.done))break;
+    const next=[];
+    for(const beam of beams){
+      if(beam.done){next.push(beam);continue}
+      const ctx=beam.tokens.slice(-maxOrder);
+      const{cands}=getCandidates(ctx);
+      const win=new Set(beam.tokens.slice(-parseInt(document.getElementById('rRepeat')?10:10)));
+      const penalized=cands.map(c=>({word:c.word,p:win.has(c.word)?c.p/repPenalty:c.p})).sort((a,b)=>b.p-a.p).slice(0,beamWidth*3);
+      for(const c of penalized){
+        const logp=beam.logp+Math.log(Math.max(c.p,1e-10));
+        const newToks=[...beam.tokens,c.word];
+        const genLen=newToks.length-seed.length;
+        const isDone=isEndToken(c.word)&&genLen>=maxLen*0.5;
+        const stateKey=newToks.slice(-maxOrder).join('\x00')+'|'+isDone;
+        if(seen.has(stateKey))continue;seen.add(stateKey);
+        next.push({tokens:newToks,logp,done:isDone});
+      }
+    }
+    next.sort((a,b)=>normScore(b)-normScore(a));
+    beams=next.slice(0,beamWidth);
+    if(beams.every(b=>b.done||b.tokens.length-seed.length>=maxLen))break;
+  }
+  return beams.sort((a,b)=>normScore(b)-normScore(a))[0].tokens.slice(seed.length);
+}
+
+function generateSample(seed,maxLen){
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const temp=parseFloat(document.getElementById('rTemp').value);
+  const topP=parseFloat(document.getElementById('rTopP').value);
+  const repPenalty=parseFloat(document.getElementById('rRepeat').value);
+  const result=[];let context=[...seed];
+  for(let i=0;i<maxLen*2;i++){
+    const{cands}=getCandidates(context.slice(-maxOrder));
+    const win=new Set(context.slice(-10));
+    let sc=cands.map(c=>({word:c.word,w:win.has(c.word)?c.p/repPenalty:c.p}));
+    if(temp>0.01)sc=sc.map(c=>({word:c.word,w:Math.pow(Math.max(c.w,1e-12),1/temp)}));
+    sc.sort((a,b)=>b.w-a.w);
+    if(topP<1.0){const sum=sc.reduce((a,b)=>a+b.w,0);let cumul=0;const nuc=[];for(const c of sc){nuc.push(c);cumul+=c.w/sum;if(cumul>=topP)break}sc=nuc}
+    const total=sc.reduce((a,b)=>a+b.w,0);let r=Math.random()*total;let word='.';
+    for(const c of sc){r-=c.w;if(r<=0){word=c.word;break}}
+    result.push(word);context.push(word);
+    if(result.length>=maxLen*0.6&&isEndToken(word))break;
+    if(result.length>=maxLen)break;
+  }
+  if(!isEndToken(result[result.length-1]))result.push('.');
+  return result;
+}
+
+function generateGreedy(seed,maxLen){
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const repPenalty=parseFloat(document.getElementById('rRepeat').value);
+  const result=[];let context=[...seed];
+  for(let i=0;i<maxLen*2;i++){
+    const{cands}=getCandidates(context.slice(-maxOrder));
+    const win=new Set(context.slice(-10));
+    const word=cands.map(c=>({word:c.word,w:win.has(c.word)?c.p/repPenalty:c.p})).sort((a,b)=>b.w-a.w)[0]?.word||'.';
+    result.push(word);context.push(word);
+    if(result.length>=maxLen*0.6&&isEndToken(word))break;
+    if(result.length>=maxLen)break;
+  }
+  if(!isEndToken(result[result.length-1]))result.push('.');
+  return result;
+}
+
+function trimResult(result){
+  if(!result||result.length===0)return'.';
+  let trimEnd=-1;
+  for(let i=result.length-1;i>=0;i--){if(isEndToken(result[i])){trimEnd=i;break}}
+  return(trimEnd>=0?result.slice(0,trimEnd+1):result).join(' ')||'.';
+}
+
+function getMaxLen(inputTokenCount){
+  if(document.getElementById('lenAuto').checked) return Math.max(20,Math.min(120,Math.round(inputTokenCount*1.5+10)));
+  return parseInt(document.getElementById('rLen').value);
+}
+
+function tokenize(text){return text.replace(/\r?\n/g,' ').split(/\s+/).filter(t=>t.length>0)}
+
+// ─── UI Helpers ──────────────────────────────────────────
+function setStatus(cls,txt){const p=document.getElementById('statusPill');p.className='status-pill '+cls;document.getElementById('statusTxt').textContent=txt}
+function syncSlider(el,valId,step){const v=parseFloat(el.value);const d=step<1?String(step).split('.')[1].length:0;document.getElementById(valId).textContent=v.toFixed(d);updateRangeFill(el)}
+function updateRangeFill(el){const min=parseFloat(el.min),max=parseFloat(el.max),val=parseFloat(el.value);el.style.setProperty('--pct',(val-min)/(max-min)*100+'%')}
+function initSliders(){document.querySelectorAll('input[type=range]').forEach(updateRangeFill)}
+function scheduleRebuild(){clearTimeout(rebuildTimer);rebuildTimer=setTimeout(()=>buildModelAsync(),600)}
+function clearPreset(){document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'))}
+function resize(el){el.style.height='0px';el.style.height=Math.min(el.scrollHeight,110)+'px'}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}}
+function scrollToBottom(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight}
+function scrollDown(){const c=document.getElementById('chat');if(c.scrollHeight-c.scrollTop-c.clientHeight<120)c.scrollTop=c.scrollHeight}
+function onLenSlider(el){syncSlider(el,'vLen',1)}
+function onLenAutoChange(cb){const s=document.getElementById('rLen');if(cb.checked){s.disabled=true;s.style.opacity='.35';document.getElementById('vLen').textContent='自動'}else{s.disabled=false;s.style.opacity='1';syncSlider(s,'vLen',1)}}
+
+const PRESETS={
+  poetic:{temp:1.8,topP:0.95,repeat:1.1,len:60},
+  logical:{temp:0.4,topP:0.80,repeat:1.6,len:40},
+  random:{temp:2.2,topP:1.00,repeat:1.0,len:40},
+  balanced:{temp:1.0,topP:0.95,repeat:1.2,len:40},
+  concise:{temp:0.7,topP:0.85,repeat:1.4,len:20},
 };
-function applyPreset(name) {
-  const p = PRESETS[name];
-  if (!p) return;
-  setSliderVal('rTemp',   p.temp,   'vTemp',   0.1);
-  setSliderVal('rTopP',   p.topP,   'vTopP',   0.01);
-  setSliderVal('rRepeat', p.repeat, 'vRepeat', 0.1);
-  setSliderVal('rDiv',    p.div,    'vDiv',    0.05);
-  const lenAutoCb = document.getElementById('lenAuto');
-  lenAutoCb.checked = false;
-  const lenSlider = document.getElementById('rLen');
-  lenSlider.disabled = false; lenSlider.style.opacity = '1';
-  setSliderVal('rLen', p.len, 'vLen', 1);
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('preset-' + name);
-  if (btn) btn.classList.add('active');
-}
-function setSliderVal(id, val, valId, step) {
-  const el = document.getElementById(id);
-  el.value = val;
-  syncSlider(el, valId, step);
-}
-function clearPreset() {
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+function applyPreset(name){
+  const p=PRESETS[name];if(!p)return;
+  const set=(id,v,vid,s)=>{const el=document.getElementById(id);el.value=v;syncSlider(el,vid,s)};
+  set('rTemp',p.temp,'vTemp',.1);set('rTopP',p.topP,'vTopP',.01);set('rRepeat',p.repeat,'vRepeat',.1);
+  const cb=document.getElementById('lenAuto');cb.checked=false;
+  const sl=document.getElementById('rLen');sl.disabled=false;sl.style.opacity='1';set('rLen',p.len,'vLen',1);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('preset-'+name);if(btn)btn.classList.add('active');
 }
 
-function toggleTheme() {
-  const html = document.documentElement;
-  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  const icon = document.getElementById('themeIcon');
-  if (next === 'light') {
-    icon.innerHTML = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
-  } else {
-    icon.innerHTML = `<circle cx="12" cy="12" r="5"/>
-      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
-  }
+function toggleTheme(){
+  const html=document.documentElement;const next=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  const icon=document.getElementById('themeIcon');
+  icon.innerHTML=next==='light'?`<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`:`<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
 }
 
-function updateNgramLive() {
-  const bar = document.getElementById('ngramBar');
-  if (!bar.classList.contains('open') || !modelReady) return;
-  const txt = document.getElementById('inp').value.trim();
-  const chart = document.getElementById('ngramChart');
-  const title = document.getElementById('ngramTitle');
-  if (!txt) {
-    chart.innerHTML = '<div class="ngram-empty">入力欄に文字を入力すると候補が表示されます</div>';
-    title.textContent = '入力語の次トークン候補（上位8件）';
-    return;
-  }
-  const toks = tokenize(txt);
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const { cands, usedOrder } = getCandidates(toks.slice(-maxOrder));
-  const top = [...cands].sort((a, b) => b.p - a.p).slice(0, 8);
-  if (top.length === 0) {
-    chart.innerHTML = '<div class="ngram-empty">候補が見つかりません</div>';
-    return;
-  }
-  const maxP = top[0].p;
-  const ctxStr = toks.slice(-Math.min(usedOrder, 3)).join(' ') || '(なし)';
-  title.textContent = `文脈「${ctxStr}」の次トークン候補（${usedOrder}-gram）`;
-  chart.innerHTML = top.map(c => {
-    const pct = (c.p / maxP * 100).toFixed(1);
-    const label = c.word.length > 10 ? c.word.slice(0, 9) + '…' : c.word;
-    return `<div class="ngram-row">
-      <div class="ngram-label" title="${escHtml(c.word)}">${escHtml(label)}</div>
-      <div class="ngram-track"><div class="ngram-fill" style="width:${pct}%"></div></div>
-      <div class="ngram-pct">${(c.p * 100).toFixed(1)}%</div>
-    </div>`;
+function toggleSettings(){
+  const bar=document.getElementById('settingsBar');const btn=document.getElementById('settingsBtn');
+  const opening=!bar.classList.contains('open');
+  document.getElementById('ngramBar').classList.remove('open');document.getElementById('ngramBtn').classList.remove('active');
+  bar.classList.toggle('open',opening);btn.classList.toggle('active',opening);
+  if(opening)setTimeout(initSliders,50);
+}
+function toggleNgram(){
+  const bar=document.getElementById('ngramBar');const btn=document.getElementById('ngramBtn');
+  const opening=!bar.classList.contains('open');
+  document.getElementById('settingsBar').classList.remove('open');document.getElementById('settingsBtn').classList.remove('active');
+  bar.classList.toggle('open',opening);btn.classList.toggle('active',opening);
+  if(opening)updateNgramLive();
+}
+function toggleHelp(){const o=document.getElementById('helpOverlay');o.classList.toggle('open');document.getElementById('helpBtn').classList.toggle('active')}
+function closeHelpOnBg(e){if(e.target===document.getElementById('helpOverlay'))toggleHelp()}
+
+function updateNgramLive(){
+  const bar=document.getElementById('ngramBar');if(!bar.classList.contains('open')||!modelReady)return;
+  const txt=document.getElementById('inp').value.trim();
+  const chart=document.getElementById('ngramChart');const title=document.getElementById('ngramTitle');
+  if(!txt){chart.innerHTML='<div class="ngram-empty">入力欄に文字を入力すると候補が表示されます</div>';return}
+  const toks=tokenize(txt);const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const{cands,usedOrder}=getCandidates(toks.slice(-maxOrder));
+  const top=[...cands].sort((a,b)=>b.p-a.p).slice(0,8);
+  if(top.length===0){chart.innerHTML='<div class="ngram-empty">候補が見つかりません</div>';return}
+  const maxP=top[0].p;
+  title.textContent=`文脈「${toks.slice(-Math.min(usedOrder,3)).join(' ')||'(なし)'}」の次候補（${usedOrder}-gram）`;
+  chart.innerHTML=top.map(c=>{
+    const pct=(c.p/maxP*100).toFixed(1);const label=c.word.length>10?c.word.slice(0,9)+'…':c.word;
+    return`<div class="ngram-row"><div class="ngram-label" title="${escHtml(c.word)}">${escHtml(label)}</div><div class="ngram-track"><div class="ngram-fill" style="width:${pct}%"></div></div><div class="ngram-pct">${(c.p*100).toFixed(1)}%</div></div>`;
   }).join('');
 }
 
-function updatePpxLive() {
-  clearTimeout(ppxLiveTimer);
-  const el = document.getElementById('ppxLive');
-  if (!modelReady) { el.textContent = ''; return; }
-  const txt = document.getElementById('inp').value.trim();
-  if (!txt) { el.textContent = ''; return; }
-  ppxLiveTimer = setTimeout(() => {
-    const toks = tokenize(txt);
-    if (toks.length < 2) { el.textContent = ''; return; }
-    const maxOrder = parseInt(document.getElementById('rOrder').value);
-    let logSum = 0, count = 0;
-    for (let i = 1; i < toks.length; i++) {
-      const ctx = toks.slice(Math.max(0, i - maxOrder), i);
-      let p = getNextProb(ctx, toks[i], maxOrder);
-      if (p < 1e-10) p = 1e-10;
-      logSum += Math.log2(p); count++;
-    }
-    if (count === 0) { el.textContent = ''; return; }
-    const ppx = Math.pow(2, -logSum / count);
-    el.textContent = `PPX ${ppx.toFixed(1)}`;
-    el.className = 'ppx-live' + (ppx < 50 ? ' hi' : ppx > 200 ? ' warn' : '');
-  }, 150);
+function updatePpxLive(){
+  clearTimeout(ppxLiveTimer);const el=document.getElementById('ppxLive');
+  if(!modelReady){el.textContent='';return}
+  const txt=document.getElementById('inp').value.trim();if(!txt){el.textContent='';return}
+  ppxLiveTimer=setTimeout(()=>{
+    const toks=tokenize(txt);if(toks.length<2){el.textContent='';return}
+    const maxOrder=parseInt(document.getElementById('rOrder').value);
+    let logSum=0,count=0;
+    for(let i=1;i<toks.length;i++){let p=getNextProb(toks.slice(Math.max(0,i-maxOrder),i),toks[i],maxOrder);if(p<1e-10)p=1e-10;logSum+=Math.log2(p);count++}
+    if(count===0){el.textContent='';return}
+    const ppx=Math.pow(2,-logSum/count);
+    el.textContent=`PPX ${ppx.toFixed(1)}`;el.className='ppx-live'+(ppx<50?' hi':ppx>200?' warn':'');
+  },150);
 }
 
-function setStatus(cls, txt) {
-  const p = document.getElementById('statusPill');
-  p.className = 'status-pill ' + cls;
-  document.getElementById('statusTxt').textContent = txt;
+function updateStats(ppx){
+  const maxN=parseInt(document.getElementById('rOrder').value);
+  const model=getModel(maxN);const states=model?model.size:0;
+  const avgTfidfWords=corpusSentences.length>0?Math.round(sentTfIdf.reduce((s,v)=>s+Object.keys(v).length,0)/corpusSentences.length):0;
+  document.getElementById('sWords').textContent=fmt(tokens.length);
+  document.getElementById('sVocab').textContent=fmt(vocab.size);
+  document.getElementById('sStates').textContent=fmt(states);
+  document.getElementById('sPpx').textContent=ppx!==undefined?ppx.toFixed(1):'—';
+  document.getElementById('sDocs').textContent=fmt(corpusSentences.length);
+  document.getElementById('sTfidf').textContent=avgTfidfWords;
 }
 
-function syncSlider(el, valId, step) {
-  const v = parseFloat(el.value);
-  const d = step < 1 ? String(step).split('.')[1].length : 0;
-  document.getElementById(valId).textContent = v.toFixed(d);
-  updateRangeFill(el);
-}
-function updateRangeFill(el) {
-  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
-  el.style.setProperty('--pct', ((val - min) / (max - min) * 100) + '%');
-}
-function initSliders() {
-  document.querySelectorAll('input[type=range]').forEach(updateRangeFill);
+function suggest(text){const inp=document.getElementById('inp');inp.value=text;resize(inp);sendMsg()}
+
+function buildChips(){
+  const ideas=['the future of','knowledge grows','language is','time passes',
+               'science advances','music connects','every morning','memory and',
+               'the stars remind','change is','reading expands','the ocean holds'];
+  document.getElementById('chips').innerHTML=ideas.map(s=>`<button class="chip" onclick="suggest('${s}')">${s}</button>`).join('');
 }
 
-function tokenize(text) {
-  return text.replace(/\r?\n/g, ' ').split(/\s+/).filter(t => t.length > 0);
-}
-
-function scheduleRebuild() {
-  clearTimeout(rebuildTimer);
-  rebuildTimer = setTimeout(() => buildModelAsync(), 600);
-}
-
-async function buildModelAsync() {
-  const myGen = ++buildGeneration;
-  setStatus('busy', 'モデル構築中…');
-  modelReady = false;
-  document.getElementById('sendBtn').disabled = true;
-  totalBoUsed   = 0;
-  totalGenSteps = 0;
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const smMethod = document.getElementById('rSmMethod').value;
-  tokens    = tokenize(corpus);
-  vocab     = new Set(tokens);
-  vocabArr  = Array.from(vocab);
-  rawCounts = {};
-  kn = {}; wb = {}; mle = {};
-  knIdx = {}; wbIdx = {}; mleIdx = {};
-  knDiscounts = {};
-  tokenPositions = new Map();
-  unigramDist = new Map();
-  sentStarts = [0];
-  continuationCounts = {};
-  buildIdf();
-  for (let i = 0; i < tokens.length; i++) {
-    if (isEndToken(tokens[i]) && i + 1 < tokens.length) sentStarts.push(i + 1);
-  }
-  const setBar = (pct, label) => {
-    document.getElementById('buildBar').style.width = pct + '%';
-    document.getElementById('buildLabel').textContent = label;
-  };
-  for (let n = 1; n <= maxOrder; n++) {
-    setBar(Math.round(n / maxOrder * 40), `カウント集計: ${n}-gram…`);
-    await sleep(0);
-    if (myGen !== buildGeneration) return;
-    rawCounts[n] = new Map();
-    for (let i = 0; i <= tokens.length - n - 1; i++) {
-      const key  = tokens.slice(i, i + n).join('\x00');
-      const next = tokens[i + n];
-      if (!rawCounts[n].has(key)) rawCounts[n].set(key, new Map());
-      const m = rawCounts[n].get(key);
-      m.set(next, (m.get(next) || 0) + 1);
-    }
-  }
-  setBar(42, '継続カウント計算…');
-  await sleep(0);
-  if (myGen !== buildGeneration) return;
-
-  // トークン位置インデックス構築（高速シード探索用）
-  for (let i = 0; i < tokens.length; i++) {
-    const t = tokens[i];
-    if (!tokenPositions.has(t)) tokenPositions.set(t, []);
-    tokenPositions.get(t).push(i);
-  }
-
-  // Modified KN 用に各次数の自動割引値を計算
-  for (let n = 1; n <= maxOrder; n++) {
-    knDiscounts[n] = computeKNDiscounts(n);
-  }
-  const contMap = new Map();
-  if (rawCounts[1]) {
-    for (const [, m] of rawCounts[1]) for (const [word] of m) contMap.set(word, (contMap.get(word) || 0) + 1);
-  }
-  continuationCounts = contMap;
-  const totalContinuations = Array.from(contMap.values()).reduce((a, b) => a + b, 0) || 1;
-  for (let n = 1; n <= maxOrder; n++) {
-    setBar(44 + Math.round(n / maxOrder * 50), `確率化: ${n}-gram (${smMethod})…`);
-    await sleep(0);
-    if (myGen !== buildGeneration) return;
-    if (smMethod === 'kn') {
-      buildKN(n, totalContinuations);
-      knIdx[n] = buildProbIndex(kn[n]);
-    } else if (smMethod === 'wb') {
-      buildWB(n);
-      wbIdx[n] = buildProbIndex(wb[n]);
-    } else if (smMethod === 'lap') {
-      buildLaplace(n);
-      mleIdx[n] = buildProbIndex(mle[n]);
-    } else {
-      buildMLE(n);
-      mleIdx[n] = buildProbIndex(mle[n]);
-    }
-  }
-  {
-    const counts = new Map();
-    for (const t of tokens) counts.set(t, (counts.get(t) || 0) + 1);
-    const total = tokens.length || 1;
-    for (const [w, c] of counts) unigramDist.set(w, c / total);
-  }
-  setBar(98, 'パープレキシティ計算…');
-  await sleep(0);
-  if (myGen !== buildGeneration) return;
-  const ppx = computePerplexity(maxOrder);
-  const ent = computeEntropy(maxOrder);
-  setBar(100, '完了');
-  if (myGen !== buildGeneration) return;
-  modelReady = true;
-  document.getElementById('sendBtn').disabled = false;
-  setStatus('ok', loadedFiles.length > 1 ? `${loadedFiles.length} ファイル 準備完了` : (loadedFiles[0] || '準備完了'));
-  updateStats(ppx, ent);
-}
-
-// ─── Modified KN 自動割引計算（Chen & Goodman 1999）─────
-function computeKNDiscounts(n) {
-  const sm = rawCounts[n];
-  if (!sm) return { D1: 0.5, D2: 1.0, D3: 1.5 };
-  let n1 = 0, n2 = 0, n3 = 0, n4 = 0;
-  for (const [, m] of sm) {
-    for (const c of m.values()) {
-      if (c === 1) n1++;
-      else if (c === 2) n2++;
-      else if (c === 3) n3++;
-      else n4++;
-    }
-  }
-  if (n1 === 0 || n2 === 0) return { D1: 0.5, D2: 1.0, D3: 1.5 };
-  const Y  = n1 / (n1 + 2 * n2);
-  const D1 = Math.max(1 - 2 * Y * (n2 / n1),              0.01);
-  const D2 = Math.max(2 - 3 * Y * (n3 / Math.max(n2, 1)), 0.01);
-  const D3 = Math.max(3 - 4 * Y * (n4 / Math.max(n3, 1)), 0.01);
-  return { D1, D2, D3 };
-}
-
-function buildProbIndex(model) {
-  const idx = new Map();
-  if (!model) return idx;
-  for (const [key, entries] of model) {
-    const m = new Map();
-    for (const e of entries) m.set(e.word, e.p);
-    idx.set(key, m);
-  }
-  return idx;
-}
-
-// ─── Modified Kneser-Ney（D1/D2/D3+ 自動割引）────────
-function buildKN(n, totalCont) {
-  const { D1, D2, D3 } = knDiscounts[n] || { D1: 0.5, D2: 1.0, D3: 1.5 };
-  const V = vocab.size || 1;
-  const result = new Map();
-  if (!rawCounts[n]) { kn[n] = result; return; }
-  for (const [key, m] of rawCounts[n]) {
-    const entries = [];
-    const totalC = Array.from(m.values()).reduce((a, b) => a + b, 0);
-    // N1+, N2+, N3+ (continuation counts used for lambda)
-    let N1 = 0, N2 = 0, N3 = 0;
-    for (const c of m.values()) {
-      if (c >= 1) N1++;
-      if (c >= 2) N2++;
-      if (c >= 3) N3++;
-    }
-    const lambda = (D1 * N1 + D2 * N2 + D3 * N3) / totalC;
-    for (const [word, c] of m) {
-      const d = c === 1 ? D1 : c === 2 ? D2 : D3;
-      const discounted = Math.max(c - d, 0) / totalC;
-      let pLow;
-      if (n === 1) {
-        pLow = (continuationCounts.get(word) || 0) / totalCont;
-      } else {
-        const lowerKey = key.split('\x00').slice(1).join('\x00');
-        const lowerIdx = knIdx[n - 1];
-        if (lowerIdx) {
-          const lm = lowerIdx.get(lowerKey);
-          pLow = lm ? (lm.get(word) ?? (1 / V)) : ((continuationCounts.get(word) || 0) / totalCont);
-        } else {
-          const lp = kn[n - 1] ? kn[n - 1].get(lowerKey) : null;
-          if (lp) { const found = lp.find(e => e.word === word); pLow = found ? found.p : (1 / V); }
-          else pLow = (continuationCounts.get(word) || 0) / totalCont;
-        }
-      }
-      const p = discounted + lambda * pLow;
-      if (p > 0) entries.push({ word, p });
-    }
-    result.set(key, entries);
-  }
-  kn[n] = result;
-}
-
-function buildWB(n) {
-  const V = vocab.size || 1;
-  const result = new Map();
-  if (!rawCounts[n]) { wb[n] = result; return; }
-  for (const [key, m] of rawCounts[n]) {
-    const entries = [];
-    const totalC  = Array.from(m.values()).reduce((a, b) => a + b, 0);
-    const T       = m.size;
-    const lambda  = T / (T + totalC);
-    for (const [word, c] of m) {
-      const pMLE = c / totalC;
-      let pLow = 1 / V;
-      if (n > 1 && wb[n - 1]) {
-        const lowerKey = key.split('\x00').slice(1).join('\x00');
-        const lp = wb[n - 1].get(lowerKey);
-        if (lp) { const found = lp.find(e => e.word === word); if (found) pLow = found.p; }
-      }
-      const p = (1 - lambda) * pMLE + lambda * pLow;
-      if (p > 0) entries.push({ word, p });
-    }
-    const sum = entries.reduce((a, e) => a + e.p, 0);
-    if (sum > 0) entries.forEach(e => e.p /= sum);
-    result.set(key, entries);
-  }
-  wb[n] = result;
-}
-
-function buildLaplace(n) {
-  const alpha = 0.1, V = vocab.size || 1, result = new Map();
-  if (!rawCounts[n]) { mle[n] = result; return; }
-  for (const [key, m] of rawCounts[n]) {
-    const total = Array.from(m.values()).reduce((a, b) => a + b, 0);
-    const denom = total + alpha * V;
-    const entries = Array.from(m.entries()).map(([word, c]) => ({ word, p: (c + alpha) / denom }));
-    const sum = entries.reduce((a, e) => a + e.p, 0);
-    if (sum > 0) entries.forEach(e => e.p /= sum);
-    result.set(key, entries);
-  }
-  mle[n] = result;
-}
-
-function buildMLE(n) {
-  const result = new Map();
-  if (!rawCounts[n]) { mle[n] = result; return; }
-  for (const [key, m] of rawCounts[n]) {
-    const total = Array.from(m.values()).reduce((a, b) => a + b, 0);
-    result.set(key, Array.from(m.entries()).map(([word, c]) => ({ word, p: c / total })));
-  }
-  mle[n] = result;
-}
-
-function getModel(n) {
-  const sm = document.getElementById('rSmMethod').value;
-  if (sm === 'kn') return kn[n] || null;
-  if (sm === 'wb') return wb[n] || null;
-  return mle[n] || kn[n] || null;
-}
-
-function getModelIdx(n) {
-  const sm = document.getElementById('rSmMethod').value;
-  if (sm === 'kn') return knIdx[n] || null;
-  if (sm === 'wb') return wbIdx[n] || null;
-  return mleIdx[n] || knIdx[n] || null;
-}
-
-function computePerplexity(maxOrder) {
-  const testLen = Math.min(tokens.length, 500);
-  let logSum = 0, count = 0;
-  for (let i = maxOrder; i < testLen; i++) {
-    let p = getNextProb(tokens.slice(i - maxOrder, i), tokens[i], maxOrder);
-    if (p < 1e-10) p = 1e-10;
-    logSum += Math.log2(p); count++;
-  }
-  return count === 0 ? Infinity : Math.pow(2, -logSum / count);
-}
-
-function computeEntropy(maxOrder) {
-  const model = getModel(maxOrder) || getModel(1);
-  if (!model) return 0;
-  let totalEnt = 0, count = 0;
-  for (const [, entries] of model) {
-    let h = 0;
-    for (const e of entries) if (e.p > 0) h -= e.p * Math.log2(e.p);
-    totalEnt += h; count++;
-    if (count > 1000) break;
-  }
-  return count > 0 ? totalEnt / count : 0;
-}
-
-function getNextProb(context, target, maxOrder) {
-  for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
-    const key = context.slice(-n).join('\x00');
-    const idx = getModelIdx(n);
-    if (!idx) continue;
-    const ctxMap = idx.get(key);
-    if (ctxMap) {
-      const p = ctxMap.get(target);
-      if (p !== undefined) return p;
-    }
-  }
-  const p = unigramDist.get(target);
-  if (p !== undefined) return p;
-  return 1 / (vocab.size || 1);
-}
-
-function buildIdf() {
-  const sentences = corpus.split(/[.!?。！？]+/).filter(s => s.trim().length > 0);
-  const df = {};
-  for (const sent of sentences) {
-    const toks = new Set(tokenize(sent));
-    for (const t of toks) df[t] = (df[t] || 0) + 1;
-  }
-  const N = sentences.length || 1;
-  tokenIdf = {};
-  for (const [word, d] of Object.entries(df)) tokenIdf[word] = Math.log((N + 1) / (d + 1)) + 1;
-}
-
-function sampleToken(cands, recentTokens) {
-  const temp       = parseFloat(document.getElementById('rTemp').value);
-  const topK       = parseInt(document.getElementById('rTopK').value);
-  const topP       = parseFloat(document.getElementById('rTopP').value);
-  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
-  const repWin     = parseInt(document.getElementById('rRepWin').value);
-  const divPen     = parseFloat(document.getElementById('rDiv').value);
-  const win        = recentTokens.slice(-repWin);
-  const recentSet  = new Set(win);
-  let sc = cands.map(c => {
-    let w = c.p;
-    if (recentSet.has(c.word)) w /= repPenalty;
-    if (divPen > 0) { const freq = win.filter(t => t === c.word).length; if (freq > 0) w *= Math.pow(1 - divPen, freq); }
-    return { word: c.word, w: Math.max(w, 0) };
-  });
-  if (temp > 0.01) sc = sc.map(c => ({ word: c.word, w: Math.pow(Math.max(c.w, 1e-12), 1 / temp) }));
-  sc.sort((a, b) => b.w - a.w);
-  if (topK > 0 && sc.length > topK) sc = sc.slice(0, topK);
-  if (topP < 1.0) {
-    const sum = sc.reduce((a, b) => a + b.w, 0);
-    if (sum > 0) {
-      let cumul = 0; const nucleus = [];
-      for (const c of sc) { nucleus.push(c); cumul += c.w / sum; if (cumul >= topP) break; }
-      if (nucleus.length > 0) sc = nucleus;
-    }
-  }
-  const total = sc.reduce((a, b) => a + b.w, 0);
-  if (total < 1e-10) return sc[Math.floor(Math.random() * sc.length)]?.word || '.';
-  let r = Math.random() * total;
-  for (const c of sc) { r -= c.w; if (r <= 0) return c.word; }
-  return sc[sc.length - 1].word;
-}
-
-function getCandidates(context) {
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
-    const key   = context.slice(-n).join('\x00');
-    const model = getModel(n);
-    if (!model) continue;
-    const cands = model.get(key);
-    if (cands && cands.length > 0) {
-      if (n < Math.min(maxOrder, context.length)) totalBoUsed++;
-      totalGenSteps++;
-      return { cands, usedOrder: n };
-    }
-  }
-  const u1 = getModel(1);
-  if (u1 && u1.size > 0) {
-    const allCands = []; for (const [, c] of u1) allCands.push(...c);
-    totalBoUsed++; totalGenSteps++;
-    return { cands: allCands, usedOrder: 0 };
-  }
-  return { cands: [{ word: '.', p: 1 }], usedOrder: 0 };
-}
-
-// ─── ビームサーチ強化版 ───────────────────────────────
-function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
-  const beamWidth  = overrideBeamWidth || parseInt(document.getElementById('rBeam').value);
-  const maxOrder   = parseInt(document.getElementById('rOrder').value);
-  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
-  const repWin     = parseInt(document.getElementById('rRepWin').value);
-  const ALPHA      = 0.65;  // 長さ正規化指数（Google NMT推奨値）
-  const COV_W      = 0.25;  // 入力語カバレッジボーナス重み
-
-  const normScore = b => {
-    if (b.frozenScore !== null) return b.frozenScore;
-    const genLen = Math.max(b.tokens.length - seed.length, 1);
-    let score = b.logp / Math.pow(genLen, ALPHA);
-    if (inputSet && inputSet.size > 0) {
-      const covered = b.tokens.filter(t => inputSet.has(t)).length;
-      score += COV_W * covered / inputSet.size;
-    }
-    return score;
-  };
-
-  let beams = [{ tokens: [...seed], logp: 0, done: false, frozenScore: null }];
-  const seenStates = new Set();
-
-  for (let step = 0; step < maxLen * 4; step++) {
-    if (beams.every(b => b.done)) break;
-    const next = [];
-    for (const beam of beams) {
-      if (beam.done) { next.push(beam); continue; }
-      const ctx = beam.tokens.slice(-maxOrder);
-      const { cands } = getCandidates(ctx);
-      // 繰り返しペナルティを候補に適用してから展開
-      const win = new Set(beam.tokens.slice(-repWin));
-      const penalized = cands
-        .map(c => ({ word: c.word, p: win.has(c.word) ? c.p / repPenalty : c.p }))
-        .sort((a, b) => b.p - a.p)
-        .slice(0, beamWidth * 3);
-      for (const c of penalized) {
-        const logp    = beam.logp + Math.log(Math.max(c.p, 1e-10));
-        const newToks = [...beam.tokens, c.word];
-        const genLen  = newToks.length - seed.length;
-        const isDone  = isEndToken(c.word) && genLen >= maxLen * 0.5;
-        // 末尾 maxOrder トークンで状態を識別し重複ビームを除去
-        const stateKey = newToks.slice(-maxOrder).join('\x00') + '|' + isDone;
-        if (seenStates.has(stateKey)) continue;
-        seenStates.add(stateKey);
-        const b = { tokens: newToks, logp, done: isDone, frozenScore: null };
-        if (isDone) b.frozenScore = normScore(b);
-        next.push(b);
-      }
-    }
-    next.sort((a, b) => normScore(b) - normScore(a));
-    beams = next.slice(0, beamWidth);
-    if (beams.every(b => b.done || b.tokens.length - seed.length >= maxLen)) break;
-  }
-  return beams.sort((a, b) => normScore(b) - normScore(a))[0].tokens.slice(seed.length);
-}
-
-function generateSample(seed, maxLen) {
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const result   = []; let context = [...seed];
-  for (let i = 0; i < maxLen * 2; i++) {
-    const { cands } = getCandidates(context.slice(-maxOrder));
-    const word = sampleToken(cands, context);
-    result.push(word); context.push(word);
-    if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
-    if (result.length >= maxLen) break;
-  }
-  if (!isEndToken(result[result.length - 1])) result.push('.');
-  return result;
-}
-
-function generateGreedy(seed, maxLen) {
-  const maxOrder   = parseInt(document.getElementById('rOrder').value);
-  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
-  const repWin     = parseInt(document.getElementById('rRepWin').value);
-  const result     = []; let context = [...seed];
-  for (let i = 0; i < maxLen * 2; i++) {
-    const { cands } = getCandidates(context.slice(-maxOrder));
-    const win = context.slice(-repWin);
-    const recentSet = new Set(win);
-    const scored = cands.map(c => ({ word: c.word, w: recentSet.has(c.word) ? c.p / repPenalty : c.p }));
-    const word = scored.sort((a, b) => b.w - a.w)[0]?.word || '.';
-    result.push(word); context.push(word);
-    if (result.length >= maxLen * 0.6 && isEndToken(word)) break;
-    if (result.length >= maxLen) break;
-  }
-  if (!isEndToken(result[result.length - 1])) result.push('.');
-  return result;
-}
-
-// ─── 上位K個のシードを返す（IDF重み + 位置インデックス）─
-function findTopSeeds(inputTokens, k) {
-  const maxOrder = parseInt(document.getElementById('rOrder').value);
-  const inputSet = new Set(inputTokens);
-  // IDF高い語を優先（一般語はシード候補から除外）
-  const highIdfTokens = inputTokens
-    .map(t => ({ t, idf: tokenIdf[t] || 1 }))
-    .sort((a, b) => b.idf - a.idf)
-    .slice(0, 8)
-    .map(x => x.t);
-
-  const scoreSlice = slice => {
-    const idfSum = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
-    return slice.length * 3 + idfSum * 4;
-  };
-
-  const candidates = [];
-
-  // 1. 入力トークン列の部分列が直接モデルに存在するもの
-  for (let n = Math.min(maxOrder, inputTokens.length); n >= 1; n--) {
-    for (let i = 0; i <= inputTokens.length - n; i++) {
-      const slice = inputTokens.slice(i, i + n);
-      const model = getModel(n);
-      if (model && model.has(slice.join('\x00'))) {
-        candidates.push({ slice, score: scoreSlice(slice) });
-      }
-    }
-  }
-
-  // 2. コーパス内でIDF高い入力語が出現する位置からウィンドウを取る
-  for (const t of highIdfTokens) {
-    const positions = tokenPositions.get(t) || [];
-    // 出現頻度が高すぎる語は多くの候補を生まないよう制限
-    const limit = Math.min(positions.length, 6);
-    for (let pi = 0; pi < limit; pi++) {
-      const i = positions[Math.floor(pi * positions.length / limit)];
-      const start = Math.max(0, i - Math.floor(maxOrder / 2));
-      const slice = tokens.slice(start, Math.min(start + maxOrder, tokens.length));
-      if (slice.length > 0) candidates.push({ slice, score: scoreSlice(slice) });
-    }
-  }
-
-  // スコア降順でユニーク化
-  candidates.sort((a, b) => b.score - a.score);
-  const seen = new Set();
-  const result = [];
-  for (const { slice } of candidates) {
-    const key = slice.join('\x00');
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push(slice);
-      if (result.length >= k) break;
-    }
-  }
-
-  // フォールバック: IDF最高の文開始位置
-  if (result.length === 0) {
-    let bss = -1, bs = 0;
-    for (const si of sentStarts) {
-      const slice = tokens.slice(si, Math.min(si + maxOrder, tokens.length));
-      const score = scoreSlice(slice);
-      if (score > bss) { bss = score; bs = si; }
-    }
-    result.push(tokens.slice(bs, Math.min(bs + maxOrder, tokens.length)));
-  }
-  return result;
-}
-
-// ─── 生成結果スコアリング（対数確率 + カバレッジ）────
-function scoreResult(result, inputSet, maxOrder) {
-  if (result.length < 2) return -Infinity;
-  let logSum = 0, count = 0;
-  for (let i = 1; i < result.length; i++) {
-    let p = getNextProb(result.slice(Math.max(0, i - maxOrder), i), result[i], maxOrder);
-    if (p < 1e-10) p = 1e-10;
-    logSum += Math.log2(p); count++;
-  }
-  const avgLogP   = count > 0 ? logSum / count : -20;
-  const coverage  = result.filter(t => inputSet.has(t)).length / Math.max(result.length, 1);
-  return avgLogP + coverage * 6;
-}
-
-function trimResult(result) {
-  if (!result || result.length === 0) return '.';
-  let trimEnd = -1;
-  for (let i = result.length - 1; i >= 0; i--) {
-    if (isEndToken(result[i])) { trimEnd = i; break; }
-  }
-  return (trimEnd >= 0 ? result.slice(0, trimEnd + 1) : result).join(' ') || '.';
-}
-
-// ─── generateReply: マルチシード版（ビームは複数シードから最良を選択）
-function generateReply(input) {
-  const inputToks = tokenize(input);
-  const inputSet  = new Set(inputToks);
-  const maxLen    = getMaxLen(inputToks.length);
-  const algo      = document.getElementById('rGenAlgo').value;
-  const maxOrder  = parseInt(document.getElementById('rOrder').value);
-
-  if (algo === 'beam' || algo === 'ultrabeam') {
-    const isUltra = algo === 'ultrabeam';
-    const seeds = findTopSeeds(inputToks, isUltra ? 5 : 3);
-    let bestResult = null, bestScore = -Infinity;
-    for (const seed of seeds) {
-      const result = generateBeam(seed, maxLen, inputSet, isUltra ? 200 : null);
-      const score  = scoreResult(result, inputSet, maxOrder);
-      if (score > bestScore) { bestScore = score; bestResult = result; }
-    }
-    return trimResult(bestResult || ['.']);
-  }
-
-  const seed = findTopSeeds(inputToks, 1)[0];
-  if (algo === 'greedy') return trimResult(generateGreedy(seed, maxLen));
-  return trimResult(generateSample(seed, maxLen));
-}
-
-function updateStats(ppx, ent) {
-  const maxN   = parseInt(document.getElementById('rOrder').value);
-  const model  = getModel(maxN);
-  const states = model ? model.size : 0;
-  const sents  = (corpus.match(/[.!?。！？]/g) || []).length;
-  const borate = totalGenSteps > 0 ? (totalBoUsed / totalGenSteps * 100).toFixed(1) + '%' : '—';
-  const charCount = corpus.replace(/\s/g, '').length;
-  document.getElementById('sChars').textContent  = fmt(charCount);
-  document.getElementById('sWords').textContent  = fmt(tokens.length);
-  document.getElementById('sStates').textContent = fmt(states);
-  document.getElementById('sVocab').textContent  = fmt(vocab.size);
-  document.getElementById('sSents').textContent  = sents;
-  document.getElementById('sPpx').textContent    = ppx !== undefined ? ppx.toFixed(1) : '—';
-  document.getElementById('sBoRate').textContent = borate;
-  document.getElementById('sEnt').textContent    = ent !== undefined ? ent.toFixed(2) : '—';
-  const filesEl = document.getElementById('sFiles');
-  if (loadedFiles.length <= 3) { filesEl.textContent = loadedFiles.join(', '); }
-  else { filesEl.textContent = `${loadedFiles.length} 件`; filesEl.title = loadedFiles.join('\n'); }
-}
-
-function buildChips() {
-  const ideas = ['the future', 'knowledge grows', 'language is', 'time passes',
-                 'the ocean', 'science advances', 'music connects', 'every morning',
-                 'the stars', 'memory and', 'change is', 'reading expands'];
-  document.getElementById('chips').innerHTML = ideas.map(s =>
-    `<button class="chip" onclick="suggest('${s}')">${s}</button>`
-  ).join('');
-}
-
-const PANELS = [
-  { barId: 'settingsBar', btnId: 'settingsBtn' },
-  { barId: 'corpusBar',   btnId: 'corpusBtn'   },
-  { barId: 'ngramBar',    btnId: 'ngramBtn'     },
-];
-function openOnlyPanel(targetBarId, targetBtnId, onOpen) {
-  const isOpen = document.getElementById(targetBarId).classList.contains('open');
-  PANELS.forEach(({ barId, btnId }) => {
-    document.getElementById(barId).classList.remove('open');
-    document.getElementById(btnId).classList.remove('active');
-  });
-  if (!isOpen) {
-    document.getElementById(targetBarId).classList.add('open');
-    document.getElementById(targetBtnId).classList.add('active');
-    if (onOpen) onOpen();
-  }
-}
-// ─── 言語切り替え ─────────────────────────────────────
-function initLangUI() {
-  document.getElementById('lang-ja').classList.toggle('active', currentLang === 'ja');
-  document.getElementById('lang-en').classList.toggle('active', currentLang === 'en');
-}
-
-async function switchLang(lang) {
-  if (lang === currentLang) return;
-  currentLang = lang;
-  initLangUI();
-  const note = document.getElementById('langNote');
-  note.textContent = '再読込中…';
-  corpus = await loadCorpusFiles();
-  document.getElementById('corpusEdit').value = corpus;
-  await buildModelAsync();
-  note.textContent = '切り替え完了';
-  setTimeout(() => { note.textContent = ''; }, 2000);
-}
-
-// ─── MyMemory 翻訳（APIキー不要・無料）────────────────
-async function translateWithMyMemory(text, targetLang) {
-  const langpair = targetLang === 'en' ? 'ja|en' : 'en|ja';
-  try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    if (data.responseStatus === 200 && data.responseData?.translatedText) {
-      return data.responseData.translatedText;
-    }
-    return '（翻訳失敗）';
-  } catch(e) {
-    return '（翻訳エラー）';
-  }
-}
-
-// 日本語テキストかどうか簡易判定
-function isJapanese(text) {
-  return /[\u3000-\u9fff\uff00-\uffef]/.test(text);
-}
-
-// 翻訳ボタンのクリック処理（バブル直下に翻訳結果を表示/非表示トグル）
-async function handleTranslate(btn, replyText) {
-  const existing = btn.parentElement.querySelector('.trans-bubble');
-  if (existing) { existing.remove(); btn.textContent = '🌐 JA'; return; }
-  btn.classList.add('loading');
-  btn.textContent = '翻訳中…';
-  const translated = await translateWithMyMemory(replyText, 'ja');
-  btn.classList.remove('loading');
-  btn.textContent = '🌐 JA ✕';
-  const bubble = document.createElement('div');
-  bubble.className = 'trans-bubble';
-  bubble.textContent = translated;
-  btn.parentElement.after(bubble);
-  scrollDown();
-}
-
-function toggleSettings() {
-  openOnlyPanel('settingsBar', 'settingsBtn', () => setTimeout(initSliders, 50));
-}
-function toggleCorpus() {
-  openOnlyPanel('corpusBar', 'corpusBtn');
-}
-function toggleNgram() {
-  openOnlyPanel('ngramBar', 'ngramBtn', () => updateNgramLive());
-}
-
-function resize(el) {
-  el.style.height = '0px';
-  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
-}
-
-function onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
-function suggest(text) {
-  const inp = document.getElementById('inp');
-  inp.value = text;
-  resize(inp);
-  sendMsg();
-}
-function scrollToBottom() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
-function scrollDown() { const c = document.getElementById('chat'); if (c.scrollHeight - c.scrollTop - c.clientHeight < 120) c.scrollTop = c.scrollHeight; }
-
-async function sendMsg() {
-  if (busy || !modelReady) return;
-  const inp = document.getElementById('inp');
-  const txt = inp.value.trim();
-  if (!txt) return;
-  lastInput = txt;
-  inp.value = '';
-  resize(inp);
-  document.getElementById('ppxLive').textContent = '';
-  busy = true;
-  document.getElementById('sendBtn').disabled = true;
-  const w = document.getElementById('welcome'); if (w) w.remove();
-  const prog = document.getElementById('prog');
-  const algo = document.getElementById('rGenAlgo').value;
-  try {
-    addBubble(txt, 'user'); scrollToBottom();
-    addSys(algo === 'ultrabeam' ? '極光ビーム展開中… ✦' : algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
+// ─── v4 核心③: sendMsg — ターン別履歴管理 ───────────────
+async function sendMsg(){
+  if(busy||!modelReady)return;
+  const inp=document.getElementById('inp');const txt=inp.value.trim();if(!txt)return;
+  inp.value='';resize(inp);document.getElementById('ppxLive').textContent='';
+  busy=true;document.getElementById('sendBtn').disabled=true;
+  const w=document.getElementById('welcome');if(w)w.remove();
+  const prog=document.getElementById('prog');
+  try{
+    // ユーザーターン記録
+    dialogHistory.push({role:'user',text:txt});
+    addBubble(txt,'user');scrollToBottom();
+    addSys('検索＆生成中…');
     prog.classList.add('active');
-    let pv = 0;
-    const pt = setInterval(() => { pv = Math.min(pv + Math.random() * 7, 80); prog.style.width = pv + '%'; }, 60);
-    await sleep(50);
-    const t0 = performance.now();
-
-    // 英語モードで日本語入力の場合、英語に翻訳してからモデルに渡す
-    let inputForModel = txt;
-    if (currentLang === 'en' && isJapanese(txt)) {
-      addSys('入力を英語に翻訳中…');
-      inputForModel = await translateWithMyMemory(txt, 'en');
-      addSys(algo === 'ultrabeam' ? '極光ビーム展開中… ✦' : algo === 'beam' ? 'ビームサーチ中…' : algo === 'greedy' ? '貪欲生成中…' : 'サンプリング中…');
-    }
-
-    history.push({ role: 'user', text: inputForModel });
-    const context = history.slice(-6).map(x => x.text).join(' ');
-    const reply = await new Promise(resolve => {
-      setTimeout(() => resolve(generateReply(context)), 0);
-    });
-    history.push({ role: 'ai', text: reply });
-    const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
-    clearInterval(pt); prog.style.width = '96%';
-    await sleep(150); removeSys();
-    document.getElementById('sBoRate').textContent = totalGenSteps > 0 ? (totalBoUsed / totalGenSteps * 100).toFixed(1) + '%' : '—';
-    prog.style.width = '100%';
-    const bub = addBubble('', 'ai');
-    bub.classList.add('streaming');
-    await typeText(bub, reply);
+    let pv=0;const pt=setInterval(()=>{pv=Math.min(pv+Math.random()*8,85);prog.style.width=pv+'%'},60);
+    await sleep(40);
+    const t0=performance.now();
+    const{text:reply,sources}=await new Promise(resolve=>{setTimeout(()=>resolve(generateReply(txt)),0)});
+    const elapsed=((performance.now()-t0)/1000).toFixed(2);
+    clearInterval(pt);prog.style.width='96%';
+    // AI ターン記録
+    dialogHistory.push({role:'ai',text:reply});
+    await sleep(120);removeSys();
+    prog.style.width='100%';
+    const bub=addBubble('','ai');bub.classList.add('streaming');
+    await typeText(bub,reply);
     bub.classList.remove('streaming');
-    addMeta(reply, algo, elapsed, txt);
-  } catch(err) {
-    removeSys(); addSys('エラーが発生しました'); console.error(err);
-  } finally {
-    setTimeout(() => { prog.style.width = '0%'; prog.classList.remove('active'); }, 700);
-    busy = false;
-    document.getElementById('sendBtn').disabled = false;
-    document.getElementById('inp').focus();
+    addMeta(reply,elapsed,sources,txt);
+  }catch(err){removeSys();addSys('エラーが発生しました');console.error(err)}
+  finally{
+    setTimeout(()=>{prog.style.width='0%';prog.classList.remove('active')},700);
+    busy=false;document.getElementById('sendBtn').disabled=false;document.getElementById('inp').focus();
   }
 }
 
-async function regenerate(input) {
-  if (busy || !modelReady || !input) return;
-  busy = true;
-  document.getElementById('sendBtn').disabled = true;
-  const algo = document.getElementById('rGenAlgo').value;
-  try {
-    addSys('再生成中…');
-    await sleep(30);
-    const t0 = performance.now();
-    const reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(input)), 0); });
-    const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+async function regenerate(input){
+  if(busy||!modelReady||!input)return;
+  busy=true;document.getElementById('sendBtn').disabled=true;
+  try{
+    addSys('再生成中…');await sleep(30);
+    const t0=performance.now();
+    const{text:reply,sources}=await new Promise(resolve=>{setTimeout(()=>resolve(generateReply(input)),0)});
+    const elapsed=((performance.now()-t0)/1000).toFixed(2);
     removeSys();
-    const bub = addBubble('', 'ai');
-    bub.classList.add('streaming');
-    await typeText(bub, reply);
-    bub.classList.remove('streaming');
-    addMeta(reply, algo, elapsed, input);
-  } catch(err) {
-    removeSys(); addSys('エラーが発生しました');
-  } finally {
-    busy = false;
-    document.getElementById('sendBtn').disabled = false;
-  }
+    const bub=addBubble('','ai');bub.classList.add('streaming');
+    await typeText(bub,reply);bub.classList.remove('streaming');
+    addMeta(reply,elapsed,sources,input);
+  }catch(err){removeSys();addSys('エラーが発生しました')}
+  finally{busy=false;document.getElementById('sendBtn').disabled=false}
 }
 
-function addMeta(reply, algo, elapsed, inputForRegen) {
-  const msgs = document.getElementById('msgs');
-  const d    = document.createElement('div');
-  d.className = 'msg-meta';
-  const toks = tokenize(reply).length;
-  const algoLabel = algo === 'ultrabeam' ? '極光ビーム ✦' : algo === 'beam' ? 'ビームサーチ' : algo === 'greedy' ? '貪欲法' : 'サンプリング';
-  const mkTag = (cls, text) => {
-    const s = document.createElement('span');
-    s.className = 'meta-tag' + (cls ? ' ' + cls : '');
-    s.textContent = text;
-    return s;
-  };
-  d.appendChild(mkTag('g', algoLabel));
-  d.appendChild(mkTag('',  toks + ' tok'));
-  d.appendChild(mkTag('',  elapsed + 's'));
-  const btn = document.createElement('button');
-  btn.className = 'regen-btn';
-  btn.title     = '再生成';
-  btn.innerHTML =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
-    'stroke-linecap="round" stroke-linejoin="round">' +
-    '<polyline points="23 4 23 10 17 10"/>' +
-    '<path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
-  btn.addEventListener('click', () => regenerate(inputForRegen));
+function addMeta(reply,elapsed,sources,inputForRegen){
+  const msgs=document.getElementById('msgs');
+  const d=document.createElement('div');d.className='msg-meta';
+  const toks=tokenize(reply).length;
+  const algo=document.getElementById('rGenAlgo').value;
+  const algoLabel=algo==='beam'?'ビーム':algo==='greedy'?'貪欲法':'サンプリング';
+  const mkTag=(cls,text)=>{const s=document.createElement('span');s.className='meta-tag'+(cls?' '+cls:'');s.textContent=text;return s};
+  d.appendChild(mkTag('g',algoLabel));
+  d.appendChild(mkTag('r','TF-IDF検索 ✓'));
+  d.appendChild(mkTag('',toks+' tok'));
+  d.appendChild(mkTag('',elapsed+'s'));
+  const btn=document.createElement('button');btn.className='regen-btn';btn.title='再生成';
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
+  btn.addEventListener('click',()=>regenerate(inputForRegen));
   d.appendChild(btn);
-
-  // 英語モード時は翻訳ボタンを追加
-  if (currentLang === 'en') {
-    const tBtn = document.createElement('button');
-    tBtn.className = 'trans-btn';
-    tBtn.textContent = '🌐 JA';
-    tBtn.title = '日本語に翻訳';
-    tBtn.addEventListener('click', () => handleTranslate(tBtn, replyText));
-    d.appendChild(tBtn);
-  }
   msgs.appendChild(d);
+  // ソースバッジ（参照した文を表示）
+  if(sources&&sources.length>0){
+    const sb=document.createElement('div');sb.style.marginLeft='41px';sb.style.marginTop='4px';sb.style.display='flex';sb.style.flexDirection='column';sb.style.gap='3px';
+    for(const src of sources){
+      const badge=document.createElement('div');badge.className='source-badge';
+      const preview=src.length>60?src.slice(0,58)+'…':src;
+      badge.textContent='↗ '+preview;badge.title=src;sb.appendChild(badge);
+    }
+    msgs.appendChild(sb);
+  }
   scrollDown();
 }
 
-function addBubble(html, role) {
-  const c = document.getElementById('msgs');
-  const d = document.createElement('div');
-  d.className = `msg ${role}`;
-  d.innerHTML = `<div class="av ${role}">${role === 'ai' ? 'AI' : 'YOU'}</div><div class="bub ${role}">${escHtml(html)}</div>`;
-  c.appendChild(d); scrollDown();
-  return d.querySelector('.bub');
+function addBubble(html,role){
+  const c=document.getElementById('msgs');const d=document.createElement('div');
+  d.className=`msg ${role}`;
+  d.innerHTML=`<div class="av ${role}">${role==='ai'?'AI':'YOU'}</div><div class="bub ${role}">${escHtml(html)}</div>`;
+  c.appendChild(d);scrollDown();return d.querySelector('.bub');
 }
-function addSys(text) {
-  removeSys();
-  const c = document.getElementById('msgs');
-  const d = document.createElement('div'); d.className = 'sys'; d.id = 'sys-msg';
-  d.innerHTML = `<span><span class="sys-dot"></span>${escHtml(text)}</span>`;
-  c.appendChild(d); scrollDown();
+function addSys(text){
+  removeSys();const c=document.getElementById('msgs');const d=document.createElement('div');
+  d.className='sys';d.id='sys-msg';
+  d.innerHTML=`<span><span class="sys-dot"></span>${escHtml(text)}</span>`;
+  c.appendChild(d);scrollDown();
 }
-function removeSys() { const e = document.getElementById('sys-msg'); if (e) e.remove(); }
-
-async function typeText(bub, text) {
-  const chars = [...text]; let out = '';
-  bub.innerHTML = '<span class="cursor-blink"></span>';
-  for (let i = 0; i < chars.length; i++) {
-    out += escHtml(chars[i]);
-    if (i % 4 === 0) { bub.innerHTML = out + '<span class="cursor-blink"></span>'; scrollDown(); await sleep(10); }
-  }
-  bub.innerHTML = out; scrollDown();
+function removeSys(){const e=document.getElementById('sys-msg');if(e)e.remove()}
+async function typeText(bub,text){
+  const chars=[...text];let out='';bub.innerHTML='<span class="cursor-blink"></span>';
+  for(let i=0;i<chars.length;i++){out+=escHtml(chars[i]);if(i%4===0){bub.innerHTML=out+'<span class="cursor-blink"></span>';scrollDown();await sleep(10)}}
+  bub.innerHTML=out;scrollDown();
 }
 
-function fallbackCorpus() {
-  return `The quick brown fox jumps over the lazy dog near the river bank. A language model learns statistical patterns from large amounts of text data. Words carry meaning through context and repetition across many sentences. The future of artificial intelligence is both exciting and deeply uncertain for everyone. Music connects people across languages and cultures in many unexpected ways. A journey of a thousand miles begins with a single step forward into the unknown. The stars at night remind us how vast the universe truly is beyond our reach. Knowledge grows when shared openly and freely with other curious and open minds. Memory and imagination are two sides of the same creative and powerful coin. Every sentence tells a small story about the world around us. Science advances one hypothesis and one careful experiment at a time. The ocean holds far more secrets than we have yet discovered beneath its surface. Reading expands the human mind in ways no other activity can fully replace. Change is the only constant in an uncertain and always evolving universe of possibilities. Technology continuously reshapes how humans communicate and create new things together. Time passes slowly when we wait and quickly when we are lost in deep thought. Language is the most powerful tool humans have ever invented to share complex ideas. Every morning brings a new chance to learn something previously unknown and surprising. The river flows endlessly forward never once returning to where it originally began.`;
+function fallbackCorpus(){
+  return`The quick brown fox jumps over the lazy dog near the river bank. A language model learns statistical patterns from large amounts of text data. Words carry meaning through context and repetition across many sentences. The future of artificial intelligence is both exciting and deeply uncertain for everyone. Music connects people across languages and cultures in many unexpected ways. A journey of a thousand miles begins with a single step forward into the unknown. The stars at night remind us how vast the universe truly is beyond our reach. Knowledge grows when shared openly and freely with other curious and open minds. Memory and imagination are two sides of the same creative and powerful coin. Every sentence tells a small story about the world around us. Science advances one hypothesis and one careful experiment at a time. The ocean holds far more secrets than we have yet discovered beneath its surface. Reading expands the human mind in ways no other activity can fully replace. Change is the only constant in an uncertain and always evolving universe of possibilities. Technology continuously reshapes how humans communicate and create new things together. Time passes slowly when we wait and quickly when we are lost in deep thought. Language is the most powerful tool humans have ever invented to share complex ideas. Every morning brings a new chance to learn something previously unknown and surprising.`;
 }
 
-function onLenSlider(el) {
-  syncSlider(el, 'vLen', 1);
-}
-function onLenAutoChange(cb) {
-  const slider = document.getElementById('rLen');
-  if (cb.checked) {
-    slider.disabled = true;
-    slider.style.opacity = '.35';
-    document.getElementById('vLen').textContent = '自動';
-  } else {
-    slider.disabled = false;
-    slider.style.opacity = '1';
-    syncSlider(slider, 'vLen', 1);
-  }
-}
-function getMaxLen(inputTokenCount) {
-  if (document.getElementById('lenAuto').checked) {
-    return Math.max(20, Math.min(120, Math.round(inputTokenCount * 1.5 + 10)));
-  }
-  return parseInt(document.getElementById('rLen').value);
-}
-function toggleHelp() {
-  const overlay = document.getElementById('helpOverlay');
-  const btn     = document.getElementById('helpBtn');
-  overlay.classList.toggle('open');
-  btn.classList.toggle('active');
-}
-function closeHelpOnBg(e) {
-  if (e.target === document.getElementById('helpOverlay')) toggleHelp();
-}
-
-// ─── モバイル viewport 修正 ──────────────────────────
-// 1) --vh をセットしてアドレスバー込みの100vhバグを回避
-function setVh() {
-  const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
-  document.documentElement.style.setProperty('--vh', vh + 'px');
-}
-setVh();
-window.addEventListener('resize', setVh, { passive: true });
-
-// 2) iOS Safariでキーボード出現時にbodyが押し上げられるのを防ぐ
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    setVh();
-    // キーボード出現でbodyがスクロールされた場合は戻す
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-  }, { passive: true });
-  window.visualViewport.addEventListener('scroll', () => {
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-  }, { passive: true });
+// Mobile viewport fix
+function setVh(){const vh=(window.visualViewport?window.visualViewport.height:window.innerHeight)*.01;document.documentElement.style.setProperty('--vh',vh+'px')}
+setVh();window.addEventListener('resize',setVh,{passive:true});
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',()=>{setVh();document.body.scrollTop=0;document.documentElement.scrollTop=0},{passive:true});
+  window.visualViewport.addEventListener('scroll',()=>{document.body.scrollTop=0;document.documentElement.scrollTop=0},{passive:true});
 }
 
 init();
 </script>
 
+<!-- Help Modal -->
 <div class="help-overlay" id="helpOverlay" onclick="closeHelpOnBg(event)">
   <div class="help-modal">
     <div class="help-head">
-      <div class="help-head-title">Com<em>pose</em> — 設定ガイド</div>
+      <div class="help-head-title">Com<em>pose</em> v4 — 設定ガイド</div>
       <button class="help-close" onclick="toggleHelp()">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="help-body">
       <div class="help-section">
-        <div class="help-section-title">モデル構築</div>
+        <div class="help-section-title">v4 新機能 — TF-IDF 意味検索</div>
         <div class="help-items">
           <div class="help-item">
-            <div class="help-item-name">N-gram最大次数<span>2〜8</span></div>
-            <div class="help-item-desc">直前の何トークンを文脈として参照するかの上限。<b>大きいほど流暢</b>だが、コーパスが小さいと逆に未知文脈が増えて精度が下がる。通常は<code>4〜6</code>が最適。</div>
+            <div class="help-item-name">検索文数<span>1〜8</span></div>
+            <div class="help-item-desc">入力に対してTF-IDFコサイン類似度で上位N件のコーパス文を取得します。<b>多いほど多様な文脈</b>を参照できますが、ノイズも増えます。<code>3〜4</code>が推奨。</div>
           </div>
           <div class="help-item">
-            <div class="help-item-name">平滑化手法</div>
-            <div class="help-item-desc"><b>Kneser-Ney</b>：未観測N-gramを継続確率で補完する最高精度の手法。<b>Witten-Bell</b>：未知語の種類数でバックオフ重みを決定。<b>Laplace</b>：全N-gramに微小確率を加算する単純な手法。<b>MLE</b>：コーパスの出現頻度をそのまま確率にする最尤推定。</div>
-          </div>
-          <div class="help-item">
-            <div class="help-item-name">KN割引 d<span>0.5〜0.95</span></div>
-            <div class="help-item-desc">Kneser-Ney平滑化での割引係数。各N-gramのカウントから<code>d</code>を引いた残りを高次確率に使う。一般的に<code>0.7〜0.8</code>が良好。</div>
+            <div class="help-item-name">文脈混合比<span>0.0〜1.0</span></div>
+            <div class="help-item-desc"><b>1.0</b>で検索文のトークンのみをシードに使用。<b>0.0</b>で入力トークンのみ。<b>0.5〜0.7</b>が検索の恩恵を受けつつ入力との関連性も保てるバランス点です。</div>
           </div>
         </div>
       </div>
       <div class="help-section">
-        <div class="help-section-title">生成アルゴリズム</div>
+        <div class="help-section-title">生成設定</div>
         <div class="help-items">
           <div class="help-item">
             <div class="help-item-name">生成アルゴリズム</div>
-            <div class="help-item-desc"><b>サンプリング</b>：確率に従いランダムに次トークンを選択。多様性が高い。<b>ビームサーチ</b>：複数の候補系列を並列探索し対数確率スコアが最高のものを採用。<b>貪欲法</b>：毎ステップ最高確率のトークンだけを選ぶ最速の手法。</div>
+            <div class="help-item-desc"><b>ビームサーチ</b>が最高品質。<b>サンプリング</b>は多様性重視。<b>貪欲法</b>は最速。</div>
           </div>
-          <div class="help-item">
-            <div class="help-item-name">ビーム幅<span>2〜12</span></div>
-            <div class="help-item-desc">ビームサーチ時に同時に保持する候補系列の本数。<b>大きいほど高品質</b>だが処理時間が増加。<code>4〜6</code>が品質と速度のバランスが良い。</div>
-          </div>
-          <div class="help-item">
-            <div class="help-item-name">応答長<span>8〜120</span></div>
-            <div class="help-item-desc">生成するトークン数の目安。句点が来ると早めに終了するため、実際の長さはこの値より短くなることが多い。</div>
-          </div>
-        </div>
-      </div>
-      <div class="help-section">
-        <div class="help-section-title">サンプリング制御</div>
-        <div class="help-items">
           <div class="help-item">
             <div class="help-item-name">温度<span>0.1〜2.5</span></div>
-            <div class="help-item-desc">各トークンの確率分布をスケーリング。<b>1.0が標準</b>。低いほど高確率トークンに集中（保守的）、高いほど創造的になる。</div>
+            <div class="help-item-desc">高いほどランダム。低いほど確実な語を選ぶ。<b>1.0が標準</b>。</div>
           </div>
-          <div class="help-item">
-            <div class="help-item-name">Top-K<span>0〜50</span></div>
-            <div class="help-item-desc">上位K件のトークンだけをサンプリング候補に絞る。<b>0で無効</b>。</div>
-          </div>
-          <div class="help-item">
-            <div class="help-item-name">Top-P<span>0.5〜1.0</span></div>
-            <div class="help-item-desc">確率の累積が<code>P</code>に達するまでの上位トークンだけを使う「核サンプリング」。<b>1.0で制限なし</b>。</div>
-          </div>
-        </div>
-      </div>
-      <div class="help-section">
-        <div class="help-section-title">繰り返し抑制</div>
-        <div class="help-items">
           <div class="help-item">
             <div class="help-item-name">繰り返しペナルティ<span>1.0〜3.0</span></div>
-            <div class="help-item-desc">直近のウィンドウに出現したトークンの確率を<code>÷ペナルティ値</code>で減衰。<b>1.0で無効</b>。貪欲法にも適用されます。</div>
-          </div>
-          <div class="help-item">
-            <div class="help-item-name">ペナルティ窓<span>2〜30</span></div>
-            <div class="help-item-desc">繰り返しペナルティを適用する直近のトークン数。</div>
-          </div>
-          <div class="help-item">
-            <div class="help-item-name">多様性ペナルティ<span>0.0〜1.0</span></div>
-            <div class="help-item-desc">ウィンドウ内での出現頻度に応じて指数的に確率を減衰させる追加ペナルティ。<b>0.0で無効</b>。</div>
+            <div class="help-item-desc">直近トークンの確率を割り引く。<b>1.0で無効</b>。高いほど同じ語の繰り返しを防ぐ。</div>
           </div>
         </div>
       </div>
