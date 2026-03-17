@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>COMPOSE v3</title>
+<title>COMPOSE v4</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <!-- TinySegmenter 削除: トークン化はスペース区切りに変更 -->
 <style>
@@ -380,7 +380,7 @@ textarea::placeholder{color:var(--dim)}
 <header>
   <div class="brand">
     <div class="brand-mark"></div>
-    <div class="brand-name">COMPOSE <em>v3</em></div>
+    <div class="brand-name">COMPOSE <em>v4</em></div>
   </div>
   <div class="hright">
     <div class="status-pill warn" id="statusPill">
@@ -553,7 +553,7 @@ textarea::placeholder{color:var(--dim)}
       <div class="welcome-card">
         <div class="welcome-head">
           <div class="welcome-title">Com<em>pose</em></div>
-          <span class="welcome-ver">v3</span>
+          <span class="welcome-ver">v4</span>
         </div>
         <p class="welcome-sub">
           <code>data/*.txt</code> を学習したマルコフ言語モデルです。<br>
@@ -595,7 +595,7 @@ textarea::placeholder{color:var(--dim)}
 
 <script>
 // ============================================================
-//  COMPOSE v3
+//  COMPOSE v4
 // ============================================================
 
 function isEndToken(t) {
@@ -626,6 +626,7 @@ let tokenPositions = new Map(); // token -> [positions] for fast seed lookup
 let sentStarts  = [];
 let bm25AvgLen  = 0;   // BM25用：平均文セグメント長
 let bm25Docs    = [];  // BM25用：文セグメント配列 [{tokens, tfMap}]
+let bm25Df      = new Map(); // BM25用：df（文書頻度）キャッシュ
 let modelReady  = false;
 let rebuildTimer = null;
 let totalBoUsed   = 0;
@@ -1149,7 +1150,9 @@ function computeEntropy(maxOrder) {
   return count > 0 ? totalEnt / count : 0;
 }
 
+// 線形補間バックオフ: 高次だけでなく低次N-gramの確率も加重して使う
 function getNextProb(context, target, maxOrder) {
+  // まず完全マッチを高次から試みる（既存の動作）
   for (let n = Math.min(maxOrder, context.length); n >= 1; n--) {
     const key = context.slice(-n).join('\x00');
     const idx = getModelIdx(n);
@@ -1157,7 +1160,11 @@ function getNextProb(context, target, maxOrder) {
     const ctxMap = idx.get(key);
     if (ctxMap) {
       const p = ctxMap.get(target);
-      if (p !== undefined) return p;
+      if (p !== undefined) {
+        // 線形補間: 高次の確率に低次（ユニグラム）を少し混ぜて未観測語に強くする
+        const pUni = unigramDist.get(target) || 1 / (vocab.size || 1);
+        return p * 0.9 + pUni * 0.1;
+      }
     }
   }
   const p = unigramDist.get(target);
@@ -1179,7 +1186,6 @@ function buildIdf() {
 
 // ─── BM25インデックス構築 ─────────────────────────────
 function buildBM25() {
-  // コーパスを文単位に分割してドキュメントとして扱う
   const sentences = corpus.split(/[。！？\n]+/).filter(s => s.trim().length > 0);
   bm25Docs = sentences.map(s => {
     const toks = tokenize(s);
@@ -1190,17 +1196,24 @@ function buildBM25() {
   bm25AvgLen = bm25Docs.length > 0
     ? bm25Docs.reduce((s, d) => s + d.tokens.length, 0) / bm25Docs.length
     : 1;
+  // dfキャッシュ構築（毎回全走査を避けるため事前計算）
+  bm25Df = new Map();
+  for (const doc of bm25Docs) {
+    for (const t of doc.tfMap.keys()) {
+      bm25Df.set(t, (bm25Df.get(t) || 0) + 1);
+    }
+  }
 }
 
-// BM25スコア計算（k=1.5, b=0.75）
+// BM25スコア計算（k=1.5, b=0.75）dfキャッシュ使用
 function bm25Score(doc, queryTokens) {
   const k = 1.5, b = 0.75;
   const N = bm25Docs.length || 1;
   let score = 0;
   for (const qt of queryTokens) {
-    const tf  = doc.tfMap.get(qt) || 0;
+    const tf = doc.tfMap.get(qt) || 0;
     if (tf === 0) continue;
-    const df  = [...bm25Docs].filter(d => d.tfMap.has(qt)).length || 1;
+    const df  = bm25Df.get(qt) || 1;
     const idf = Math.log((N - df + 0.5) / (df + 0.5) + 1);
     score += idf * (tf * (k + 1)) / (tf + k * (1 - b + b * (doc.tokens.length / bm25AvgLen)));
   }
@@ -1292,12 +1305,20 @@ function applyGrammarFilter(cands, prevToken) {
   }));
 }
 function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
-  const beamWidth  = overrideBeamWidth || parseInt(document.getElementById('rBeam').value);
-  const maxOrder   = parseInt(document.getElementById('rOrder').value);
-  const repPenalty = parseFloat(document.getElementById('rRepeat').value);
-  const repWin     = parseInt(document.getElementById('rRepWin').value);
-  const ALPHA      = 0.65;  // 長さ正規化指数（Google NMT推奨値）
-  const COV_W      = 0.25;  // 入力語カバレッジボーナス重み
+  const beamWidth    = overrideBeamWidth || parseInt(document.getElementById('rBeam').value);
+  const maxOrder     = parseInt(document.getElementById('rOrder').value);
+  const repPenalty   = parseFloat(document.getElementById('rRepeat').value);
+  const repWin       = parseInt(document.getElementById('rRepWin').value);
+  const ALPHA        = 0.65;
+  const COV_W        = 0.25;
+  const NO_REPEAT_N  = 3; // 同じN-gramの再出現をブロック
+
+  // 生成済みトークン列からN-gramセットを生成
+  const getNgramSet = (toks, n) => {
+    const s = new Set();
+    for (let i = 0; i <= toks.length - n; i++) s.add(toks.slice(i, i + n).join('\x00'));
+    return s;
+  };
 
   const normScore = b => {
     if (b.frozenScore !== null) return b.frozenScore;
@@ -1320,19 +1341,37 @@ function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
       if (beam.done) { next.push(beam); continue; }
       const ctx = beam.tokens.slice(-maxOrder);
       const { cands } = getCandidates(ctx);
-      // 繰り返しペナルティ + 文法フィルタを候補に適用してから展開
       const prevToken = beam.tokens[beam.tokens.length - 1] || '__START__';
       const win = new Set(beam.tokens.slice(-repWin));
+
+      // no_repeat_ngram: 生成済み列に既出のN-gramを生む候補をブロック
+      const genToks  = beam.tokens.slice(seed.length);
+      const ngramSet = getNgramSet(genToks, NO_REPEAT_N - 1);
+      const blocked  = new Set();
+      for (const ng of ngramSet) {
+        const parts = ng.split('\x00');
+        if (beam.tokens.slice(-(NO_REPEAT_N - 1)).join('\x00') === ng) {
+          // この文脈の直後に来る同じトークンをブロック
+        }
+      }
+      // より正確なno_repeat_ngram実装: 直近N-1トークンが既出ならその次をブロック
+      const tail = beam.tokens.slice(-(NO_REPEAT_N - 1)).join('\x00');
+      for (const ng of getNgramSet(genToks, NO_REPEAT_N)) {
+        const parts = ng.split('\x00');
+        if (parts.slice(0, -1).join('\x00') === tail) blocked.add(parts[parts.length - 1]);
+      }
+
       const penalized = applyGrammarFilter(cands, prevToken)
+        .filter(c => !blocked.has(c.word))  // no_repeat_ngramでブロック
         .map(c => ({ word: c.word, p: win.has(c.word) ? c.p / repPenalty : c.p }))
         .sort((a, b) => b.p - a.p)
         .slice(0, beamWidth * 3);
+
       for (const c of penalized) {
         const logp    = beam.logp + Math.log(Math.max(c.p, 1e-10));
         const newToks = [...beam.tokens, c.word];
         const genLen  = newToks.length - seed.length;
         const isDone  = isEndToken(c.word) && genLen >= maxLen * 0.5;
-        // 末尾 maxOrder トークンで状態を識別し重複ビームを除去
         const stateKey = newToks.slice(-maxOrder).join('\x00') + '|' + isDone;
         if (seenStates.has(stateKey)) continue;
         seenStates.add(stateKey);
@@ -1345,7 +1384,25 @@ function generateBeam(seed, maxLen, inputSet, overrideBeamWidth) {
     beams = next.slice(0, beamWidth);
     if (beams.every(b => b.done || b.tokens.length - seed.length >= maxLen)) break;
   }
-  return beams.sort((a, b) => normScore(b) - normScore(a))[0].tokens.slice(seed.length);
+
+  // MBR（Minimum Bayes Risk）選択: 全ビームとのトークン重複率が最高のビームを選ぶ
+  const finalBeams = beams.sort((a, b) => normScore(b) - normScore(a));
+  if (finalBeams.length > 1) {
+    const mbrScores = finalBeams.map((b, i) => {
+      const setB = new Set(b.tokens.slice(seed.length));
+      let overlap = 0;
+      for (const [j, other] of finalBeams.entries()) {
+        if (i === j) continue;
+        const setO = new Set(other.tokens.slice(seed.length));
+        const inter = [...setB].filter(t => setO.has(t)).length;
+        overlap += inter / Math.max(setB.size + setO.size - inter, 1);
+      }
+      return { beam: b, mbr: overlap + normScore(b) * 0.5 };
+    });
+    mbrScores.sort((a, b) => b.mbr - a.mbr);
+    return mbrScores[0].beam.tokens.slice(seed.length);
+  }
+  return finalBeams[0].tokens.slice(seed.length);
 }
 
 function generateSample(seed, maxLen) {
@@ -1386,17 +1443,17 @@ function generateGreedy(seed, maxLen) {
 }
 
 // ─── 上位K個のシードを返す（BM25 + モデルヒットボーナス）─
-function findTopSeeds(inputTokens, k) {
+function findTopSeeds(inputTokens, k, jitter = 0.0) {
   const maxOrder = parseInt(document.getElementById('rOrder').value);
   const inputSet = new Set(inputTokens);
 
-  // BM25で上位文セグメントを取得
+  // BM25で上位文セグメントを取得（jitterで毎回少し違う候補が出るようにする）
   const scored = bm25Docs.map((doc, idx) => ({
     idx,
-    score: bm25Score(doc, inputTokens)
+    score: bm25Score(doc, inputTokens) * (1 + jitter * (Math.random() - 0.5))
   })).filter(x => x.score > 0);
   scored.sort((a, b) => b.score - a.score);
-  const topDocs = scored.slice(0, 20); // 上位20文から候補を生成
+  const topDocs = scored.slice(0, 20 + Math.floor(jitter * 20)); // jitter時は候補を広げる
 
   const candidates = [];
 
@@ -1408,7 +1465,9 @@ function findTopSeeds(inputTokens, k) {
       if (slice.length === 0) continue;
       const modelHit = getModel(slice.length) && getModel(slice.length).has(slice.join('\x00')) ? 5 : 0;
       const idfSum   = slice.filter(t => inputSet.has(t)).reduce((s, t) => s + (tokenIdf[t] || 1), 0);
-      candidates.push({ slice, score: idfSum * 3 + modelHit + slice.length });
+      // jitterが大きいほどランダム性を加える
+      const noise = jitter > 0 ? Math.random() * jitter * 3 : 0;
+      candidates.push({ slice, score: idfSum * 3 + modelHit + slice.length + noise });
     }
   }
 
@@ -1483,7 +1542,7 @@ function trimResult(result) {
 }
 
 // ─── generateReply: マルチシード版（ビームは複数シードから最良を選択）
-function generateReply(input) {
+function generateReply(input, jitter = 0.0) {
   const inputToks = tokenize(input);
   const inputSet  = new Set(inputToks);
   const maxLen    = getMaxLen(inputToks.length);
@@ -1492,7 +1551,7 @@ function generateReply(input) {
 
   if (algo === 'beam' || algo === 'ultrabeam') {
     const isUltra = algo === 'ultrabeam';
-    const seeds = findTopSeeds(inputToks, isUltra ? 7 : 3);
+    const seeds = findTopSeeds(inputToks, isUltra ? 7 : 3, jitter);
     let bestResult = null, bestScore = -Infinity;
     for (const seed of seeds) {
       const result = generateBeam(seed, maxLen, inputSet, isUltra ? 100 : null);
@@ -1502,7 +1561,7 @@ function generateReply(input) {
     return trimResult(bestResult || ['.']);
   }
 
-  const seed = findTopSeeds(inputToks, 1)[0];
+  const seed = findTopSeeds(inputToks, 1, jitter)[0];
   if (algo === 'greedy') return trimResult(generateGreedy(seed, maxLen));
   return trimResult(generateSample(seed, maxLen));
 }
@@ -1666,18 +1725,31 @@ async function sendMsg() {
     }
 
     history.push({ role: 'user', text: inputForModel });
-    // ユーザー入力のみをコンテキストに使用（AI返答の蓄積で同一返答ループを防ぐ）
-    const context = history
-      .filter(x => x.role === 'user')
-      .slice(-3)
-      .map(x => x.text)
-      .join(' ');
-    // 重複返答防止：直近2件のAI返答と被ったら別シードで最大2回再試行
-    const recentReplies = history.filter(x => x.role === 'ai').slice(-2).map(x => x.text);
+
+    // コンテキストは今回の入力のみ（履歴の蓄積が同一返答ループの原因になるため）
+    const context = inputForModel;
+
+    // 直近5件のAI返答を類似度チェック用に保持
+    const recentReplies = history.filter(x => x.role === 'ai').slice(-5).map(x => x.text);
+
+    // トークン重複率で類似度を計算（完全一致だけでなく似た文も検出）
+    const tooSimilar = (a, b) => {
+      const sa = new Set(a.split(/\s+/));
+      const sb = new Set(b.split(/\s+/));
+      const inter = [...sa].filter(t => sb.has(t)).length;
+      const union = new Set([...sa, ...sb]).size;
+      return union > 0 && inter / union > 0.6;
+    };
+    const isDuplicate = (r) => recentReplies.some(prev => tooSimilar(r, prev));
+
+    // 初回生成
     let reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(context)), 0); });
-    for (let retry = 0; retry < 2; retry++) {
-      if (!recentReplies.includes(reply)) break;
-      reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(context + ' ' + inputForModel)), 0); });
+
+    // 重複していたら最大4回再試行（試行ごとにランダム性を増やす）
+    for (let retry = 0; retry < 4; retry++) {
+      if (!isDuplicate(reply)) break;
+      const jitter = 0.3 + retry * 0.2;
+      reply = await new Promise(resolve => { setTimeout(() => resolve(generateReply(context, jitter)), 0); });
     }
     history.push({ role: 'ai', text: reply });
     const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
