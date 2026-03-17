@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>COMPOSE v4</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<title>COMPOSE v5 — 分布意味論</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root,[data-theme="dark"]{
   --bg:#161412;--s1:#1d1a17;--s2:#242018;--bd:#302c24;--bd2:#3e3830;--bd3:#524a3e;
@@ -15,7 +15,7 @@
   --r-sm:8px;--r-md:14px;--r-lg:20px;
 }
 [data-theme="light"]{
-  --bg:#f5f2ed;--s1:#fffefb;--s2:#f0ece4;--bd:#d8d0c4;--bd2:#c8bfb2;--bd3:#b0a494;
+  --bg:#f5f2ed;--s1:#fffefb;--s2:#f0ece4;--bd:#d8d0c4;--bd2:#c8bfb2;
   --sage:#4a8c35;--sage2:#3a7428;--sagef:rgba(74,140,53,.10);--sageg:rgba(74,140,53,.05);
   --amber:#9c6e0a;--rose:#a0463a;--sky:#2a7a8c;--violet:#6e50b8;
   --text:#1a1510;--mid:#6a5c48;--dim:#c0b8ac;
@@ -26,17 +26,18 @@ html{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
   background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;
   display:flex;flex-direction:column;height:100dvh;height:calc(var(--vh,1vh)*100);
-  width:100%;overflow:hidden;overscroll-behavior:none;transition:background .3s,color .3s;
+  overflow:hidden;overscroll-behavior:none;transition:background .3s,color .3s;
 }
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse 70% 50% at 15% 5%,rgba(143,188,122,.05) 0%,transparent 55%),
-             radial-gradient(ellipse 60% 70% at 85% 95%,rgba(212,168,83,.04) 0%,transparent 55%);
+             radial-gradient(ellipse 60% 70% at 85% 95%,rgba(165,144,208,.04) 0%,transparent 55%);
 }
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
-/* Header */
+
+/* ─── Header ─── */
 header{
   position:relative;z-index:20;flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
@@ -44,23 +45,1017 @@ header{
   background:var(--header-bg);backdrop-filter:blur(28px);
 }
 .brand{display:flex;align-items:center;gap:11px}
-.brand-mark{
-  width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(143,188,122,.35);
-  display:grid;place-items:center;position:relative;overflow:hidden;
-}
-.brand-mark::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(143,188,122,.12),transparent 70%)}
-.brand-mark::after{
-  content:'';width:7px;height:7px;background:var(--sage);border-radius:50%;
-  box-shadow:0 0 10px rgba(143,188,122,.6);animation:pulse 3.5s ease-in-out infinite;
-}
+.brand-mark{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(165,144,208,.4);display:grid;place-items:center;position:relative;overflow:hidden}
+.brand-mark::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(165,144,208,.15),transparent 70%)}
+.brand-mark::after{content:'';width:7px;height:7px;background:var(--violet);border-radius:50%;box-shadow:0 0 10px rgba(165,144,208,.6);animation:pulse 3.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(.65);opacity:.4}50%{transform:scale(1);opacity:1}}
-.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;letter-spacing:.2em;color:var(--text)}
-.brand-name em{font-style:italic;color:var(--sage);font-size:.72em;letter-spacing:.06em;vertical-align:middle;margin-left:3px}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;letter-spacing:.2em}
+.brand-name em{font-style:italic;color:var(--violet);font-size:.72em;letter-spacing:.06em;vertical-align:middle;margin-left:3px}
 .hright{display:flex;align-items:center;gap:7px}
-.status-pill{
-  display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
-  border:1px solid var(--bd2);background:var(--s1);
-  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.05em;color:var(--mid);transition:all .35s;
+.status-pill{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.05em;color:var(--mid);transition:all .35s}
+.status-pill.ok{border-color:rgba(143,188,122,.3);color:var(--sage)}
+.status-pill.warn{border-color:rgba(212,168,83,.3);color:var(--amber)}
+.status-pill.busy{border-color:rgba(165,144,208,.3);color:var(--violet)}
+.dot{width:4px;height:4px;border-radius:50%;background:currentColor;animation:bk 2s ease-in-out infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.15}}
+.icon-btn{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--bd2);background:var(--s1);color:var(--mid);cursor:pointer;display:grid;place-items:center;font-size:.76rem;transition:all .18s}
+.icon-btn:hover{border-color:var(--violet);color:var(--violet);background:rgba(165,144,208,.1)}
+.icon-btn.active{border-color:var(--violet);color:var(--violet);background:rgba(165,144,208,.1)}
+
+/* ─── Settings panel ─── */
+.settings-bar{position:relative;z-index:10;flex-shrink:0;overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);background:var(--panel-bg);transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s}
+.settings-bar.open{max-height:460px;border-bottom-width:1px}
+.settings-inner{padding:16px 22px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px 18px;align-items:start}
+.ctrl{display:flex;flex-direction:column;gap:6px}
+.ctrl-lbl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;color:var(--mid);display:flex;justify-content:space-between;align-items:center}
+.ctrl-lbl .val{color:var(--violet);font-weight:500;background:rgba(165,144,208,.08);padding:1px 5px;border-radius:3px;min-width:28px;text-align:center}
+.ctrl-desc{font-size:.6rem;color:var(--dim);line-height:1.4;font-family:'JetBrains Mono',monospace}
+.preset-row{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--bd);align-items:center}
+.preset-lbl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.06em;color:var(--mid);margin-right:4px}
+.preset-btn{font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 10px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);color:var(--mid);cursor:pointer;transition:all .2s}
+.preset-btn:hover,.preset-btn.active{border-color:var(--amber);color:var(--amber);background:rgba(212,168,83,.08)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;border-radius:2px;background:linear-gradient(to right,var(--violet) var(--pct,50%),var(--bd2) var(--pct,50%));outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--violet);cursor:pointer;box-shadow:0 0 0 3px rgba(165,144,208,.15);transition:box-shadow .2s}
+.select-ctrl{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:4px 8px;outline:none;cursor:pointer;width:100%;-webkit-appearance:none;appearance:none}
+.stat-row{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--bd);align-items:center}
+.sc{font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);color:var(--mid)}
+.sc b{color:var(--text);font-weight:500}
+.sc.sem{border-color:rgba(165,144,208,.2);background:rgba(165,144,208,.04)}
+.sc.sem b{color:var(--violet)}
+.sc.hi{border-color:rgba(143,188,122,.2);background:var(--sageg)}
+.sc.hi b{color:var(--sage)}
+.build-bar-wrap{grid-column:1/-1;background:var(--s1);border:1px solid var(--bd);border-radius:6px;overflow:hidden;height:4px}
+.build-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--sage),var(--violet));border-radius:6px;transition:width .1s linear}
+.build-label{grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--mid);letter-spacing:.05em;min-height:14px}
+
+/* ─── 語義マップパネル ─── */
+.semmap-bar{position:relative;z-index:9;flex-shrink:0;overflow:hidden;max-height:0;border-bottom:0px solid var(--bd);background:var(--panel-bg);transition:max-height .4s cubic-bezier(.4,0,.2,1),border-width .4s}
+.semmap-bar.open{max-height:340px;border-bottom-width:1px}
+.semmap-inner{padding:12px 22px 14px;display:flex;flex-direction:column;gap:10px}
+.semmap-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.semmap-title{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.06em;color:var(--violet)}
+.semmap-search{display:flex;gap:6px;align-items:center;flex:1;max-width:280px}
+.semmap-input{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.64rem;padding:3px 8px;outline:none}
+.semmap-input:focus{border-color:rgba(165,144,208,.4)}
+.semmap-input::placeholder{color:var(--dim)}
+.semmap-btn{font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:3px 10px;border-radius:6px;border:1px solid rgba(165,144,208,.3);background:rgba(165,144,208,.08);color:var(--violet);cursor:pointer;transition:all .2s;white-space:nowrap}
+.semmap-btn:hover{background:rgba(165,144,208,.18)}
+canvas#semCanvas{width:100%;height:240px;border-radius:var(--r-sm);border:1px solid var(--bd);background:var(--s2);display:block;cursor:crosshair}
+.neighbor-list{display:flex;gap:5px;flex-wrap:wrap}
+.nbr-tag{font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:2px 8px;border-radius:10px;border:1px solid rgba(165,144,208,.2);background:rgba(165,144,208,.06);color:var(--violet);cursor:pointer;transition:all .18s}
+.nbr-tag:hover{background:rgba(165,144,208,.15)}
+.nbr-tag .sim{color:var(--mid);font-size:.52rem;margin-left:3px}
+
+/* ─── Chat ─── */
+#chat{flex:1;overflow-y:auto;padding:24px 0 18px;position:relative;z-index:5;scroll-behavior:smooth}
+.msgs{max-width:740px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:16px}
+.welcome{animation:fadeUp .8s cubic-bezier(.34,1.15,.64,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.welcome-card{border:1px solid var(--bd2);border-radius:var(--r-lg);background:var(--s1);padding:26px 28px;position:relative;overflow:hidden}
+.welcome-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(165,144,208,.35) 40%,rgba(143,188,122,.2) 70%,transparent 95%)}
+.welcome-head{display:flex;align-items:baseline;gap:11px;margin-bottom:13px}
+.welcome-title{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:400;letter-spacing:.12em}
+.welcome-title em{font-style:italic;color:var(--violet)}
+.welcome-ver{font-family:'JetBrains Mono',monospace;font-size:.56rem;padding:2px 6px;border:1px solid rgba(165,144,208,.25);border-radius:4px;color:var(--violet);letter-spacing:.08em}
+.welcome-sub{color:var(--mid);font-size:.84rem;line-height:1.95;margin-bottom:16px}
+.welcome-sub code{font-family:'JetBrains Mono',monospace;font-size:.78em;color:var(--violet);background:rgba(165,144,208,.08);padding:1px 5px;border-radius:3px}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.feat{border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg);padding:9px 12px;font-size:.7rem;line-height:1.6;position:relative;overflow:hidden}
+.feat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent,var(--sage));border-radius:0 2px 2px 0}
+.feat.ppmi{--accent:var(--violet)}.feat.pca{--accent:var(--sky)}.feat.sem{--accent:var(--amber)}.feat.kn{--accent:var(--sage)}
+.feat strong{display:block;font-size:.68rem;letter-spacing:.05em;color:var(--text);margin-bottom:2px;font-weight:500}
+.feat span{color:var(--mid)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.76rem;padding:5px 13px;border:1px solid var(--bd2);border-radius:20px;background:transparent;color:var(--mid);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .22s cubic-bezier(.34,1.4,.64,1)}
+.chip:hover{border-color:rgba(165,144,208,.4);color:var(--violet);background:rgba(165,144,208,.05);transform:translateY(-2px)}
+.msg{display:flex;gap:11px;align-items:flex-start;animation:msgIn .38s cubic-bezier(.34,1.2,.64,1) both}
+@keyframes msgIn{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.av{width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:500;letter-spacing:.04em}
+.av.ai{background:linear-gradient(135deg,rgba(165,144,208,.1),rgba(122,179,194,.06));border:1px solid rgba(165,144,208,.2);color:var(--violet)}
+.av.user{background:linear-gradient(135deg,rgba(196,136,122,.09),rgba(212,168,83,.06));border:1px solid rgba(196,136,122,.18);color:var(--rose)}
+.bub{max-width:78%;padding:12px 16px;font-size:.86rem;line-height:1.95}
+.bub.ai{background:var(--s1);border:1px solid var(--bd);border-radius:3px var(--r-md) var(--r-md) var(--r-md);color:var(--text)}
+.bub.user{background:var(--s2);border:1px solid rgba(196,136,122,.1);border-radius:var(--r-md) 3px var(--r-md) var(--r-md);color:var(--text);text-align:right}
+.bub.streaming{border-color:rgba(165,144,208,.3);box-shadow:0 0 24px rgba(165,144,208,.06)}
+.sem-badge{display:inline-flex;align-items:center;gap:4px;margin-top:7px;font-family:'JetBrains Mono',monospace;font-size:.52rem;padding:2px 8px;border-radius:10px;border:1px solid rgba(165,144,208,.2);background:rgba(165,144,208,.06);color:var(--violet)}
+.msg-meta{font-family:'JetBrains Mono',monospace;font-size:.53rem;letter-spacing:.04em;color:var(--dim);margin-top:5px;margin-left:41px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.meta-tag{border:1px solid var(--bd);border-radius:10px;padding:1px 7px;background:var(--s1);color:var(--mid)}
+.meta-tag.v{border-color:rgba(165,144,208,.2);color:rgba(165,144,208,.6)}
+.meta-tag.g{border-color:rgba(143,188,122,.2);color:rgba(143,188,122,.5)}
+.regen-btn{width:20px;height:20px;border-radius:5px;border:1px solid var(--bd);background:var(--s1);color:var(--dim);cursor:pointer;display:grid;place-items:center;transition:all .18s;flex-shrink:0}
+.regen-btn:hover{border-color:var(--violet);color:var(--violet);background:rgba(165,144,208,.1)}
+.regen-btn svg{width:10px;height:10px}
+.cursor-blink{display:inline-block;width:2px;height:.88em;background:var(--violet);margin-left:2px;vertical-align:text-bottom;border-radius:1px;animation:cb .65s step-end infinite}
+@keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
+.sys{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.07em;color:var(--dim);padding:3px 0;animation:fadeUp .35s ease both}
+.sys span{border:1px solid var(--bd);border-radius:20px;padding:3px 11px;background:var(--s1);display:inline-flex;align-items:center;gap:6px}
+.sys-dot{width:4px;height:4px;border-radius:50%;background:var(--violet);animation:bk 1.4s ease-in-out infinite}
+
+/* ─── Footer ─── */
+footer{position:relative;z-index:20;flex-shrink:0;border-top:1px solid var(--bd);background:var(--footer-bg);backdrop-filter:blur(28px);padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.input-wrap{max-width:740px;margin:0 auto}
+.input-row{display:flex;align-items:flex-end;gap:7px;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r-md);padding:9px 9px 9px 16px;transition:border-color .25s,box-shadow .25s}
+.input-row:focus-within{border-color:rgba(165,144,208,.3);box-shadow:0 0 0 4px rgba(165,144,208,.04)}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.86rem;resize:none;max-height:110px;width:0;min-width:0;max-width:100%;line-height:1.75;padding:2px 0}
+textarea::placeholder{color:var(--dim)}
+.send-btn{width:34px;height:34px;border:none;border-radius:var(--r-sm);background:var(--violet);color:#f0eef8;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:all .2s cubic-bezier(.34,1.4,.64,1)}
+.send-btn:hover{background:#b8a8e0;box-shadow:0 4px 18px rgba(165,144,208,.3);transform:scale(1.07)}
+.send-btn:active{transform:scale(.91)}
+.send-btn:disabled{opacity:.28;cursor:not-allowed;transform:none;box-shadow:none}
+.send-btn svg{width:13px;height:13px}
+.progress-strip{height:1.5px;border-radius:1px;background:linear-gradient(90deg,var(--violet),var(--sky),var(--sage));width:0%;margin-top:8px;opacity:0;transition:width .07s linear,opacity .3s}
+.progress-strip.active{opacity:1}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
+.footer-hint{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--dim);letter-spacing:.05em}
+.ppx-live{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--mid);letter-spacing:.04em}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-name">COMPOSE <em>v5</em></div>
+  </div>
+  <div class="hright">
+    <div class="status-pill warn" id="statusPill"><div class="dot"></div><span id="statusTxt">読込中…</span></div>
+    <div class="icon-btn" onclick="toggleTheme()" title="テーマ">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </div>
+    <div class="icon-btn" id="semmapBtn" onclick="toggleSemmap()" title="語義マップ">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="2"/><circle cx="5" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/>
+        <line x1="7" y1="7" x2="10.5" y2="10.5"/><line x1="17" y1="7" x2="13.5" y2="10.5"/><line x1="7" y1="17" x2="10.5" y2="13.5"/>
+      </svg>
+    </div>
+    <div class="icon-btn" id="settingsBtn" onclick="toggleSettings()" title="設定">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="settings-bar" id="settingsBar">
+  <div class="settings-inner">
+    <div class="preset-row">
+      <span class="preset-lbl">PRESET</span>
+      <button class="preset-btn" onclick="applyPreset('poetic')" id="preset-poetic">詩的</button>
+      <button class="preset-btn" onclick="applyPreset('logical')" id="preset-logical">論理的</button>
+      <button class="preset-btn" onclick="applyPreset('balanced')" id="preset-balanced">均衡</button>
+      <button class="preset-btn" onclick="applyPreset('concise')" id="preset-concise">簡潔</button>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">N-gram次数 <span class="val" id="vOrder">5</span></div>
+      <input type="range" id="rOrder" min="2" max="8" value="5" oninput="syncSlider(this,'vOrder',1);scheduleRebuild()">
+      <div class="ctrl-desc">兼：共起窓幅に使用</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">平滑化手法</div>
+      <select class="select-ctrl" id="rSmMethod" onchange="scheduleRebuild()">
+        <option value="kn">Kneser-Ney</option>
+        <option value="wb">Witten-Bell</option>
+        <option value="lap">Laplace</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">意味語彙数 <span class="val" id="vSemVocab">500</span></div>
+      <input type="range" id="rSemVocab" min="100" max="1000" value="500" step="50" oninput="syncSlider(this,'vSemVocab',1);scheduleRebuild()">
+      <div class="ctrl-desc">PPMIベクトルを構築する語数</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">PCA次元 <span class="val" id="vPCA">30</span></div>
+      <input type="range" id="rPCA" min="10" max="60" value="30" step="5" oninput="syncSlider(this,'vPCA',1);scheduleRebuild()">
+      <div class="ctrl-desc">意味空間の圧縮次元数</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">検索文数 <span class="val" id="vRetrK">3</span></div>
+      <input type="range" id="rRetrK" min="1" max="8" value="3" oninput="syncSlider(this,'vRetrK',1)">
+      <div class="ctrl-desc">意味検索で取得する文数</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">生成アルゴリズム</div>
+      <select class="select-ctrl" id="rGenAlgo">
+        <option value="beam">ビームサーチ</option>
+        <option value="sample">サンプリング</option>
+        <option value="greedy">貪欲法</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">ビーム幅 <span class="val" id="vBeam">4</span></div>
+      <input type="range" id="rBeam" min="2" max="10" value="4" oninput="syncSlider(this,'vBeam',1)">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">温度 <span class="val" id="vTemp">1.0</span></div>
+      <input type="range" id="rTemp" min="0.1" max="2.5" value="1.0" step="0.1" oninput="syncSlider(this,'vTemp',.1)">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">繰り返しペナルティ <span class="val" id="vRepeat">1.2</span></div>
+      <input type="range" id="rRepeat" min="1.0" max="3.0" value="1.2" step="0.1" oninput="syncSlider(this,'vRepeat',.1)">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-lbl">応答長 <span class="val" id="vLen">自動</span></div>
+      <input type="range" id="rLen" min="8" max="120" value="40" step="4" oninput="onLenSlider(this)" disabled style="opacity:.35">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+        <input type="checkbox" id="lenAuto" checked onchange="onLenAutoChange(this)" style="accent-color:var(--violet)">
+        <span class="ctrl-desc" style="margin:0">自動</span>
+      </label>
+    </div>
+    <div class="build-label" id="buildLabel">モデル未構築</div>
+    <div class="build-bar-wrap"><div class="build-bar" id="buildBar"></div></div>
+    <div class="stat-row">
+      <div class="sc hi">トークン <b id="sWords">—</b></div>
+      <div class="sc hi">語彙 <b id="sVocab">—</b></div>
+      <div class="sc sem">意味語彙 <b id="sSemVocab">—</b></div>
+      <div class="sc sem">PPMI密度 <b id="sPpmiDensity">—</b></div>
+      <div class="sc sem">PCA次元 <b id="sPCADim">—</b></div>
+      <div class="sc">N-gram PPX <b id="sPpx">—</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 語義マップパネル ─── -->
+<div class="semmap-bar" id="semmapBar">
+  <div class="semmap-inner">
+    <div class="semmap-head">
+      <div class="semmap-title">語義マップ — PCA 2D投影（クリックで近傍語を表示）</div>
+      <div class="semmap-search">
+        <input class="semmap-input" id="nbrInput" placeholder="単語を入力…" oninput="updateNeighbors()">
+        <button class="semmap-btn" onclick="updateNeighbors()">近傍語</button>
+      </div>
+    </div>
+    <canvas id="semCanvas"></canvas>
+    <div class="neighbor-list" id="neighborList"></div>
+  </div>
+</div>
+
+<div id="chat">
+  <div class="msgs" id="msgs">
+    <div class="welcome" id="welcome">
+      <div class="welcome-card">
+        <div class="welcome-head">
+          <div class="welcome-title">Com<em>pose</em></div>
+          <span class="welcome-ver">v5 — 分布意味論</span>
+        </div>
+        <p class="welcome-sub">
+          <code>PPMI共起ベクトル</code> + <code>PCA意味空間</code> + <code>Kneser-Ney</code> の三層構造。<br>
+          N-gramの共起統計から語の意味を抽出し、意味的に関連した文を検索してから生成します。
+        </p>
+        <div class="feature-grid">
+          <div class="feat ppmi"><strong>PPMI 共起ベクトル</strong><span>正の相互情報量で語の意味を数値化</span></div>
+          <div class="feat pca"><strong>Power Iteration PCA</strong><span>高次元ベクトルを意味空間に圧縮</span></div>
+          <div class="feat sem"><strong>コサイン類似度検索</strong><span>TF-IDFより深い意味での文書検索</span></div>
+          <div class="feat kn"><strong>Kneser-Ney 生成</strong><span>検索文を起点にN-gramで拡張</span></div>
+        </div>
+        <div class="chips" id="chips"><span style="color:var(--dim);font-size:.76rem">学習中…</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="input-wrap">
+    <div class="input-row">
+      <textarea id="inp" placeholder="メッセージを入力…" rows="1"
+        oninput="resize(this)"
+        onkeydown="onKey(event)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled title="送信">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="progress-strip" id="prog"></div>
+    <div class="footer-bottom">
+      <div class="footer-hint">ENTER で送信 ／ SHIFT+ENTER で改行</div>
+      <div class="ppx-live" id="ppxLive"></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+//  COMPOSE v5 — 分布意味論エンジン
+//  核心: PPMI共起ベクトル + Power Iteration PCA + コサイン類似度検索
+// ============================================================
+
+function isEnd(t){return /[.!?。！？]$/.test(t)}
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n)}
+function dot(a,b){let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s}
+function norm2(a){return Math.sqrt(dot(a,a))}
+function normalize(a){const n=norm2(a)||1;return a.map(x=>x/n)}
+
+// ─── グローバル状態 ──────────────────────────────────────
+let corpus='', tokens=[], vocab=new Set(), vocabArr=[];
+let kn={}, wb={}, mle={}, knIdx={}, wbIdx={}, mleIdx={};
+let unigramDist=new Map(), rawCounts={}, continuationCounts={}, knDiscounts={};
+let sentStarts=[], modelReady=false, rebuildTimer=null, busy=false, buildGeneration=0;
+let loadedFiles=[];
+
+// ─── v5 意味空間の状態 ──────────────────────────────────
+let semVocab=[];              // 意味語彙（頻度上位N語）
+let semVocabIndex=new Map();  // word -> index
+let ppmiMatrix=null;          // Float32Array, semV × semV （PPMI行列）
+let wordVecs=null;            // Float32Array, semV × pcaDim （PCA後の語ベクトル）
+let pcaDim=30;
+let semV=0;
+let pcaPoints2D=[];           // [{word, x, y}]  語義マップ描画用
+let corpusSents=[];           // 文単位分割（意味検索用）
+let dialogHistory=[];
+let ppxLiveTimer=null;
+
+// ============================================================
+//  ─── 分布意味論コア ────────────────────────────────────
+//
+//  理論的背景:
+//  「You shall know a word by the company it keeps」(Firth 1957)
+//  同じ文脈に現れる語は意味が似ている、という原理。
+//  word2vec/GloVe/BERT内部の埋め込みはこれを神経網で実装したもの。
+//  ここでは純粋な共起統計（PPMI）+ 行列因子分解（PCA）で実現する。
+// ============================================================
+
+// STEP1: PPMI共起行列の構築
+// PPMI(w,c) = max(0, log2( P(w,c) / (P(w)·P(c)) ))
+// P(w,c) = 共起確率（距離に反比例した重み付きカウント / 全カウント）
+// 直感: w と c が「偶然より多く」共起するほど高スコア
+function buildPPMI(){
+  const maxVocab=parseInt(document.getElementById('rSemVocab').value);
+  const window=Math.min(parseInt(document.getElementById('rOrder').value),6);
+
+  // 頻度上位 maxVocab 語を意味語彙とする
+  const freq=new Map();
+  for(const t of tokens) freq.set(t,(freq.get(t)||0)+1);
+  semVocab=[...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,Math.min(maxVocab,freq.size)).map(([w])=>w);
+  semV=semVocab.length;
+  semVocabIndex.clear();
+  semVocab.forEach((w,i)=>semVocabIndex.set(w,i));
+
+  // 共起カウント行列（1次元Float32Array: index = i*semV+j）
+  const cooc=new Float32Array(semV*semV);
+  // 距離に反比例した重み: 1語離れ=1.0, 2語離れ=0.5, k語離れ=1/k
+  for(let pos=0;pos<tokens.length;pos++){
+    const wi=semVocabIndex.get(tokens[pos]);
+    if(wi===undefined) continue;
+    for(let d=1;d<=window&&pos+d<tokens.length;d++){
+      const wj=semVocabIndex.get(tokens[pos+d]);
+      if(wj===undefined) continue;
+      const weight=1/d;
+      cooc[wi*semV+wj]+=weight;
+      cooc[wj*semV+wi]+=weight;  // 対称行列
+    }
+  }
+
+  // 周辺確率を計算
+  const rowSum=new Float32Array(semV);
+  let total=0;
+  for(let i=0;i<semV;i++){
+    for(let j=0;j<semV;j++){
+      rowSum[i]+=cooc[i*semV+j];
+      total+=cooc[i*semV+j];
+    }
+  }
+  if(total===0){ppmiMatrix=null;return}
+
+  // PPMI変換（正の値のみ保持）
+  ppmiMatrix=new Float32Array(semV*semV);
+  let nnz=0;  // 非ゼロ要素数（密度計算用）
+  for(let i=0;i<semV;i++){
+    for(let j=0;j<semV;j++){
+      const pWC=cooc[i*semV+j]/total;
+      const pW=rowSum[i]/total;
+      const pC=rowSum[j]/total;
+      if(pWC>0&&pW>0&&pC>0){
+        const ppmi=Math.max(0,Math.log2(pWC/(pW*pC)));
+        ppmiMatrix[i*semV+j]=ppmi;
+        if(ppmi>0) nnz++;
+      }
+    }
+  }
+  const density=nnz/(semV*semV);
+  document.getElementById('sPpmiDensity').textContent=(density*100).toFixed(1)+'%';
+}
+
+// STEP2: Power Iteration による主成分分析（PCA）
+// 行列 A（semV × semV）の上位 k 主成分を反復法で求める。
+// 外部ライブラリ不要・O(semV² × k × iters) で動作。
+// 目的: 高次元PPMIベクトル → 低次元「意味空間」への圧縮
+function buildPCA(){
+  if(!ppmiMatrix){wordVecs=null;return}
+  pcaDim=Math.min(parseInt(document.getElementById('rPCA').value),semV-1,40);
+  wordVecs=new Float32Array(semV*pcaDim);
+
+  // 各語のPPMI行ベクトルを配列に
+  const rows=[];
+  for(let i=0;i<semV;i++){
+    rows.push(ppmiMatrix.slice(i*semV,(i+1)*semV));
+  }
+
+  // 平均センタリング
+  const mean=new Float32Array(semV);
+  for(let i=0;i<semV;i++) for(let j=0;j<semV;j++) mean[j]+=rows[i][j]/semV;
+  const centered=rows.map(r=>{const c=new Float32Array(semV);for(let j=0;j<semV;j++)c[j]=r[j]-mean[j];return c});
+
+  // Power Iteration: 共分散行列 C = X^T X の固有ベクトルを反復で求める
+  // 各主成分を求めるたびに射影を除去（deflation）
+  const found=[];   // 求まった固有ベクトル
+  const projData=[...centered.map(r=>new Float32Array(r))];
+
+  const ITERS=25;
+  for(let k=0;k<pcaDim;k++){
+    // 乱数初期化
+    let v=new Float32Array(semV);
+    for(let j=0;j<semV;j++) v[j]=Math.random()-0.5;
+    v=normalize(v);
+
+    for(let iter=0;iter<ITERS;iter++){
+      // X v → n次元
+      const Xv=projData.map(xi=>dot(xi,v));
+      // X^T (Xv) → semV次元
+      const XtXv=new Float32Array(semV);
+      for(let i=0;i<projData.length;i++) for(let j=0;j<semV;j++) XtXv[j]+=projData[i][j]*Xv[i];
+      v=normalize(Array.from(XtXv));
+    }
+
+    found.push(v);
+    // Deflation: 求まった主成分方向を各データ点から除去
+    for(let i=0;i<projData.length;i++){
+      const proj=dot(Array.from(projData[i]),v);
+      for(let j=0;j<semV;j++) projData[i][j]-=proj*v[j];
+    }
+  }
+
+  // 語ベクトル = 元データ × 主成分行列
+  for(let i=0;i<semV;i++){
+    for(let k=0;k<pcaDim;k++){
+      wordVecs[i*pcaDim+k]=dot(Array.from(centered[i]),found[k]);
+    }
+  }
+
+  document.getElementById('sPCADim').textContent=pcaDim;
+
+  // 2D可視化用: 最初の2主成分を使う
+  build2DProjection(centered,found);
+}
+
+function build2DProjection(centered,found){
+  if(found.length<2){pcaPoints2D=[];return}
+  const topWords=semVocab.slice(0,Math.min(80,semV));
+  pcaPoints2D=topWords.map((w,i)=>({
+    word:w,
+    x:dot(Array.from(centered[i]),found[0]),
+    y:dot(Array.from(centered[i]),found[1]),
+  }));
+}
+
+// ─── 語ベクトルの取得（PCA空間）────────────────────────
+function getWordVec(word){
+  if(!wordVecs) return null;
+  const i=semVocabIndex.get(word);
+  if(i===undefined) return null;
+  return wordVecs.slice(i*pcaDim,(i+1)*pcaDim);
+}
+
+// ─── コサイン類似度 ──────────────────────────────────────
+function cosSim(a,b){
+  const na=norm2(a),nb=norm2(b);
+  if(!na||!nb) return 0;
+  return dot(a,b)/(na*nb);
+}
+
+// ─── 文ベクトル = 構成語ベクトルの平均 ─────────────────
+function sentVec(toks){
+  if(!wordVecs) return null;
+  const acc=new Float32Array(pcaDim);
+  let count=0;
+  for(const t of toks){
+    const v=getWordVec(t);
+    if(v){for(let i=0;i<pcaDim;i++)acc[i]+=v[i];count++}
+  }
+  if(!count) return null;
+  for(let i=0;i<pcaDim;i++) acc[i]/=count;
+  return acc;
+}
+
+// ─── 意味検索（コサイン類似度ベース）───────────────────
+// TF-IDFとの違い:
+//   TF-IDF = 入力と文書が「同じ単語」を共有しているか
+//   PPMI意味検索 = 入力と文書が「意味的に近い語」を持つか
+//   例: 入力「海」→ 文書中に「ocean」があっても（英語なら）類似度が高くなりうる
+function semanticSearch(queryToks,k){
+  if(!wordVecs||corpusSents.length===0) return [];
+  const qvec=sentVec(queryToks);
+  if(!qvec) return [];
+  return corpusSents
+    .map(sent=>({sent,sim:cosSim(qvec,sentVec(tokenize(sent))??new Float32Array(pcaDim))}))
+    .sort((a,b)=>b.sim-a.sim)
+    .slice(0,k)
+    .filter(s=>s.sim>0.01);
+}
+
+// ─── 近傍語検索（語義マップUIから呼ばれる）─────────────
+function nearestNeighbors(word,k=8){
+  if(!wordVecs) return [];
+  const wv=getWordVec(word);
+  if(!wv) return [];
+  return semVocab
+    .map((w,i)=>({word:w,sim:cosSim(wv,wordVecs.slice(i*pcaDim,(i+1)*pcaDim))}))
+    .filter(x=>x.word!==word)
+    .sort((a,b)=>b.sim-a.sim)
+    .slice(0,k);
+}
+
+// ============================================================
+//  ─── モデル構築 ──────────────────────────────────────────
+// ============================================================
+async function buildModelAsync(){
+  const myGen=++buildGeneration;
+  setStatus('busy','構築中…');
+  modelReady=false;
+  document.getElementById('sendBtn').disabled=true;
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const smMethod=document.getElementById('rSmMethod').value;
+  tokens=tokenize(corpus);
+  vocab=new Set(tokens);
+  vocabArr=Array.from(vocab);
+  rawCounts={};kn={};wb={};mle={};knIdx={};wbIdx={};mleIdx={};
+  knDiscounts={};unigramDist=new Map();sentStarts=[0];continuationCounts={};
+
+  const setBar=(p,l)=>{document.getElementById('buildBar').style.width=p+'%';document.getElementById('buildLabel').textContent=l};
+
+  // STEP A: 文分割
+  setBar(2,'文分割…');await sleep(0);
+  if(myGen!==buildGeneration) return;
+  corpusSents=corpus.split(/(?<=[。.!?！？\n])\s*/).map(s=>s.trim()).filter(s=>s.length>4);
+
+  // STEP B: N-gramカウント
+  for(let i=0;i<tokens.length;i++) if(isEnd(tokens[i])&&i+1<tokens.length) sentStarts.push(i+1);
+  for(let n=1;n<=maxOrder;n++){
+    setBar(5+Math.round(n/maxOrder*28),'N-gram '+n+'次カウント…');
+    await sleep(0);
+    if(myGen!==buildGeneration) return;
+    rawCounts[n]=new Map();
+    for(let i=0;i<=tokens.length-n-1;i++){
+      const key=tokens.slice(i,i+n).join('\x00');
+      const next=tokens[i+n];
+      if(!rawCounts[n].has(key)) rawCounts[n].set(key,new Map());
+      const m=rawCounts[n].get(key);
+      m.set(next,(m.get(next)||0)+1);
+    }
+  }
+
+  // STEP C: PPMI共起行列（分布意味論の核心）
+  setBar(36,'PPMI共起行列を構築中（分布意味論）…');await sleep(0);
+  if(myGen!==buildGeneration) return;
+  buildPPMI();
+
+  // STEP D: Power Iteration PCA（意味空間への圧縮）
+  setBar(55,'Power Iteration PCA…');await sleep(0);
+  if(myGen!==buildGeneration) return;
+  buildPCA();
+
+  // STEP E: Kneser-Ney確率モデル構築
+  for(let n=1;n<=maxOrder;n++) knDiscounts[n]=computeKNDiscounts(n);
+  const contMap=new Map();
+  if(rawCounts[1]) for(const[,m]of rawCounts[1]) for(const[word]of m) contMap.set(word,(contMap.get(word)||0)+1);
+  continuationCounts=contMap;
+  const totalCont=Array.from(contMap.values()).reduce((a,b)=>a+b,0)||1;
+
+  for(let n=1;n<=maxOrder;n++){
+    setBar(65+Math.round(n/maxOrder*28),'確率化: '+n+'-gram…');
+    await sleep(0);
+    if(myGen!==buildGeneration) return;
+    if(smMethod==='kn'){buildKN(n,totalCont);knIdx[n]=buildProbIndex(kn[n])}
+    else if(smMethod==='wb'){buildWB(n);wbIdx[n]=buildProbIndex(wb[n])}
+    else{buildLaplace(n);mleIdx[n]=buildProbIndex(mle[n])}
+  }
+
+  {const counts=new Map();for(const t of tokens)counts.set(t,(counts.get(t)||0)+1);const tot=tokens.length||1;for(const[w,c]of counts)unigramDist.set(w,c/tot)}
+
+  setBar(96,'PPX計算…');await sleep(0);
+  if(myGen!==buildGeneration) return;
+  const ppx=computePerplexity(maxOrder);
+  setBar(100,'完了');
+  if(myGen!==buildGeneration) return;
+
+  modelReady=true;
+  document.getElementById('sendBtn').disabled=false;
+  setStatus('ok',loadedFiles[0]||'準備完了');
+  updateStats(ppx);
+  // 語義マップを再描画
+  if(document.getElementById('semmapBar').classList.contains('open')) drawSemmap();
+}
+
+// ─── Kneser-Ney 実装 ────────────────────────────────────
+function computeKNDiscounts(n){
+  const sm=rawCounts[n];if(!sm)return{D1:.5,D2:1,D3:1.5};
+  let n1=0,n2=0,n3=0,n4=0;
+  for(const[,m]of sm)for(const c of m.values()){if(c===1)n1++;else if(c===2)n2++;else if(c===3)n3++;else n4++}
+  if(!n1||!n2)return{D1:.5,D2:1,D3:1.5};
+  const Y=n1/(n1+2*n2);
+  return{D1:Math.max(1-2*Y*(n2/n1),.01),D2:Math.max(2-3*Y*(n3/Math.max(n2,1)),.01),D3:Math.max(3-4*Y*(n4/Math.max(n3,1)),.01)};
+}
+function buildProbIndex(model){const idx=new Map();if(!model)return idx;for(const[key,entries]of model){const m=new Map();for(const e of entries)m.set(e.word,e.p);idx.set(key,m)}return idx}
+function buildKN(n,totalCont){
+  const{D1,D2,D3}=knDiscounts[n]||{D1:.5,D2:1,D3:1.5};const V=vocab.size||1;const result=new Map();
+  if(!rawCounts[n]){kn[n]=result;return}
+  for(const[key,m]of rawCounts[n]){
+    const entries=[];const totalC=Array.from(m.values()).reduce((a,b)=>a+b,0);
+    let N1=0,N2=0,N3=0;for(const c of m.values()){if(c>=1)N1++;if(c>=2)N2++;if(c>=3)N3++}
+    const lambda=(D1*N1+D2*N2+D3*N3)/totalC;
+    for(const[word,c]of m){
+      const d=c===1?D1:c===2?D2:D3;const discounted=Math.max(c-d,0)/totalC;
+      let pLow;
+      if(n===1){pLow=(continuationCounts.get(word)||0)/totalCont}
+      else{
+        const lk=key.split('\x00').slice(1).join('\x00');const li=knIdx[n-1];
+        if(li){const lm=li.get(lk);pLow=lm?(lm.get(word)??(1/V)):((continuationCounts.get(word)||0)/totalCont)}
+        else pLow=(continuationCounts.get(word)||0)/totalCont;
+      }
+      const p=discounted+lambda*pLow;if(p>0)entries.push({word,p});
+    }
+    result.set(key,entries);
+  }
+  kn[n]=result;
+}
+function buildWB(n){
+  const V=vocab.size||1;const result=new Map();if(!rawCounts[n]){wb[n]=result;return}
+  for(const[key,m]of rawCounts[n]){
+    const entries=[];const totalC=Array.from(m.values()).reduce((a,b)=>a+b,0);const T=m.size;const lambda=T/(T+totalC);
+    for(const[word,c]of m){
+      let pLow=1/V;
+      if(n>1&&wb[n-1]){const lk=key.split('\x00').slice(1).join('\x00');const lp=wb[n-1].get(lk);if(lp){const f=lp.find(e=>e.word===word);if(f)pLow=f.p}}
+      const p=(1-lambda)*(c/totalC)+lambda*pLow;if(p>0)entries.push({word,p});
+    }
+    const sum=entries.reduce((a,e)=>a+e.p,0);if(sum>0)entries.forEach(e=>e.p/=sum);result.set(key,entries);
+  }
+  wb[n]=result;
+}
+function buildLaplace(n){
+  const alpha=0.1,V=vocab.size||1,result=new Map();if(!rawCounts[n]){mle[n]=result;return}
+  for(const[key,m]of rawCounts[n]){
+    const total=Array.from(m.values()).reduce((a,b)=>a+b,0);const denom=total+alpha*V;
+    const entries=Array.from(m.entries()).map(([word,c])=>({word,p:(c+alpha)/denom}));
+    const sum=entries.reduce((a,e)=>a+e.p,0);if(sum>0)entries.forEach(e=>e.p/=sum);result.set(key,entries);
+  }
+  mle[n]=result;
+}
+function getModel(n){const sm=document.getElementById('rSmMethod').value;if(sm==='kn')return kn[n]||null;if(sm==='wb')return wb[n]||null;return mle[n]||kn[n]||null}
+function getModelIdx(n){const sm=document.getElementById('rSmMethod').value;if(sm==='kn')return knIdx[n]||null;if(sm==='wb')return wbIdx[n]||null;return mleIdx[n]||knIdx[n]||null}
+function getCandidates(context){
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  for(let n=Math.min(maxOrder,context.length);n>=1;n--){
+    const key=context.slice(-n).join('\x00');const model=getModel(n);if(!model)continue;
+    const cands=model.get(key);if(cands&&cands.length>0)return{cands,usedOrder:n};
+  }
+  const u1=getModel(1);
+  if(u1&&u1.size>0){const all=[];for(const[,c]of u1)all.push(...c);return{cands:all,usedOrder:0}}
+  return{cands:[{word:'.',p:1}],usedOrder:0};
+}
+function getNextProb(context,target,maxOrder){
+  for(let n=Math.min(maxOrder,context.length);n>=1;n--){
+    const key=context.slice(-n).join('\x00');const idx=getModelIdx(n);if(!idx)continue;
+    const ctxMap=idx.get(key);if(ctxMap){const p=ctxMap.get(target);if(p!==undefined)return p}
+  }
+  return unigramDist.get(target)||1/(vocab.size||1);
+}
+function computePerplexity(maxOrder){
+  const testLen=Math.min(tokens.length,500);let logSum=0,count=0;
+  for(let i=maxOrder;i<testLen;i++){
+    let p=getNextProb(tokens.slice(i-maxOrder,i),tokens[i],maxOrder);
+    if(p<1e-10)p=1e-10;logSum+=Math.log2(p);count++;
+  }
+  return count===0?Infinity:Math.pow(2,-logSum/count);
+}
+
+// ─── 生成エンジン（意味検索シードを使用）────────────────
+function generateReply(input){
+  const inputToks=tokenize(input);
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const retriK=parseInt(document.getElementById('rRetrK').value);
+  const algo=document.getElementById('rGenAlgo').value;
+  const maxLen=getMaxLen(inputToks.length);
+  const inputSet=new Set(inputToks);
+
+  // 会話文脈を混ぜた検索クエリ
+  const recentAI=dialogHistory.filter(h=>h.role==='ai').slice(-1).map(h=>h.text).join(' ');
+  const queryToks=[...inputToks,...tokenize(recentAI).slice(0,8)];
+
+  // 意味検索（PPMI + PCA + コサイン類似度）
+  const retrieved=semanticSearch(queryToks,retriK);
+  const sources=retrieved.map(r=>r.sent);
+
+  // 意味検索結果をシード候補として評価し最良を選ぶ
+  let bestSeed=inputToks.slice(-maxOrder);
+  let bestMatch=-1;
+  for(const{sent}of retrieved){
+    const stoks=tokenize(sent);
+    for(let n=Math.min(maxOrder,stoks.length);n>=1;n--){
+      const candidate=stoks.slice(-n);
+      const key=candidate.join('\x00');
+      const model=getModel(n);
+      if(model&&model.has(key)&&n>bestMatch){
+        bestMatch=n;bestSeed=candidate;
+      }
+    }
+  }
+
+  let result;
+  if(algo==='beam') result=generateBeam(bestSeed,maxLen,inputSet);
+  else if(algo==='greedy') result=generateGreedy(bestSeed,maxLen);
+  else result=generateSample(bestSeed,maxLen);
+
+  return{text:trimResult(result),sources};
+}
+
+function generateBeam(seed,maxLen,inputSet){
+  const beamWidth=parseInt(document.getElementById('rBeam').value);
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const repPenalty=parseFloat(document.getElementById('rRepeat').value);
+  const ALPHA=0.65,COV_W=0.25;
+  const normScore=b=>{const gl=Math.max(b.tokens.length-seed.length,1);let s=b.logp/Math.pow(gl,ALPHA);if(inputSet&&inputSet.size>0){const cov=b.tokens.filter(t=>inputSet.has(t)).length;s+=COV_W*cov/inputSet.size}return s};
+  let beams=[{tokens:[...seed],logp:0,done:false}];
+  const seen=new Set();
+  for(let step=0;step<maxLen*4;step++){
+    if(beams.every(b=>b.done))break;
+    const next=[];
+    for(const beam of beams){
+      if(beam.done){next.push(beam);continue}
+      const ctx=beam.tokens.slice(-maxOrder);
+      const{cands}=getCandidates(ctx);
+      const win=new Set(beam.tokens.slice(-10));
+      const penalized=cands.map(c=>({word:c.word,p:win.has(c.word)?c.p/repPenalty:c.p})).sort((a,b)=>b.p-a.p).slice(0,beamWidth*3);
+      for(const c of penalized){
+        const logp=beam.logp+Math.log(Math.max(c.p,1e-10));
+        const newToks=[...beam.tokens,c.word];
+        const gl=newToks.length-seed.length;
+        const isDone=isEnd(c.word)&&gl>=maxLen*0.5;
+        const sk=newToks.slice(-maxOrder).join('\x00')+'|'+isDone;
+        if(seen.has(sk))continue;seen.add(sk);
+        next.push({tokens:newToks,logp,done:isDone});
+      }
+    }
+    next.sort((a,b)=>normScore(b)-normScore(a));
+    beams=next.slice(0,beamWidth);
+    if(beams.every(b=>b.done||b.tokens.length-seed.length>=maxLen))break;
+  }
+  return beams.sort((a,b)=>normScore(b)-normScore(a))[0].tokens.slice(seed.length);
+}
+function generateSample(seed,maxLen){
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const temp=parseFloat(document.getElementById('rTemp').value);
+  const repPenalty=parseFloat(document.getElementById('rRepeat').value);
+  const result=[];let context=[...seed];
+  for(let i=0;i<maxLen*2;i++){
+    const{cands}=getCandidates(context.slice(-maxOrder));
+    const win=new Set(context.slice(-10));
+    let sc=cands.map(c=>({word:c.word,w:win.has(c.word)?c.p/repPenalty:c.p}));
+    if(temp>0.01)sc=sc.map(c=>({word:c.word,w:Math.pow(Math.max(c.w,1e-12),1/temp)}));
+    sc.sort((a,b)=>b.w-a.w);
+    const total=sc.reduce((a,b)=>a+b.w,0);let r=Math.random()*total;let word='.';
+    for(const c of sc){r-=c.w;if(r<=0){word=c.word;break}}
+    result.push(word);context.push(word);
+    if(result.length>=maxLen*0.6&&isEnd(word))break;if(result.length>=maxLen)break;
+  }
+  if(!isEnd(result[result.length-1]))result.push('.');return result;
+}
+function generateGreedy(seed,maxLen){
+  const maxOrder=parseInt(document.getElementById('rOrder').value);
+  const repPenalty=parseFloat(document.getElementById('rRepeat').value);
+  const result=[];let context=[...seed];
+  for(let i=0;i<maxLen*2;i++){
+    const{cands}=getCandidates(context.slice(-maxOrder));
+    const win=new Set(context.slice(-10));
+    const word=cands.map(c=>({word:c.word,w:win.has(c.word)?c.p/repPenalty:c.p})).sort((a,b)=>b.w-a.w)[0]?.word||'.';
+    result.push(word);context.push(word);
+    if(result.length>=maxLen*0.6&&isEnd(word))break;if(result.length>=maxLen)break;
+  }
+  if(!isEnd(result[result.length-1]))result.push('.');return result;
+}
+function trimResult(result){if(!result||!result.length)return'.';let e=-1;for(let i=result.length-1;i>=0;i--)if(isEnd(result[i])){e=i;break}return(e>=0?result.slice(0,e+1):result).join(' ')||'.'}
+function getMaxLen(n){if(document.getElementById('lenAuto').checked)return Math.max(20,Math.min(120,Math.round(n*1.5+10)));return parseInt(document.getElementById('rLen').value)}
+function tokenize(text){return text.replace(/\r?\n/g,' ').split(/\s+/).filter(t=>t.length>0)}
+
+// ============================================================
+//  ─── 語義マップ描画 ──────────────────────────────────────
+// ============================================================
+let hoveredWord=null;
+function drawSemmap(){
+  const canvas=document.getElementById('semCanvas');
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.offsetWidth*dpr;
+  canvas.height=canvas.offsetHeight*dpr;
+  ctx.scale(dpr,dpr);
+  const W=canvas.offsetWidth,H=canvas.offsetHeight;
+
+  if(!pcaPoints2D.length){
+    ctx.fillStyle='var(--mid)';
+    ctx.font='12px monospace';
+    ctx.fillText('モデルを構築すると語義マップが表示されます',20,H/2);
+    return;
+  }
+
+  // 正規化
+  const xs=pcaPoints2D.map(p=>p.x),ys=pcaPoints2D.map(p=>p.y);
+  const xmin=Math.min(...xs),xmax=Math.max(...xs);
+  const ymin=Math.min(...ys),ymax=Math.max(...ys);
+  const pad=36;
+  const sx=p=>pad+(p.x-xmin)/(xmax-xmin||1)*(W-pad*2);
+  const sy=p=>pad+(p.y-ymin)/(ymax-ymin||1)*(H-pad*2);
+
+  // 背景
+  ctx.clearRect(0,0,W,H);
+
+  // 強調語（ホバー/検索）を取得
+  const highlightWord=hoveredWord||document.getElementById('nbrInput').value.trim();
+  const nbrs=highlightWord?new Set(nearestNeighbors(highlightWord,6).map(x=>x.word)):new Set();
+
+  // 点と語ラベルを描画
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  for(const p of pcaPoints2D){
+    const px=sx(p),py=sy(p);
+    const isHL=p.word===highlightWord;
+    const isNbr=nbrs.has(p.word);
+    const r=isHL?6:isNbr?4:2.5;
+    ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);
+    ctx.fillStyle=isHL?'#a590d0':isNbr?'#7ab3c2':(isDark?'rgba(143,188,122,.5)':'rgba(74,140,53,.5)');
+    ctx.fill();
+    if(isHL||isNbr||pcaPoints2D.indexOf(p)<20){
+      ctx.font=(isHL?'bold ':'')+`${isHL?12:10}px 'JetBrains Mono',monospace`;
+      ctx.fillStyle=isHL?'#c4b0e8':isNbr?'#7ab3c2':(isDark?'rgba(232,224,212,.7)':'rgba(26,21,16,.7)');
+      ctx.fillText(p.word,px+5,py-4);
+    }
+  }
+}
+
+function updateNeighbors(){
+  const word=document.getElementById('nbrInput').value.trim();
+  if(!word||!wordVecs){document.getElementById('neighborList').innerHTML='';drawSemmap();return}
+  const nbrs=nearestNeighbors(word,10);
+  const list=document.getElementById('neighborList');
+  if(!nbrs.length){list.innerHTML=`<span style="font-family:monospace;font-size:.6rem;color:var(--dim)">"${esc(word)}" は意味語彙にありません</span>`;drawSemmap();return}
+  list.innerHTML=nbrs.map(n=>`<span class="nbr-tag" onclick="document.getElementById('nbrInput').value='${esc(n.word)}';updateNeighbors()">${esc(n.word)}<span class="sim">${(n.sim*100).toFixed(0)}%</span></span>`).join('');
+  drawSemmap();
+}
+
+// ─── Canvas イベント ─────────────────────────────────────
+function initCanvasEvents(){
+  const canvas=document.getElementById('semCanvas');
+  canvas.addEventListener('mousemove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    const mx=(e.clientX-rect.left),my=(e.clientY-rect.top);
+    if(!pcaPoints2D.length)return;
+    const xs=pcaPoints2D.map(p=>p.x),ys=pcaPoints2D.map(p=>p.y);
+    const xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+    const W=canvas.offsetWidth,H=canvas.offsetHeight,pad=36;
+    let best=null,bestD=Infinity;
+    for(const p of pcaPoints2D){
+      const px=pad+(p.x-xmin)/(xmax-xmin||1)*(W-pad*2);
+      const py=pad+(p.y-ymin)/(ymax-ymin||1)*(H-pad*2);
+      const d=Math.hypot(mx-px,my-py);
+      if(d<bestD){bestD=d;best=p}
+    }
+    if(best&&bestD<20){
+      if(hoveredWord!==best.word){hoveredWord=best.word;drawSemmap()}
+    }else{
+      if(hoveredWord){hoveredWord=null;drawSemmap()}
+    }
+  });
+  canvas.addEventListener('click',e=>{
+    if(hoveredWord){document.getElementById('nbrInput').value=hoveredWord;updateNeighbors()}
+  });
+  canvas.addEventListener('mouseleave',()=>{hoveredWord=null;drawSemmap()});
+}
+
+// ============================================================
+//  ─── UI ─────────────────────────────────────────────────
+// ============================================================
+function updateStats(ppx){
+  document.getElementById('sWords').textContent=fmt(tokens.length);
+  document.getElementById('sVocab').textContent=fmt(vocab.size);
+  document.getElementById('sSemVocab').textContent=fmt(semV);
+  document.getElementById('sPpx').textContent=ppx!==undefined?ppx.toFixed(1):'—';
+}
+function setStatus(cls,txt){const p=document.getElementById('statusPill');p.className='status-pill '+cls;document.getElementById('statusTxt').textContent=txt}
+function syncSlider(el,valId,step){const v=parseFloat(el.value);const d=step<1?String(step).split('.')[1].length:0;document.getElementById(valId).textContent=v.toFixed(d);updateRangeFill(el)}
+function updateRangeFill(el){const min=parseFloat(el.min),max=parseFloat(el.max),val=parseFloat(el.value);el.style.setProperty('--pct',(val-min)/(max-min)*100+'%')}
+function initSliders(){document.querySelectorAll('input[type=range]').forEach(updateRangeFill)}
+function scheduleRebuild(){clearTimeout(rebuildTimer);rebuildTimer=setTimeout(()=>buildModelAsync(),600)}
+function resize(el){el.style.height='0px';el.style.height=Math.min(el.scrollHeight,110)+'px'}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}}
+function scrollToBottom(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight}
+function scrollDown(){const c=document.getElementById('chat');if(c.scrollHeight-c.scrollTop-c.clientHeight<120)c.scrollTop=c.scrollHeight}
+function onLenSlider(el){syncSlider(el,'vLen',1)}
+function onLenAutoChange(cb){const s=document.getElementById('rLen');if(cb.checked){s.disabled=true;s.style.opacity='.35';document.getElementById('vLen').textContent='自動'}else{s.disabled=false;s.style.opacity='1';syncSlider(s,'vLen',1)}}
+const PRESETS={poetic:{temp:1.8,repeat:1.1,len:60},logical:{temp:0.4,repeat:1.6,len:40},balanced:{temp:1.0,repeat:1.2,len:40},concise:{temp:0.7,repeat:1.4,len:20}};
+function applyPreset(name){const p=PRESETS[name];if(!p)return;const set=(id,v,vid,s)=>{const el=document.getElementById(id);el.value=v;syncSlider(el,vid,s)};set('rTemp',p.temp,'vTemp',.1);set('rRepeat',p.repeat,'vRepeat',.1);const cb=document.getElementById('lenAuto');cb.checked=false;const sl=document.getElementById('rLen');sl.disabled=false;sl.style.opacity='1';set('rLen',p.len,'vLen',1);document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));document.getElementById('preset-'+name)?.classList.add('active')}
+function toggleTheme(){const h=document.documentElement;const next=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',next);const icon=document.getElementById('themeIcon');icon.innerHTML=next==='light'?`<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`:`<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;setTimeout(drawSemmap,50)}
+function toggleSettings(){const bar=document.getElementById('settingsBar');const btn=document.getElementById('settingsBtn');const opening=!bar.classList.contains('open');document.getElementById('semmapBar').classList.remove('open');document.getElementById('semmapBtn').classList.remove('active');bar.classList.toggle('open',opening);btn.classList.toggle('active',opening);if(opening)setTimeout(initSliders,50)}
+function toggleSemmap(){const bar=document.getElementById('semmapBar');const btn=document.getElementById('semmapBtn');const opening=!bar.classList.contains('open');document.getElementById('settingsBar').classList.remove('open');document.getElementById('settingsBtn').classList.remove('active');bar.classList.toggle('open',opening);btn.classList.toggle('active',opening);if(opening)setTimeout(()=>{initCanvasEvents();drawSemmap()},50)}
+function buildChips(){
+  const ideas=['the future of','knowledge grows','language is','time passes','science advances','music connects','every morning','the stars remind'];
+  document.getElementById('chips').innerHTML=ideas.map(s=>`<button class="chip" onclick="suggest('${s}')">${s}</button>`).join('');
+}
+function suggest(text){const inp=document.getElementById('inp');inp.value=text;resize(inp);sendMsg()}
+
+async function sendMsg(){
+  if(busy||!modelReady)return;
+  const inp=document.getElementById('inp');const txt=inp.value.trim();if(!txt)return;
+  inp.value='';resize(inp);busy=true;document.getElementById('sendBtn').disabled=true;
+  const w=document.getElementById('welcome');if(w)w.remove();
+  const prog=document.getElementById('prog');
+  try{
+    dialogHistory.push({role:'user',text:txt});
+    addBubble(txt,'user');scrollToBottom();
+    addSys('意味検索 → 生成中…');
+    prog.classList.add('active');let pv=0;
+    const pt=setInterval(()=>{pv=Math.min(pv+Math.random()*8,85);prog.style.width=pv+'%'},60);
+    await sleep(40);
+    const t0=performance.now();
+    const{text:reply,sources}=await new Promise(resolve=>{setTimeout(()=>resolve(generateReply(txt)),0)});
+    const elapsed=((performance.now()-t0)/1000).toFixed(2);
+    clearInterval(pt);prog.style.width='96%';
+    dialogHistory.push({role:'ai',text:reply});
+    await sleep(100);removeSys();prog.style.width='100%';
+    const bub=addBubble('','ai');bub.classList.add('streaming');
+    await typeText(bub,reply);bub.classList.remove('streaming');
+    // 意味的根拠バッジ
+    if(sources&&sources.length>0){
+      const badge=document.createElement('div');badge.className='sem-badge';
+      const preview=sources[0].length>50?sources[0].slice(0,48)+'…':sources[0];
+      badge.textContent='↗ 意味的根拠: '+preview;badge.title=sources.join('\n');
+      bub.after(badge);
+    }
+    addMeta(reply,elapsed,txt);
+  }catch(err){removeSys();addSys('エラーが発生しました');console.error(err)}
+  finally{setTimeout(()=>{prog.style.width='0%';prog.classList.remove('active')},700);busy=false;document.getElementById('sendBtn').disabled=false;document.getElementById('inp').focus()}
+}
+
+async function regenerate(input){
+  if(busy||!modelReady||!input)return;
+  busy=true;document.getElementById('sendBtn').disabled=true;
+  try{addSys('再生成中…');await sleep(30);const t0=performance.now();const{text:reply,sources}=await new Promise(resolve=>{setTimeout(()=>resolve(generateReply(input)),0)});const elapsed=((performance.now()-t0)/1000).toFixed(2);removeSys();const bub=addBubble('','ai');bub.classList.add('streaming');await typeText(bub,reply);bub.classList.remove('streaming');addMeta(reply,elapsed,input)}
+  catch(err){removeSys();addSys('エラー')}
+  finally{busy=false;document.getElementById('sendBtn').disabled=false}
+}
+
+function addMeta(reply,elapsed,inputForRegen){
+  const msgs=document.getElementById('msgs');const d=document.createElement('div');d.className='msg-meta';
+  const toks=tokenize(reply).length;const algo=document.getElementById('rGenAlgo').value;
+  const mkTag=(cls,txt)=>{const s=document.createElement('span');s.className='meta-tag'+(cls?' '+cls:'');s.textContent=txt;return s};
+  d.appendChild(mkTag('v','PPMI+PCA'));d.appendChild(mkTag('g',algo==='beam'?'ビーム':algo==='greedy'?'貪欲':'サンプリング'));d.appendChild(mkTag('',toks+' tok'));d.appendChild(mkTag('',elapsed+'s'));
+  const btn=document.createElement('button');btn.className='regen-btn';btn.title='再生成';
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
+  btn.addEventListener('click',()=>regenerate(inputForRegen));d.appendChild(btn);msgs.appendChild(d);scrollDown();
+}
+function addBubble(html,role){const c=document.getElementById('msgs');const d=document.createElement('div');d.className=`msg ${role}`;d.innerHTML=`<div class="av ${role}">${role==='ai'?'AI':'YOU'}</div><div class="bub ${role}">${esc(html)}</div>`;c.appendChild(d);scrollDown();return d.querySelector('.bub')}
+function addSys(text){removeSys();const c=document.getElementById('msgs');const d=document.createElement('div');d.className='sys';d.id='sys-msg';d.innerHTML=`<span><span class="sys-dot"></span>${esc(text)}</span>`;c.appendChild(d);scrollDown()}
+function removeSys(){const e=document.getElementById('sys-msg');if(e)e.remove()}
+async function typeText(bub,text){const chars=[...text];let out='';bub.innerHTML='<span class="cursor-blink"></span>';for(let i=0;i<chars.length;i++){out+=esc(chars[i]);if(i%4===0){bub.innerHTML=out+'<span class="cursor-blink"></span>';scrollDown();await sleep(10)}}bub.innerHTML=out;scrollDown()}
+
+// ─── コーパスロード ──────────────────────────────────────
+async function loadCorpusFiles(){
+  loadedFiles=[];let fileList=[];
+  try{const r=await fetch('data/manifest.json');if(r.ok){const j=await r.json();const arr=Array.isArray(j)?j:(j.files||[]);for(const f of arr)if(typeof f==='string'&&f.endsWith('.txt'))fileList.push(f)}}catch(_){}
+  if(!fileList.length){try{const r=await fetch('data/');if(r.ok){const h=await r.text();const re=/href="\.?\/?([^"?#]+\.txt)"/gi;let m;while((m=re.exec(h))!==null)fileList.push('data/'+m[1].split('/').pop())}}catch(_){}}
+  if(!fileList.length)fileList.push('ai.txt');
+  const texts=[];
+  for(const path of [...new Set(fileList)]){try{const r=await fetch(path);if(r.ok){const t=await r.text();if(t.trim()){texts.push(t);loadedFiles.push(path.split('/').pop())}}}catch(_){}}
+  if(!texts.length){loadedFiles=['(内蔵)'];setStatus('warn','フォールバック');return fallbackCorpus()}
+  setStatus('ok',loadedFiles.length===1?loadedFiles[0]:loadedFiles.length+' ファイル');
+  return texts.join('\n');
+}
+
+function fallbackCorpus(){
+  return`The quick brown fox jumps over the lazy dog near the river bank. A language model learns statistical patterns from large amounts of text data. Words carry meaning through context and repetition across many sentences. The future of artificial intelligence is both exciting and deeply uncertain for everyone. Music connects people across languages and cultures in many unexpected ways. A journey of a thousand miles begins with a single step forward into the unknown. The stars at night remind us how vast the universe truly is beyond our reach. Knowledge grows when shared openly and freely with other curious and open minds. Memory and imagination are two sides of the same creative and powerful coin. Every sentence tells a small story about the world around us. Science advances one hypothesis and one careful experiment at a time. The ocean holds far more secrets than we have yet discovered beneath its surface. Reading expands the human mind in ways no other activity can fully replace. Change is the only constant in an uncertain and always evolving universe. Time passes slowly when we wait and quickly when we are lost in thought. Language is the most powerful tool humans have ever invented to share ideas. Every morning brings a new chance to learn something previously unknown.`;
+}
+
+function setVh(){const vh=(window.visualViewport?window.visualViewport.height:window.innerHeight)*.01;document.documentElement.style.setProperty('--vh',vh+'px')}
+setVh();window.addEventListener('resize',setVh,{passive:true});
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',()=>{setVh();document.body.scrollTop=0;document.documentElement.scrollTop=0},{passive:true});
+}
+
+async function init(){
+  corpus=await loadCorpusFiles();
+  await buildModelAsync();
+  buildChips();
+  initSliders();
+  initCanvasEvents();
+}
+init();
+</script>
+</body>
+</html>  font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.05em;color:var(--mid);transition:all .35s;
 }
 .status-pill.ok{border-color:rgba(143,188,122,.3);color:var(--sage)}
 .status-pill.warn{border-color:rgba(212,168,83,.3);color:var(--amber)}
