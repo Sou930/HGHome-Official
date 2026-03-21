@@ -25,6 +25,9 @@ let currentSearchQuery = '';
 let tagInputTags = [];
 let _coverImageBase64 = null;
 let authMode = 'login';
+let sortOrder = 'newest'; // 'newest' | 'oldest'
+let _draftSaveTimer = null;
+let _editorView = 'write'; // 'write' | 'preview'
 
 /* ═══ Cookie / Session ═══ */
 function getCookie(n) {
@@ -170,6 +173,7 @@ function updateHeaderUI() {
     hu.style.display = 'none';
     if (wb) wb.style.display = 'none';
   }
+  updateMobileNavUI();
 }
 function toggleAcctMenu() { document.getElementById('acctMenu').classList.toggle('open'); }
 function closeAcctMenu() { document.getElementById('acctMenu').classList.remove('open'); }
@@ -341,13 +345,35 @@ function renderMarkdown(md) {
     return `<ol>${items}</ol>`;
   });
 
+  // Tables — must come before paragraph wrapping
+  html = html.replace(/((?:^\|.+$\n?){2,})/gm, (block) => {
+    const lines = block.trim().split('\n').map(l => l.trim()).filter(l => l.startsWith('|'));
+    if (lines.length < 2) return block;
+    // Second line must be a separator (|---|---|)
+    if (!/^\|[\s\-:|]+\|$/.test(lines[1])) return block;
+    const parseRow = (line) =>
+      line.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+    const headers = parseRow(lines[0]);
+    const dataRows = lines.slice(2);
+    let t = '<table><thead><tr>';
+    headers.forEach(h => { t += `<th>${h}</th>`; });
+    t += '</tr></thead><tbody>';
+    dataRows.forEach(row => {
+      t += '<tr>';
+      parseRow(row).forEach(c => { t += `<td>${c}</td>`; });
+      t += '</tr>';
+    });
+    t += '</tbody></table>';
+    return t;
+  });
+
   // Paragraphs (double newline → paragraph break)
   const parts = html.split(/\n{2,}/);
   html = parts.map(p => {
     p = p.trim();
     if (!p) return '';
     // Skip block elements
-    if (/^<(h[1-6]|ul|ol|li|pre|blockquote|hr|table)/.test(p)) return p;
+    if (/^<(h[1-6]|ul|ol|li|pre|blockquote|hr|table|thead|tbody|tr|th|td)/.test(p)) return p;
     // Single newlines within paragraph → <br>
     p = p.replace(/\n/g, '<br>');
     return `<p>${p}</p>`;
@@ -419,6 +445,11 @@ function renderPosts() {
       (p.author || '').toLowerCase().includes(q) ||
       (p.tags || []).some(t => t.toLowerCase().includes(q))
     );
+  }
+
+  // Sort
+  if (sortOrder === 'oldest') {
+    posts = [...posts].sort((a, b) => (a.ts || 0) - (b.ts || 0));
   }
 
   if (!posts.length) {
@@ -569,6 +600,7 @@ async function openReader(postId) {
   panel.innerHTML = '<div class="spinner" style="padding:120px"><div class="spin"></div></div>';
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+  attachProgressBar(overlay);
 
   try {
     let post;
@@ -640,7 +672,9 @@ async function openReader(postId) {
   }
 }
 function closeReader() {
-  document.getElementById('readerOverlay').classList.remove('open');
+  const overlay = document.getElementById('readerOverlay');
+  overlay.classList.remove('open');
+  detachProgressBar(overlay);
   document.body.style.overflow = '';
 }
 
@@ -650,6 +684,8 @@ async function openEditor(editId) {
   editingPostId = editId || null;
   _coverImageBase64 = null;
   tagInputTags = [];
+  _editorView = 'write';
+  setEditorView('write');
 
   document.getElementById('editorTitle').textContent = editId ? '記事を編集' : '新しい記事を書く';
   document.getElementById('editorSubmitBtn').textContent = editId ? '更新する' : '公開する';
@@ -659,10 +695,12 @@ async function openEditor(editId) {
   document.getElementById('postContent').value = '';
   clearCoverImage();
   renderTagInput();
+  updateTitleCount();
+  const badge = document.getElementById('editorDraftBadge');
+  if (badge) badge.style.display = 'none';
 
   if (editId) {
-    try {
-      const snap = await db.ref('blog_posts/' + editId).once('value');
+    try {      const snap = await db.ref('blog_posts/' + editId).once('value');
       const p = snap.val();
       if (!p) return;
       document.getElementById('postTitle').value = p.title || '';
@@ -680,7 +718,18 @@ async function openEditor(editId) {
   }
 
   document.getElementById('editorOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('postTitle').focus(), 80);
+  setTimeout(() => {
+    document.getElementById('postTitle').focus();
+    if (!editId) restoreDraft();
+  }, 80);
+
+  // Wire up draft auto-save for content textarea
+  const ta = document.getElementById('postContent');
+  if (ta) {
+    ta.oninput = scheduleDraftSave;
+  }
+  const sel = document.getElementById('postCat');
+  if (sel) sel.onchange = scheduleDraftSave;
 }
 function closeEditor() {
   document.getElementById('editorOverlay').classList.remove('open');
@@ -809,6 +858,7 @@ async function submitPost() {
       data.ts = Date.now();
       await db.ref('blog_posts').push(data);
       showToast('記事を公開しました ✓');
+      clearDraft();
     }
     closeEditor();
     await loadPosts();
@@ -833,6 +883,330 @@ async function deletePost(id) {
     closeReader();
     await loadPosts();
   } catch(e) { showToast('エラー: ' + e.message); }
+}
+
+/* ═══ MARKDOWN TOOLBAR ═══ */
+function insertMd(type) {
+  const ta = document.getElementById('postContent');
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const sel = ta.value.substring(start, end);
+  const before = ta.value.substring(0, start);
+  const after = ta.value.substring(end);
+
+  const wrap = (pre, post, placeholder) => {
+    const text = sel || placeholder;
+    ta.value = before + pre + text + post + after;
+    const s = start + pre.length;
+    ta.setSelectionRange(s, s + text.length);
+  };
+  const linePrefix = (prefix, placeholder) => {
+    const bol = before.lastIndexOf('\n') + 1;
+    const lineStart = ta.value.substring(0, bol);
+    const lineEnd = ta.value.substring(bol);
+    const text = sel || placeholder;
+    ta.value = lineStart + prefix + lineEnd;
+    ta.setSelectionRange(bol + prefix.length, bol + prefix.length + text.length);
+  };
+  const block = (text) => {
+    const pre = (before.length > 0 && !before.endsWith('\n\n')) ?
+      (before.endsWith('\n') ? '\n' : '\n\n') : '';
+    const suf = '\n\n';
+    ta.value = before + pre + text + suf + after;
+    ta.setSelectionRange(start + pre.length, start + pre.length + text.length);
+  };
+
+  switch(type) {
+    case 'bold':       wrap('**', '**', 'テキスト'); break;
+    case 'italic':     wrap('*', '*', 'テキスト'); break;
+    case 'code':       wrap('`', '`', 'コード'); break;
+    case 'codeblock':  block('```\n' + (sel || 'コードをここに') + '\n```'); break;
+    case 'heading1':   linePrefix('# ', '見出し1'); break;
+    case 'heading2':   linePrefix('## ', '見出し2'); break;
+    case 'heading3':   linePrefix('### ', '見出し3'); break;
+    case 'quote':      linePrefix('> ', '引用テキスト'); break;
+    case 'list':       linePrefix('- ', 'リスト項目'); break;
+    case 'link': {
+      const url = 'https://';
+      const text2 = sel || 'リンクテキスト';
+      ta.value = before + '[' + text2 + '](' + url + ')' + after;
+      const s2 = start + 1 + text2.length + 2;
+      ta.setSelectionRange(s2, s2 + url.length);
+      break;
+    }
+  }
+  ta.focus();
+  scheduleDraftSave();
+}
+
+function insertMarkdownTable(rows, cols) {
+  const ta = document.getElementById('postContent');
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const before = ta.value.substring(0, start);
+  const after = ta.value.substring(start);
+
+  // Build header row with placeholder names
+  const headerCells = Array.from({length: cols}, (_, i) => ' 列' + (i + 1) + ' ');
+  const sepCells    = Array.from({length: cols}, () => '---');
+  const dataCells   = Array.from({length: cols}, () => '   ');
+
+  const headerRow = '|' + headerCells.join('|') + '|';
+  const sepRow    = '|' + sepCells.join('|') + '|';
+  const dataRow   = '|' + dataCells.join('|') + '|';
+  const dataRows  = Array.from({length: rows - 1}, () => dataRow);
+
+  const table = [headerRow, sepRow, ...dataRows].join('\n');
+  const pre = (before.length > 0 && !before.endsWith('\n\n')) ?
+    (before.endsWith('\n') ? '\n' : '\n\n') : '';
+  const suf = '\n\n';
+
+  ta.value = before + pre + table + suf + after;
+  // Select first header cell content
+  const selStart = start + pre.length + 1; // after leading |
+  ta.setSelectionRange(selStart, selStart + headerCells[0].length);
+  ta.focus();
+  scheduleDraftSave();
+}
+
+let _tablePicker = null;
+function toggleTablePicker(btnEl) {
+  if (_tablePicker) { _tablePicker.remove(); _tablePicker = null; return; }
+
+  const MAXR = 6, MAXC = 6;
+  let selR = 2, selC = 2;
+
+  const picker = document.createElement('div');
+  picker.className = 'table-picker';
+  _tablePicker = picker;
+
+  const title = document.createElement('div');
+  title.className = 'table-picker-title';
+  title.textContent = '表のサイズを選択';
+
+  const grid = document.createElement('div');
+  grid.className = 'table-picker-grid';
+
+  for (let r = 0; r < MAXR; r++) {
+    for (let c = 0; c < MAXC; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'table-picker-cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+      cell.onmouseenter = () => {
+        selR = r + 1; selC = c + 1;
+        updateGridHighlight(grid, selR, selC);
+        label.textContent = `${selR} 行 × ${selC} 列`;
+      };
+      cell.onclick = () => { insertMarkdownTable(selR, selC); closeTablePicker(); };
+      if (r < 2 && c < 2) cell.classList.add('sel');
+      grid.appendChild(cell);
+    }
+  }
+
+  const label = document.createElement('div');
+  label.className = 'table-picker-label';
+  label.textContent = '2 行 × 2 列';
+
+  // Manual input section
+  const manual = document.createElement('div');
+  manual.className = 'table-picker-manual';
+  manual.innerHTML =
+    '<label>行</label>' +
+    '<input class="table-picker-num" id="tpRows" type="number" min="1" max="30" value="3">' +
+    '<label>列</label>' +
+    '<input class="table-picker-num" id="tpCols" type="number" min="1" max="10" value="3">' +
+    '<button class="table-picker-insert" onclick="insertTableManual()">挿入</button>';
+
+  picker.appendChild(title);
+  picker.appendChild(grid);
+  picker.appendChild(label);
+  picker.appendChild(manual);
+
+  const wrap = document.getElementById('mdToolTableWrap');
+  wrap.appendChild(picker);
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', _tablePickerOutside);
+  }, 0);
+}
+function _tablePickerOutside(e) {
+  const wrap = document.getElementById('mdToolTableWrap');
+  if (wrap && !wrap.contains(e.target)) closeTablePicker();
+}
+function closeTablePicker() {
+  if (_tablePicker) { _tablePicker.remove(); _tablePicker = null; }
+  document.removeEventListener('click', _tablePickerOutside);
+}
+function updateGridHighlight(grid, rows, cols) {
+  grid.querySelectorAll('.table-picker-cell').forEach(cell => {
+    const r = parseInt(cell.dataset.r) + 1;
+    const c = parseInt(cell.dataset.c) + 1;
+    cell.classList.toggle('sel', r <= rows && c <= cols);
+  });
+}
+function insertTableManual() {
+  const r = Math.max(1, Math.min(30, parseInt(document.getElementById('tpRows').value) || 3));
+  const c = Math.max(1, Math.min(10, parseInt(document.getElementById('tpCols').value) || 3));
+  insertMarkdownTable(r, c);
+  closeTablePicker();
+}
+
+/* ═══ MOBILE NAV ═══ */
+function toggleMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  const btn = document.getElementById('navHamburger');
+  const isOpen = nav.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+function closeMobileNav() {
+  document.getElementById('mobileNav').classList.remove('open');
+  document.getElementById('navHamburger').classList.remove('open');
+}
+function updateMobileNavUI() {
+  const mu = document.getElementById('mobileNavUser');
+  const ml = document.getElementById('mobileLoginBtn');
+  const mr = document.getElementById('mobileRegBtn');
+  if (!mu) return;
+  if (session) {
+    mu.style.display = 'flex';
+    ml.style.display = 'none';
+    mr.style.display = 'none';
+    const d = document.getElementById('mobileNavDisp');
+    const h = document.getElementById('mobileNavHandle');
+    if (d) d.textContent = session.displayName || session.username;
+    if (h) h.textContent = '@' + session.username;
+    const av = session._avatar || localStorage.getItem('fm_avatar_' + session.username) || null;
+    drawAvatarCanvas(document.getElementById('mobileNavAvatar'), session.username, av, 32);
+  } else {
+    mu.style.display = 'none';
+    ml.style.display = '';
+    mr.style.display = '';
+  }
+}
+
+/* ═══ SORT ═══ */
+function toggleSort() {
+  sortOrder = sortOrder === 'newest' ? 'oldest' : 'newest';
+  const btn = document.getElementById('sortBtn');
+  const lbl = document.getElementById('sortLabel');
+  if (sortOrder === 'oldest') {
+    lbl.textContent = '古い順';
+    btn.classList.add('asc');
+  } else {
+    lbl.textContent = '新しい順';
+    btn.classList.remove('asc');
+  }
+  renderPosts();
+}
+
+/* ═══ READING PROGRESS BAR ═══ */
+let _progressHandler = null;
+function attachProgressBar(overlayEl) {
+  const bar = document.createElement('div');
+  bar.className = 'reader-progress-bar';
+  bar.id = 'readerProgressFill';
+  const panel = document.getElementById('readerPanel');
+  if (panel) panel.prepend(bar);
+
+  _progressHandler = function() {
+    const scrollTop = overlayEl.scrollTop;
+    const scrollHeight = overlayEl.scrollHeight - overlayEl.clientHeight;
+    const pct = scrollHeight > 0 ? Math.min(100, (scrollTop / scrollHeight) * 100) : 0;
+    bar.style.width = pct + '%';
+  };
+  overlayEl.addEventListener('scroll', _progressHandler, { passive: true });
+}
+function detachProgressBar(overlayEl) {
+  if (_progressHandler) {
+    overlayEl.removeEventListener('scroll', _progressHandler);
+    _progressHandler = null;
+  }
+}
+
+/* ═══ EDITOR TABS ═══ */
+function setEditorView(mode) {
+  _editorView = mode;
+  const writePanel = document.getElementById('editorWritePanel');
+  const previewPanel = document.getElementById('editorPreviewPanel');
+  const tabWrite = document.getElementById('editorTabWrite');
+  const tabPreview = document.getElementById('editorTabPreview');
+  if (mode === 'preview') {
+    const title = document.getElementById('postTitle').value.trim();
+    const content = document.getElementById('postContent').value;
+    const previewTitle = document.getElementById('editorPreviewTitle');
+    const previewBody = document.getElementById('editorPreviewBody');
+    if (previewTitle) previewTitle.textContent = title;
+    if (previewBody) previewBody.innerHTML = renderMarkdown(content);
+    writePanel.style.display = 'none';
+    previewPanel.style.display = '';
+    tabWrite.classList.remove('active');
+    tabPreview.classList.add('active');
+  } else {
+    writePanel.style.display = '';
+    previewPanel.style.display = 'none';
+    tabWrite.classList.add('active');
+    tabPreview.classList.remove('active');
+    setTimeout(() => document.getElementById('postTitle').focus(), 60);
+  }
+}
+
+/* ═══ TITLE CHAR COUNTER ═══ */
+function updateTitleCount() {
+  const input = document.getElementById('postTitle');
+  const counter = document.getElementById('titleCharCount');
+  if (!input || !counter) return;
+  const len = input.value.length;
+  const max = 120;
+  counter.textContent = len + ' / ' + max;
+  counter.classList.toggle('warn', len > 90 && len <= 108);
+  counter.classList.toggle('danger', len > 108);
+  scheduleDraftSave();
+}
+
+/* ═══ DRAFT AUTO-SAVE ═══ */
+const DRAFT_KEY = 'hgblog_draft';
+function scheduleDraftSave() {
+  clearTimeout(_draftSaveTimer);
+  _draftSaveTimer = setTimeout(saveDraft, 1800);
+}
+function saveDraft() {
+  if (!session) return;
+  try {
+    const title = document.getElementById('postTitle').value;
+    const content = document.getElementById('postContent').value;
+    const cat = document.getElementById('postCat').value;
+    if (!title && !content) { clearDraft(); return; }
+    const draft = { title, content, cat, tags: tagInputTags.slice(), savedAt: Date.now() };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    const badge = document.getElementById('editorDraftBadge');
+    if (badge) badge.style.display = 'inline-flex';
+  } catch(e) {}
+}
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+  const badge = document.getElementById('editorDraftBadge');
+  if (badge) badge.style.display = 'none';
+}
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return false;
+    const draft = JSON.parse(raw);
+    if (!draft || (!draft.title && !draft.content)) return false;
+    const ageMin = Math.round((Date.now() - (draft.savedAt || 0)) / 60000);
+    if (!confirm(`${ageMin}分前の下書きが見つかりました。\n\n「${draft.title || '（タイトルなし）'}」\n\n復元しますか？`)) return false;
+    document.getElementById('postTitle').value = draft.title || '';
+    document.getElementById('postContent').value = draft.content || '';
+    document.getElementById('postCat').value = draft.cat || 'general';
+    tagInputTags = draft.tags || [];
+    renderTagInput();
+    updateTitleCount();
+    const badge = document.getElementById('editorDraftBadge');
+    if (badge) badge.style.display = 'inline-flex';
+    return true;
+  } catch(e) { return false; }
 }
 
 /* ═══ Init ═══ */
