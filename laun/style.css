@@ -159,9 +159,22 @@ main{display:grid;grid-template-columns:1fr 390px;flex:1;overflow:hidden;min-hei
   line-height:1.7;margin-top:6px;
 }
 
-/* ── LOG: intervention type ── */
+/* ── LOG: new types ── */
 .logitem.int{border-left:2px solid var(--grn2);padding-left:7px;background:rgba(58,112,72,.06)}
+.logitem.dig{border-left:2px solid var(--blue2);padding-left:7px;background:rgba(58,110,160,.05)}
+.logitem.rit{border-left:2px solid var(--gold);padding-left:7px;background:rgba(201,162,39,.05)}
+.logitem.cre{border-left:2px solid #9060c0;padding-left:7px;background:rgba(144,96,192,.05)}
 .logitem .in{color:var(--grn2);font-weight:600}
+.logitem .dg{color:var(--blue2);font-weight:600}
+.logitem .rt{color:var(--gold);font-weight:600}
+.logitem .cr{color:#b080e0;font-weight:600}
+
+/* 書記形の小表示 */
+.written-form{
+  display:block;font-size:8px;color:var(--blue2);
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  line-height:1.2;opacity:0.85;
+}
 
 /* ── TOAST ── */
 .toast{
