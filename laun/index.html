@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="言語漂流">
+<meta name="theme-color" content="#0b0f1a">
+<title>言語の漂流 v2</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Apple Touch Icons -->
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+
+<!-- App Styles -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="htitle">⚑ 言語の漂流 <small>言語変化シミュレーション</small></div>
+  <div class="evtick" id="evtick"></div>
+  <div class="yrbox">紀元 <span id="yr">0</span> 年</div>
+  <div class="ctrls">
+    <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶</button>
+    <button class="btn on" data-s="10" onclick="setSpeed(this)">×1</button>
+    <button class="btn" data-s="50" onclick="setSpeed(this)">×5</button>
+    <button class="btn" data-s="200" onclick="setSpeed(this)">×20</button>
+    <button class="btn btn-rst" onclick="resetGame()">リセット</button>
+  </div>
+</header>
+<main>
+  <div class="mapwrap"><svg id="map" viewBox="0 0 690 500" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div class="panel">
+    <div class="vinfo" id="vinfo">
+      <div class="vi-name" id="vi-name"></div>
+      <div class="vi-meta" id="vi-meta"></div>
+      <div class="vi-bars" id="vi-bars"></div>
+      <div class="vi-trait" id="vi-trait"></div>
+      <div class="vi-actions" id="vi-actions"></div>
+    </div>
+    <div class="tabs">
+      <div class="tab on" id="tab-vocab" onclick="setTab('vocab')">語彙比較</div>
+      <div class="tab" id="tab-log" onclick="setTab('log')">変化ログ</div>
+      <div class="tab" id="tab-stats" onclick="setTab('stats')">統計</div>
+      <div class="tab" id="tab-chart" onclick="setTab('chart')">グラフ</div>
+    </div>
+    <div class="pbody" id="pb-vocab">
+      <div class="intro">
+        <b>▶</b> を押して開始。<em>赤</em>=直近の音変化（体系的）、<b style="color:var(--blue2)">青</b>=借用語（音韻適応済）、灰=祖語から変化済。村名クリックで詳細＋介入コマンド。
+      </div>
+      <div class="table-wrap">
+        <table class="vtable"><thead id="vthead"></thead><tbody id="vtbody"></tbody></table>
+      </div>
+    </div>
+    <div class="pbody" id="pb-log" style="display:none">
+      <div class="loglist" id="loglist"></div>
+    </div>
+    <div class="pbody" id="pb-stats" style="display:none">
+      <div class="stbody" id="stbody"></div>
+    </div>
+    <div class="pbody" id="pb-chart" style="display:none">
+      <div class="chart-inner">
+        <div class="chart-sec-title">乖離率の推移（50年ごと記録）</div>
+        <canvas id="chart-line" class="chart-canvas"></canvas>
+        <div class="chart-sec-title" style="margin-top:14px">語彙類似度 系統樹（UPGMA法）</div>
+        <canvas id="chart-tree" class="chart-canvas chart-tree"></canvas>
+        <p class="chart-note">枝が長いほど語彙的距離が大きく「別言語」に近い。リアルタイムで更新。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- App Logic -->
+<script src="app.js"></script>
+
+<!-- Service Worker 登録 -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
