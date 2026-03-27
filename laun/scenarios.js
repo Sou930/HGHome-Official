@@ -1,0 +1,130 @@
+// ═══════════════════════════════════════════════════════════
+// シナリオ定義
+// ═══════════════════════════════════════════════════════════
+
+const SCENARIOS = {
+
+  // ── デフォルト: 大陸モデル ──────────────────────────────
+  continent: {
+    name: '大陸モデル',
+    desc: '中央交易都市を中心に10集落が連結。借用と体系変化が競合する標準モード',
+    proto: {
+      '水':'akuva','火':'apiru','空':'okelo','土':'atela','太陽':'asora',
+      '月':'seluna','星':'astori','山':'morava','川':'rivoka','雨':'plovera',
+      '木':'odoru','草':'veridu','魚':'apiska','鳥':'avoru','獣':'bestalu',
+      '手':'amanu','目':'okuli','血':'sangova','歯':'dentiru','子':'pirvanu',
+      '母':'matela','石':'opedu','家':'dometu','食べる':'omandu','歩く':'akamu',
+      '話す':'paroletu','与える':'donamu','一':'onuma','良い':'abonu','新しい':'novelu',
+    },
+    vdefs: [
+      { id:'arka',   name:'アルカ',   px:320, py:232, desc:'中央交易都市',      prestige:2.2, iso:false,
+        params:{vo:0.32,fd:0.18,vs:0.24,dv:0.14,pal:0.12},
+        trait:'音変化・借用のバランス型。高い威信により周辺集落への語彙伝播が多い' },
+      { id:'nubo',   name:'ヌボ',     px:218, py:74,  desc:'北の山岳集落',      prestige:0.9, iso:false,
+        params:{vo:0.04,fd:0.10,vs:0.14,dv:0.72,pal:0.00},
+        trait:'無声化が極めて強く音が硬質化。山岳という閉鎖環境が変化を保守的にする' },
+      { id:'foren',  name:'フォレン', px:80,  py:100, desc:'北西の高地集落',    prestige:0.8, iso:false,
+        params:{vo:0.14,fd:0.28,vs:0.20,dv:0.28,pal:0.10},
+        trait:'語末脱落と無声化が共存。ヌボとセルヴァの中間的性質' },
+      { id:'serva',  name:'セルヴァ', px:78,  py:218, desc:'西の深森集落',      prestige:1.0, iso:false,
+        params:{vo:0.62,fd:0.14,vs:0.12,dv:0.04,pal:0.08},
+        trait:'有声化が顕著。アルカとの活発な交易で借用語が多く蓄積される' },
+      { id:'vera',   name:'ヴェラ',   px:130, py:348, desc:'南西の湿地帯',      prestige:0.7, iso:false,
+        params:{vo:0.28,fd:0.46,vs:0.16,dv:0.04,pal:0.06},
+        trait:'語末脱落と有声化が合わさる。湿地地形が交流を制限する' },
+      { id:'marina', name:'マリナ',   px:270, py:398, desc:'南の海岸集落',      prestige:1.1, iso:false,
+        params:{vo:0.20,fd:0.68,vs:0.08,dv:0.02,pal:0.02},
+        trait:'語末の音が次々と脱落する「侵食型」。語形が極端に短縮される' },
+      { id:'terra',  name:'テラ',     px:450, py:330, desc:'東南の大平原',      prestige:1.2, iso:false,
+        params:{vo:0.24,fd:0.16,vs:0.38,dv:0.14,pal:0.08},
+        trait:'母音推移が中心。農業地帯で語彙変化は緩やかだが着実に進む' },
+      { id:'kairo',  name:'カイロ',   px:598, py:266, desc:'東の孤立した島嶼',  prestige:0.5, iso:true,
+        params:{vo:0.08,fd:0.58,vs:0.22,dv:0.08,pal:0.04},
+        trait:'完全孤立による急速な独自進化。語末侵食が激しい' },
+      { id:'petra',  name:'ペトラ',   px:524, py:130, desc:'東北の孤立した岩峰',prestige:0.6, iso:true,
+        params:{vo:0.12,fd:0.52,vs:0.42,dv:0.18,pal:0.04},
+        trait:'母音変化と語末脱落が激しい。孤立のため変化速度は最速' },
+      { id:'sara',   name:'サラ',     px:420, py:110, desc:'北東の農耕集落',    prestige:0.9, iso:false,
+        params:{vo:0.18,fd:0.14,vs:0.48,dv:0.12,pal:0.08},
+        trait:'母音推移が際立つ。ペトラとアルカ双方の影響を受ける交差点' },
+    ],
+    conns:[
+      ['arka','nubo'],['arka','serva'],['arka','marina'],
+      ['arka','terra'],['arka','sara'],
+      ['serva','foren'],['serva','vera'],
+      ['nubo','foren'],['nubo','sara'],
+      ['marina','vera'],['marina','terra'],
+      ['terra','kairo'],['sara','petra'],
+    ],
+  },
+
+  // ── 島嶼群モデル ─────────────────────────────────────
+  islands: {
+    name: '島嶼群モデル',
+    desc: '海で隔てられた8つの島。孤立度が高く独自進化が激しい。交易路が少ない',
+    proto: {
+      '水':'maru','火':'kahi','空':'lani','土':'pona','太陽':'ahi',
+      '月':'mahina','星':'hoku','山':'mauna','川':'wai','海':'kai',
+      '魚':'ika','鳥':'manu','石':'pohaku','家':'hale','食べる':'ai',
+      '歩く':'hele','話す':'olelo','子':'keiki','母':'makuahine','良い':'maika',
+    },
+    vdefs: [
+      { id:'ao',    name:'アオ',    px:175, py:120, desc:'北の大島',      prestige:1.8, iso:false,
+        params:{vo:0.20,fd:0.40,vs:0.30,dv:0.05,pal:0.05}, trait:'交易の中心。変化は緩やかだが借用語が多い' },
+      { id:'koa',   name:'コア',    px:320, py:80,  desc:'北東の岩礁島',  prestige:0.5, iso:true,
+        params:{vo:0.10,fd:0.70,vs:0.15,dv:0.05,pal:0.00}, trait:'完全孤立。語末侵食が極端' },
+      { id:'nui',   name:'ヌイ',    px:490, py:140, desc:'東の火山島',    prestige:0.7, iso:false,
+        params:{vo:0.05,fd:0.20,vs:0.60,dv:0.10,pal:0.05}, trait:'母音推移が激しい。火山性地形による孤立傾向' },
+      { id:'iti',   name:'イティ',  px:550, py:300, desc:'東南の珊瑚礁',  prestige:0.4, iso:true,
+        params:{vo:0.05,fd:0.75,vs:0.10,dv:0.05,pal:0.05}, trait:'最も孤立した島。語形が極限まで短縮される' },
+      { id:'loa',   name:'ロア',    px:380, py:350, desc:'中央の貿易中継島',prestige:2.0, iso:false,
+        params:{vo:0.35,fd:0.20,vs:0.25,dv:0.10,pal:0.10}, trait:'全島の交差点。多くの借用語が通過する' },
+      { id:'puni',  name:'プニ',    px:200, py:360, desc:'南の漁業島',    prestige:0.8, iso:false,
+        params:{vo:0.25,fd:0.50,vs:0.15,dv:0.05,pal:0.05}, trait:'語末脱落と有声化が共存する漁民の島' },
+      { id:'hina',  name:'ヒナ',    px:90,  py:260, desc:'西の霧の島',    prestige:0.6, iso:false,
+        params:{vo:0.45,fd:0.30,vs:0.15,dv:0.05,pal:0.05}, trait:'有声化が顕著。霧による孤立が独自音韻を育む' },
+      { id:'tama',  name:'タマ',    px:310, py:230, desc:'中央の主島',    prestige:1.5, iso:false,
+        params:{vo:0.20,fd:0.20,vs:0.40,dv:0.10,pal:0.10}, trait:'母音推移中心。ロアとの交流で変化が加速' },
+    ],
+    conns:[
+      ['ao','koa'],['ao','tama'],['ao','hina'],
+      ['koa','nui'],['nui','iti'],['nui','loa'],
+      ['loa','tama'],['loa','puni'],['loa','iti'],
+      ['tama','hina'],['tama','puni'],
+    ],
+  },
+
+  // ── 征服・言語交代モデル ──────────────────────────────
+  conquest: {
+    name: '征服モデル',
+    desc: '高威信の征服都市2都市が周辺5村を言語的に支配しようとする。征服語 vs 在来語の競合',
+    proto: {
+      '水':'aque','火':'igni','地':'terra','空':'aero','太陽':'sola',
+      '月':'luna','王':'rege','民':'plebu','剣':'spata','法':'lege',
+      '神':'deu','家':'dome','子':'fili','母':'matre','食べる':'mandu',
+      '話す':'parle','戦う':'belli','与える':'dona','一':'unu','良い':'bonu',
+    },
+    vdefs: [
+      { id:'impe',  name:'インペ',   px:280, py:200, desc:'第一征服帝都',  prestige:3.0, iso:false,
+        params:{vo:0.10,fd:0.05,vs:0.20,dv:0.30,pal:0.05}, trait:'圧倒的威信。周辺への語彙伝播が凄まじく速い' },
+      { id:'capit', name:'カピト',   px:430, py:160, desc:'第二征服都市',  prestige:2.2, iso:false,
+        params:{vo:0.15,fd:0.08,vs:0.25,dv:0.20,pal:0.08}, trait:'インペに次ぐ威信都市。東部の言語化を担う' },
+      { id:'vill1', name:'ヴィロ',   px:160, py:110, desc:'北西の在来村落', prestige:0.5, iso:false,
+        params:{vo:0.50,fd:0.30,vs:0.10,dv:0.05,pal:0.05}, trait:'在来語を守る。有声化が強く征服語に抵抗' },
+      { id:'vill2', name:'ルスト',   px:160, py:300, desc:'西の在来村落',  prestige:0.4, iso:false,
+        params:{vo:0.40,fd:0.45,vs:0.05,dv:0.05,pal:0.05}, trait:'語末脱落が激しく在来の短縮形を保つ' },
+      { id:'vill3', name:'アグロ',   px:330, py:360, desc:'南の農耕村落',  prestige:0.6, iso:false,
+        params:{vo:0.20,fd:0.20,vs:0.40,dv:0.10,pal:0.10}, trait:'母音推移で征服語を変容させて受容する' },
+      { id:'vill4', name:'モンス',   px:500, py:300, desc:'東の山岳村落',  prestige:0.5, iso:false,
+        params:{vo:0.05,fd:0.15,vs:0.20,dv:0.55,pal:0.05}, trait:'無声化が支配的。征服語も硬質化して吸収' },
+      { id:'vill5', name:'シルヴァ', px:560, py:100, desc:'北東の森林村落', prestige:0.4, iso:true,
+        params:{vo:0.30,fd:0.55,vs:0.10,dv:0.00,pal:0.05}, trait:'孤立しており征服の影響が最も遅く届く' },
+    ],
+    conns:[
+      ['impe','vill1'],['impe','vill2'],['impe','vill3'],['impe','capit'],
+      ['capit','vill4'],['capit','vill5'],['capit','vill3'],
+      ['vill1','vill2'],['vill3','vill4'],
+    ],
+  },
+
+};
